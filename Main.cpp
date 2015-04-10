@@ -4,33 +4,9 @@
 #include <string>
 
 #include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <curl/curl.h>
 #include <microhttpd.h>
 #include <sqlite3.h>
-
-static void dumpTree(boost::property_tree::ptree &pTree, int level)
-{
-	for (auto it : pTree)
-	{
-		for (int i = 0; i < level; i++)
-			std::cout << "\t";
-		std::cout << it.first << "[" << it.second.size() << "]="
-				<< it.second.get_value<std::string>() << std::endl;
-		if (it.second.size() > 0)
-			dumpTree(it.second, level++);
-	}
-}
-
-static size_t writeMemoryCallback(void *ptr, size_t size, size_t nmemb, void *data)
-{
-	std::stringstream *ss = (std::stringstream *)data;
-	size_t length = (size * nmemb);
-
-	ss->write((char *)ptr, length);
-	return length;
-}
+#include "Domoticz.h"
 
 static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		const char *url, const char *method, const char *version,
@@ -53,12 +29,17 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 int main(int ac, char **av)
 {
 	boost::program_options::options_description desc("Options");
-	std::string domoURL, domoAuth;
+	std::string domoURL, domoAuth, dht22Cmd;
+	int domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater;
 
 	desc.add_options()
-	    ("Domoticz.url", boost::program_options::value<std::string>(&domoURL), "URL of Domoticz" )
-	    ("Domoticz.http_auth", boost::program_options::value<std::string>(&domoAuth),"Auth of Domoticz (if needed)" );
-
+	    ("Domoticz.url", boost::program_options::value<std::string>(&domoURL),  "URL of Domoticz")
+	    ("Domoticz.http_auth", boost::program_options::value<std::string>(&domoAuth), "Auth of Domoticz (if needed)")
+	    ("Domoticz.device_idx_dht22", boost::program_options::value<int>(&domoDeviceIdxDHT22)->default_value(-1), "Device Index in Domoticz")
+	    ("Domoticz.device_idx_heating", boost::program_options::value<int>(&domoDeviceIdxHeating)->default_value(-1), "Device Index in Domoticz")
+	    ("Domoticz.device_idx_heater", boost::program_options::value<int>(&domoDeviceIdxHeater)->default_value(-1), "Device Index in Domoticz")
+	    ("DHT22.command", boost::program_options::value<std::string>(&dht22Cmd), "Command to read DTH22")
+	    ;
 
 	boost::program_options::variables_map vm;
 	std::ifstream settings_file("config.ini", std::ifstream::in);
@@ -66,39 +47,30 @@ int main(int ac, char **av)
 	settings_file.close();
 	boost::program_options::notify(vm);
 
-	CURL *curl;
-	CURLcode res;
-	std::stringstream ss;
+	//
+	Domoticz *d = new Domoticz(domoURL, domoAuth, domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater);
 
-	curl = curl_easy_init();
-	if (curl != nullptr)
+	d->get();
+	exit(0);
+
+	//
+	FILE *fh;
+
+	fh = popen(dht22Cmd.c_str(), "r");
+	if (fh == nullptr)
+		std::cerr << "popen() failed" << std::endl;
+	else
 	{
-		domoURL += "json.htm?type=devices&filter=all&used=true&order=Name&plan=0";
-		curl_easy_setopt(curl, CURLOPT_URL, domoURL.c_str());
-		if (domoAuth.size() > 0)
-		{
-			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_ANY);
-			curl_easy_setopt(curl, CURLOPT_USERPWD, domoAuth.c_str());
-		}
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&ss);
-		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+		char line[1024];
+		int execReturn;
 
-		res = curl_easy_perform(curl);
-		if (res != CURLE_OK)
-			std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-		else
-		{
-			boost::property_tree::ptree pTree;
-
-			//cout << "===CONTENT===" << endl << ss.str() << endl;
-			std::cout << "===DUMP-JSON===" << std::endl;
-			boost::property_tree::read_json(ss, pTree);
-			dumpTree(pTree, 0);
-		}
-		curl_easy_cleanup(curl);
+		while (fgets(line, sizeof(line), fh) != nullptr)
+			std::cout << "PIPE: " << line;
+		execReturn = pclose(fh);
+		std::cout << "Exec return: " << execReturn << std::endl;
 	}
 
+	//
 	sqlite3 *db = nullptr;
 	int rc;
 
