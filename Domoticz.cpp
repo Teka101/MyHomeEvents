@@ -8,6 +8,8 @@
 #include <curl/curl.h>
 #include "Domoticz.h"
 
+#define DOMOTICZ_REFRESH_EVERY 300
+
 static size_t writeMemoryCallback(void *ptr, size_t size, size_t nmemb, void *data)
 {
 	std::stringstream *ss = (std::stringstream *)data;
@@ -25,6 +27,17 @@ Domoticz::Domoticz(std::string &domoURL, std::string &domoAuth, int deviceIdxDHT
 
 Domoticz::~Domoticz()
 {
+	this->removeDevices();
+}
+
+void Domoticz::removeDevices()
+{
+#ifdef DODEBUG
+	std::cout << "Domoticz::removeDevices() - clean devices []:" << this->devices.size() << std::endl;
+#endif
+	for (auto it : this->devices)
+		delete it;
+	devices.erase(devices.begin(), devices.end());
 }
 
 
@@ -34,7 +47,7 @@ void Domoticz::refreshData()
 	time_t diff = currentTime - lastUpdateDevices;
 	CURL *curl;
 
-	if (diff < 300)
+	if (diff < DOMOTICZ_REFRESH_EVERY)
 		return;
 	lastUpdateDevices = currentTime;
 
@@ -42,7 +55,7 @@ void Domoticz::refreshData()
 	if (curl != nullptr)
 	{
 		std::stringstream ss;
-		std::string url = serverUrl + "json.htm?type=devices&filter=all&used=true&order=Name&plan=1";
+		std::string url = serverUrl + "json.htm?type=devices&filter=all&used=true&order=Name&plan=1";//FIXME no hardcoded plan :)
 		CURLcode res;
 
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -62,43 +75,44 @@ void Domoticz::refreshData()
 		{
 			boost::property_tree::ptree pTree;
 
-			devices.erase(devices.begin(), devices.end());
 			boost::property_tree::read_json(ss, pTree);
-
+			this->removeDevices();
 			for (auto it : pTree.get_child("result"))
 				if (it.second.size() > 0)
 				{
-					sDomoticzDevice device;
+					sDomoticzDevice *device = new sDomoticzDevice();
 
 					for (auto itChild : it.second)
 					{
 						if (itChild.first == "idx")
-							device.idx = itChild.second.get_value<int>();
+							device->idx = itChild.second.get_value<int>();
 						else if (itChild.first == "Name")
-							device.name = itChild.second.get_value<std::string>();
+							device->name = itChild.second.get_value<std::string>();
 						else if (itChild.first == "LastUpdate")
 						{
 							std::string date = itChild.second.get_value<std::string>();
 							struct tm tm;
 
 							memset(&tm, 0, sizeof(tm));
+							tm.tm_zone = *tzname;
+							tm.tm_isdst = daylight;
 							if (strptime(date.c_str(), "%Y-%m-%d %H:%M:%S", &tm) != nullptr)
-								device.lastUpdate = mktime(&tm);
+								device->lastUpdate = mktime(&tm);
 						}
 						else if (itChild.first == "Status")
 						{
 							std::string status = itChild.second.get_value<std::string>();
 
-							device.statusIsOn = boost::starts_with(status, "On");
+							device->statusIsOn = boost::starts_with(status, "On");
 						}
 						else if (itChild.first == "Temp")
-							device.temperature = itChild.second.get_value<float>();
+							device->temperature = itChild.second.get_value<float>();
 						else if (itChild.first == "Humidity")
-							device.humidity = itChild.second.get_value<float>();
+							device->humidity = itChild.second.get_value<float>();
 					}
 #ifdef DODEBUG
-					std::cout << "sDomoticzDevice[idx=" << device.idx << " name=" << device.name << " lastUpdate=" << device.lastUpdate << " temperature="
-							<< device.temperature << " humidity=" << device.humidity << " isOn=" << (device.statusIsOn ? "true" : "false") << "]" << std::endl;
+					std::cout << "Domoticz::refreshData() - sDomoticzDevice[idx=" << device->idx << " name=" << device->name << " lastUpdate=" << device->lastUpdate << " temperature="
+							<< device->temperature << " humidity=" << device->humidity << " isOn=" << (device->statusIsOn ? "true" : "false") << "]" << std::endl;
 #endif
 					devices.push_back(device);
 				}
@@ -107,7 +121,101 @@ void Domoticz::refreshData()
 	}
 }
 
-void Domoticz::get()
+sDomoticzDevice *Domoticz::getDeviceDTH22()
 {
 	refreshData();
+	for (auto it : this->devices)
+		if (it->idx == this->idxDHT22)
+			return it;
+	return nullptr;
+}
+
+bool Domoticz::setValuesDHT22(time_t timestamp, float temperature, float humidity)
+{
+	std::stringstream ss, ssURL;
+	CURL *curl;
+
+	ssURL << this->serverUrl << "json.htm?type=command&param=udevice&idx=" << this->idxDHT22 << "&nvalue=0&svalue=" << temperature << ';' << humidity << ";2";
+	curl = curl_easy_init();
+	if (curl != nullptr)
+	{
+		CURLcode res;
+
+		curl_easy_setopt(curl, CURLOPT_URL, ssURL.str().c_str());
+		if (serverAuth.size() > 0)
+		{
+			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_ANY);
+			curl_easy_setopt(curl, CURLOPT_USERPWD, serverAuth.c_str());
+		}
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&ss);
+		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+
+		res = curl_easy_perform(curl);
+		if (res != CURLE_OK)
+			std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+		else
+		{
+			long httpCode;
+
+#ifdef DODEBUG
+			std::cout << "Domoticz::setValuesDHT22 - result:" << std::endl << "[[" << ss.str() << "]]" << std::endl;
+#endif
+			res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+			if (res == CURLE_OK)
+				if (httpCode == 200)
+				{
+					sDomoticzDevice *dev = this->getDeviceDTH22();
+
+					if (dev != nullptr)
+					{
+						dev->lastUpdate = timestamp;
+						dev->humidity = humidity;
+						dev->temperature = temperature;
+						this->listenerDHT22(dev);
+					}
+					return true;
+				}
+		}
+	}
+	return false;
+}
+
+bool Domoticz::setStatusHeater(bool activate)
+{
+	std::stringstream ss, ssURL;
+	CURL *curl;
+
+	ssURL << this->serverUrl << "json.htm?type=command&param=switchlight&idx=" << this->idxHeater << "&switchcmd=" << (activate ? "On" : "Off") << "&level=0";
+	curl = curl_easy_init();
+	if (curl != nullptr)
+	{
+		CURLcode res;
+
+		curl_easy_setopt(curl, CURLOPT_URL, ssURL.str().c_str());
+		if (serverAuth.size() > 0)
+		{
+			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_ANY);
+			curl_easy_setopt(curl, CURLOPT_USERPWD, serverAuth.c_str());
+		}
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&ss);
+		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+
+		res = curl_easy_perform(curl);
+		if (res != CURLE_OK)
+			std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+		else
+		{
+			long httpCode;
+
+	#ifdef DODEBUG
+			std::cout << "Domoticz::setStatusHeater - result:" << std::endl << "[[" << ss.str() << "]]" << std::endl;
+	#endif
+			res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+			if (res == CURLE_OK)
+				return (httpCode == 200);
+		}
+	}
+	return false;
 }
