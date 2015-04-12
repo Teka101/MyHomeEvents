@@ -6,7 +6,26 @@
 #include <boost/program_options.hpp>
 #include <microhttpd.h>
 #include <sqlite3.h>
+#include "DeviceDHT22.h"
 #include "Domoticz.h"
+
+class TestUpdate
+{
+public:
+	TestUpdate(){}
+	~TestUpdate(){}
+
+	//void operator()(sDomoticzDevice *dev) const
+	void hello(sDomoticzDevice *dev)
+	{
+		std::cout << "YOUHOU ! temp=" << dev->temperature << " hum=" << dev->humidity << std::endl;
+	}
+};
+
+static void helloMe(sDomoticzDevice *dev)
+{
+	std::cout << "YOUHOU ! temp=" << dev->temperature << " hum=" << dev->humidity << std::endl;
+}
 
 static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		const char *url, const char *method, const char *version,
@@ -28,47 +47,37 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 int main(int ac, char **av)
 {
-	boost::program_options::options_description desc("Options");
+	boost::program_options::options_description desc("ConfigFile");
+	boost::program_options::variables_map vm;
 	std::string domoURL, domoAuth, dht22Cmd;
 	int domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater;
 
 	desc.add_options()
-	    ("Domoticz.url", boost::program_options::value<std::string>(&domoURL),  "URL of Domoticz")
-	    ("Domoticz.http_auth", boost::program_options::value<std::string>(&domoAuth), "Auth of Domoticz (if needed)")
-	    ("Domoticz.device_idx_dht22", boost::program_options::value<int>(&domoDeviceIdxDHT22)->default_value(-1), "Device Index in Domoticz")
-	    ("Domoticz.device_idx_heating", boost::program_options::value<int>(&domoDeviceIdxHeating)->default_value(-1), "Device Index in Domoticz")
-	    ("Domoticz.device_idx_heater", boost::program_options::value<int>(&domoDeviceIdxHeater)->default_value(-1), "Device Index in Domoticz")
-	    ("DHT22.command", boost::program_options::value<std::string>(&dht22Cmd), "Command to read DTH22")
+	    ("Domoticz.url", boost::program_options::value<std::string>(&domoURL))
+	    ("Domoticz.http_auth", boost::program_options::value<std::string>(&domoAuth))
+	    ("Domoticz.device_idx_dht22", boost::program_options::value<int>(&domoDeviceIdxDHT22)->default_value(-1))
+	    ("Domoticz.device_idx_heating", boost::program_options::value<int>(&domoDeviceIdxHeating)->default_value(-1))
+	    ("Domoticz.device_idx_heater", boost::program_options::value<int>(&domoDeviceIdxHeater)->default_value(-1))
+	    ("DHT22.command", boost::program_options::value<std::string>(&dht22Cmd))
 	    ;
-
-	boost::program_options::variables_map vm;
 	std::ifstream settings_file("config.ini", std::ifstream::in);
 	boost::program_options::store(boost::program_options::parse_config_file(settings_file, desc, true), vm);
 	settings_file.close();
 	boost::program_options::notify(vm);
 
 	//
+	TestUpdate *tu = new TestUpdate();
 	Domoticz *d = new Domoticz(domoURL, domoAuth, domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater);
+	//DeviceDHT22 *ddht22 = new DeviceDHT22(d, dht22Cmd);
 
-	d->get();
+	d->listenerDHT22.connect(boost::bind(&TestUpdate::hello, tu, _1));
+	d->listenerDHT22.connect(&helloMe);
+	//d->setValuesDHT22(0, 1, 2);
+	std::cout << "Infinite loop..." << std::endl;
+	for (;;)
+		sleep(30);
+
 	exit(0);
-
-	//
-	FILE *fh;
-
-	fh = popen(dht22Cmd.c_str(), "r");
-	if (fh == nullptr)
-		std::cerr << "popen() failed" << std::endl;
-	else
-	{
-		char line[1024];
-		int execReturn;
-
-		while (fgets(line, sizeof(line), fh) != nullptr)
-			std::cout << "PIPE: " << line;
-		execReturn = pclose(fh);
-		std::cout << "Exec return: " << execReturn << std::endl;
-	}
 
 	//
 	sqlite3 *db = nullptr;
@@ -104,7 +113,7 @@ int main(int ac, char **av)
 
 	struct MHD_Daemon *daemon;
 
-	daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 8080, NULL, NULL, &answer_to_connection, NULL, MHD_OPTION_END);
+	daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 8080, nullptr, nullptr, &answer_to_connection, nullptr, MHD_OPTION_END);
 	if (daemon == nullptr)
 		std::cerr << "MHD_start_daemon() error" << std::endl;
 	else

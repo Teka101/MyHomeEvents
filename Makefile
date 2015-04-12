@@ -1,9 +1,9 @@
 NAME= MyHomeEvents
-SRC=Main.cpp Domoticz.cpp
+SRC=Main.cpp Domoticz.cpp DeviceDHT22.cpp
 OBJ=$(SRC:.cpp=.o)
 
 CPPFLAGS=-g3 -Wall -Wunused -Wpointer-arith -Wno-uninitialized -std=c++11 `curl-config --cflags` -DDODEBUG
-LDFLAGS=`curl-config --libs` -lmicrohttpd -lsqlite3 -lboost_program_options
+LDFLAGS=`curl-config --libs` -lmicrohttpd -lsqlite3 -lboost_program_options -lboost_system -lboost_thread -lboost_date_time -lboost_regex
 CPP=g++
 RM=rm -f
 
