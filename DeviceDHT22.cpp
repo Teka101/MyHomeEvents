@@ -83,12 +83,7 @@ void DeviceDHT22::updateData(float temperature, float humidity)
 		float diffHumidity = std::abs(humidity - dev->humidity);
 
 		if (diffDate >= 1200 || (diffHumidity <= 15.0 && diffTemperature <= 5.0))
-			if (domo->setValuesDHT22(temperature, humidity))
-			{
-				dev->lastUpdate = now;
-				dev->humidity = humidity;
-				dev->temperature = temperature;
-			}
+			domo->setValuesDHT22(now, temperature, humidity);
 		else
 			std::cerr << "DeviceDHT22::updateData - invalid value : temperature=" << temperature << " d" << diffTemperature << " humdity=" << humidity << " d" << diffHumidity << std::endl;
 	}
