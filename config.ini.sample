@@ -1,3 +1,6 @@
+[WebServer]
+port=8080
+
 [Domoticz]
 url=http://localhost:8080/
 http_auth=mylogin:mypassword

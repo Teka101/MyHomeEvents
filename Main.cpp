@@ -33,8 +33,10 @@ int main(int ac, char **av)
 	boost::program_options::variables_map vm;
 	std::string domoURL, domoAuth, dht22Cmd;
 	int domoPlan, domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater;
+	int webPort;
 
 	desc.add_options()
+		("WebServer.port", boost::program_options::value<int>(&webPort)->default_value(8080))
 	    ("Domoticz.url", boost::program_options::value<std::string>(&domoURL))
 	    ("Domoticz.http_auth", boost::program_options::value<std::string>(&domoAuth))
 	    ("Domoticz.plan", boost::program_options::value<int>(&domoPlan)->default_value(0))
@@ -52,7 +54,7 @@ int main(int ac, char **av)
 	TestUpdate *tu = new TestUpdate();
 	Domoticz *d = new Domoticz(domoURL, domoAuth, domoPlan, domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater);
 	DeviceDHT22 *ddht22 = new DeviceDHT22(d, dht22Cmd);
-	WebServer *web = new WebServer(8080);
+	WebServer *web = new WebServer(webPort);
 
 	d->listenerDHT22.connect(boost::bind(&TestUpdate::hello, tu, _1));
 	d->listenerDHT22.connect(&helloMe);
