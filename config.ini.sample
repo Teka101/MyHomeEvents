@@ -1,0 +1,10 @@
+[Domoticz]
+url=http://localhost:8080/
+http_auth=mylogin:mypassword
+plan=0
+device_idx_dht22=1
+device_idx_heating=2
+device_idx_heater=3
+
+[DHT22]
+command=/bin/readDht22.sh

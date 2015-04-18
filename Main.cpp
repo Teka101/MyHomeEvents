@@ -4,10 +4,10 @@
 #include <string>
 
 #include <boost/program_options.hpp>
-#include <microhttpd.h>
 #include <sqlite3.h>
 #include "DeviceDHT22.h"
 #include "Domoticz.h"
+#include "WebServer.h"
 
 class TestUpdate
 {
@@ -27,34 +27,17 @@ static void helloMe(sDomoticzDevice *dev)
 	std::cout << "YOUHOU ! temp=" << dev->temperature << " hum=" << dev->humidity << std::endl;
 }
 
-static int answer_to_connection(void *cls, struct MHD_Connection *connection,
-		const char *url, const char *method, const char *version,
-		const char *upload_data, size_t *upload_data_size, void **con_cls)
-{
-	const char *page = "<html><body>Hello, browser!</body></html>";
-	struct MHD_Response *response;
-	int ret;
-
-	std::cout << "HTTP-request: url=" << url << " method=" << method << " version=" << version << std::endl;
-	//MHD_create_response_from_fd
-	//MHD_add_response_header
-	response = MHD_create_response_from_buffer(strlen(page), (void *) page, MHD_RESPMEM_PERSISTENT);
-	ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-	MHD_destroy_response(response);
-
-	return ret;
-}
-
 int main(int ac, char **av)
 {
 	boost::program_options::options_description desc("ConfigFile");
 	boost::program_options::variables_map vm;
 	std::string domoURL, domoAuth, dht22Cmd;
-	int domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater;
+	int domoPlan, domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater;
 
 	desc.add_options()
 	    ("Domoticz.url", boost::program_options::value<std::string>(&domoURL))
 	    ("Domoticz.http_auth", boost::program_options::value<std::string>(&domoAuth))
+	    ("Domoticz.plan", boost::program_options::value<int>(&domoPlan)->default_value(0))
 	    ("Domoticz.device_idx_dht22", boost::program_options::value<int>(&domoDeviceIdxDHT22)->default_value(-1))
 	    ("Domoticz.device_idx_heating", boost::program_options::value<int>(&domoDeviceIdxHeating)->default_value(-1))
 	    ("Domoticz.device_idx_heater", boost::program_options::value<int>(&domoDeviceIdxHeater)->default_value(-1))
@@ -67,16 +50,21 @@ int main(int ac, char **av)
 
 	//
 	TestUpdate *tu = new TestUpdate();
-	Domoticz *d = new Domoticz(domoURL, domoAuth, domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater);
-	//DeviceDHT22 *ddht22 = new DeviceDHT22(d, dht22Cmd);
+	Domoticz *d = new Domoticz(domoURL, domoAuth, domoPlan, domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater);
+	DeviceDHT22 *ddht22 = new DeviceDHT22(d, dht22Cmd);
+	WebServer *web = new WebServer(8080);
 
 	d->listenerDHT22.connect(boost::bind(&TestUpdate::hello, tu, _1));
 	d->listenerDHT22.connect(&helloMe);
 	//d->setValuesDHT22(0, 1, 2);
-	std::cout << "Infinite loop..." << std::endl;
-	for (;;)
-		sleep(30);
 
+	std::cout << "Press ENTER to quit..." << std::endl;
+	getchar();
+
+	delete web;
+	//FIXME bugged delete ddht22;
+	delete d;
+	delete tu;
 	exit(0);
 
 	//
@@ -109,15 +97,5 @@ int main(int ac, char **av)
 			   std::cout << "Table created successfully" << std::endl;
 	}
 	sqlite3_close(db);
-
-
-	struct MHD_Daemon *daemon;
-
-	daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 8080, nullptr, nullptr, &answer_to_connection, nullptr, MHD_OPTION_END);
-	if (daemon == nullptr)
-		std::cerr << "MHD_start_daemon() error" << std::endl;
-	else
-		getchar();
-	MHD_stop_daemon(daemon);
 	return 0;
 }

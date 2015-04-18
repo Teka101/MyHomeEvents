@@ -19,8 +19,8 @@ static size_t writeMemoryCallback(void *ptr, size_t size, size_t nmemb, void *da
 	return length;
 }
 
-Domoticz::Domoticz(std::string &domoURL, std::string &domoAuth, int deviceIdxDHT22, int deviceIdxHeating, int deviceIdxHeater)
-	: serverUrl(domoURL), serverAuth(domoAuth), lastUpdateDevices(0), idxDHT22(deviceIdxDHT22), idxHeating(deviceIdxHeating), idxHeater(deviceIdxHeater)
+Domoticz::Domoticz(std::string &domoURL, std::string &domoAuth, int planIdx, int deviceIdxDHT22, int deviceIdxHeating, int deviceIdxHeater)
+	: serverUrl(domoURL), serverAuth(domoAuth), plan(planIdx), lastUpdateDevices(0), idxDHT22(deviceIdxDHT22), idxHeating(deviceIdxHeating), idxHeater(deviceIdxHeater)
 {
 	tzset();
 }
@@ -35,8 +35,8 @@ void Domoticz::removeDevices()
 #ifdef DODEBUG
 	std::cout << "Domoticz::removeDevices() - clean devices []:" << this->devices.size() << std::endl;
 #endif
-	for (auto it : this->devices)
-		delete it;
+	for (sDomoticzDevice *d : this->devices)
+		delete d;
 	devices.erase(devices.begin(), devices.end());
 }
 
@@ -54,11 +54,11 @@ void Domoticz::refreshData()
 	curl = curl_easy_init();
 	if (curl != nullptr)
 	{
-		std::stringstream ss;
-		std::string url = serverUrl + "json.htm?type=devices&filter=all&used=true&order=Name&plan=1";//FIXME no hardcoded plan :)
+		std::stringstream ss, ssUrl;
 		CURLcode res;
 
-		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		ssUrl << serverUrl << "json.htm?type=devices&filter=all&used=true&order=Name&plan=" << plan;
+		curl_easy_setopt(curl, CURLOPT_URL, ssUrl.str().c_str());
 		if (serverAuth.size() > 0)
 		{
 			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_ANY);
@@ -124,9 +124,9 @@ void Domoticz::refreshData()
 sDomoticzDevice *Domoticz::getDeviceDTH22()
 {
 	refreshData();
-	for (auto it : this->devices)
-		if (it->idx == this->idxDHT22)
-			return it;
+	for (sDomoticzDevice *d : this->devices)
+		if (d->idx == this->idxDHT22)
+			return d;
 	return nullptr;
 }
 
