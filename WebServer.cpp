@@ -14,6 +14,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		const char *url, const char *method, const char *version,
 		const char *upload_data, size_t *upload_data_size, void **con_cls)
 {
+	WebServer *ws = (WebServer *)cls;
 	const char *page = "<html><body>Hello, browser!</body></html>";
 	struct MHD_Response *response = nullptr;
 	int ret;
@@ -34,6 +35,23 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 			response = MHD_create_response_from_fd(st.st_size, fd);
 		}
 	}
+	else if (boost::starts_with(url, "/graphs"))
+	{
+		std::stringstream ss;
+		int idx = 0;
+
+		ss << "[";
+		for (sGraph graph : ws->getDataBase()->getGraphs())
+		{
+			if (idx > 0)
+				ss << ",";
+			ss << "{id:" << graph.id << ", description:'" << graph.description << "'}";
+			idx++;
+		}
+		ss << "]";
+		response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(response, "Content-Type", "application/json");
+	}
 	else
 		response = MHD_create_response_from_buffer(strlen(page), (void *)page, MHD_RESPMEM_PERSISTENT);
 	if (response == nullptr)
@@ -50,13 +68,18 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	return ret;
 }
 
-WebServer::WebServer(int port)
+WebServer::WebServer(int port, DataBase *dbConnection) : db(dbConnection)
 {
-	daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, nullptr, nullptr, &answer_to_connection, nullptr, MHD_OPTION_END);
+	daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, nullptr, nullptr, &answer_to_connection, this, MHD_OPTION_END);
 }
 
 WebServer::~WebServer()
 {
 	if (daemon != nullptr)
 		MHD_stop_daemon(daemon);
+}
+
+DataBase *WebServer::getDataBase()
+{
+	return this->db;
 }

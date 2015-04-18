@@ -4,7 +4,7 @@
 #include <string>
 
 #include <boost/program_options.hpp>
-#include <sqlite3.h>
+#include "DataBase.h"
 #include "DeviceDHT22.h"
 #include "Domoticz.h"
 #include "WebServer.h"
@@ -53,11 +53,14 @@ int main(int ac, char **av)
 	//
 	TestUpdate *tu = new TestUpdate();
 	Domoticz *d = new Domoticz(domoURL, domoAuth, domoPlan, domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater);
-	DeviceDHT22 *ddht22 = new DeviceDHT22(d, dht22Cmd);
-	WebServer *web = new WebServer(webPort);
+	//DeviceDHT22 *ddht22 = new DeviceDHT22(d, dht22Cmd);
+	DataBase *db = new DataBase();
+	WebServer *web = new WebServer(webPort, db);
 
 	d->listenerDHT22.connect(boost::bind(&TestUpdate::hello, tu, _1));
 	d->listenerDHT22.connect(&helloMe);
+
+	db->getGraphs();
 	//d->setValuesDHT22(0, 1, 2);
 
 	std::cout << "Press ENTER to quit..." << std::endl;
@@ -67,37 +70,6 @@ int main(int ac, char **av)
 	//FIXME bugged delete ddht22;
 	delete d;
 	delete tu;
-	exit(0);
-
-	//
-	sqlite3 *db = nullptr;
-	int rc;
-
-	rc = sqlite3_open("test.db", &db);
-	if (rc != 0)
-		std::cerr << "sqlite3_open() failed: " << sqlite3_errmsg(db) << std::endl;
-	else
-	{
-		char *zErrMsg = nullptr;
-		char *sql = nullptr;
-
-		sql = "CREATE TABLE COMPANY("  \
-		         "ID INT PRIMARY KEY     NOT NULL," \
-		         "NAME           TEXT    NOT NULL," \
-		         "AGE            INT     NOT NULL," \
-		         "ADDRESS        CHAR(50)," \
-		         "SALARY         REAL );";
-
-		   /* Execute SQL statement */
-		   rc = sqlite3_exec(db, sql, nullptr, nullptr, &zErrMsg);
-		   if (rc != SQLITE_OK)
-		   {
-			   std::cerr << "SQL error: " << zErrMsg << std::endl;
-			   sqlite3_free(zErrMsg);
-		   }
-		   else
-			   std::cout << "Table created successfully" << std::endl;
-	}
-	sqlite3_close(db);
+	delete db;
 	return 0;
 }

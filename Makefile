@@ -1,5 +1,5 @@
 NAME=MyHomeEvents
-SRC=Main.cpp DeviceDHT22.cpp Domoticz.cpp WebServer.cpp
+SRC=Main.cpp DataBase.cpp DeviceDHT22.cpp Domoticz.cpp WebServer.cpp
 OBJ=$(SRC:.cpp=.o)
 
 DEPS_PATH=$(HOME)/deps
