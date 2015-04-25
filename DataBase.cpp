@@ -33,7 +33,7 @@ void DataBase::createTables()
 {
 	const char sqls[][256] =
 	{
-			"CREATE TABLE condition(description TEXT, type INTEGER, device_domoticz_idx INTEGER, temperature_min REAL, temperature_max REAL, calendar_id INTEGER REFERENCES calendar(rowid))",
+			"CREATE TABLE condition(description TEXT, domoticz_device_type INTEGER, temperature_min REAL, temperature_max REAL, day INTEGER, calendar_id INTEGER REFERENCES calendar(rowid))",
 			"CREATE TABLE calendar(date INTEGER)",
 			"CREATE TABLE graph(description TEXT, position INTEGER DEFAULT 99, condition_id INTEGER REFERENCES condition(rowid))",
 			"CREATE TABLE graph_data(graph_id INTEGER REFERENCES graph(rowid), time INTEGER NOT NULL, value REAL)",
@@ -60,11 +60,11 @@ void DataBase::insertDefaultData()
 {
 	const char sqls[][256] =
 	{
-			"INSERT INTO graph(description, position, condition_id) VALUES('Default', 0, NULL)",
-			"INSERT INTO graph_data(graph_id, time, value) VALUES(1, 0000, 19),(1, 0600, 19.5),(1, 1900, 20),(1, 2100, 19)"
-			/*"CREATE TABLE calendar(date INTEGER)",
-			"CREATE TABLE graph(description TEXT, position INTEGER, condition_id INTEGER REFERENCES condition(rowid))",
-			"CREATE TABLE graph_data(graph_id INTEGER REFERENCES graph(rowid), value REAL)",*/
+			"INSERT INTO condition(description, domoticz_device_type, day) VALUES('Monday to friday', 0, 124),('Saturday to sunday', 0, 3)",
+			"INSERT INTO graph(description, position, condition_id) VALUES('Default week', 0, 1)",
+			"INSERT INTO graph_data(graph_id, time, value) VALUES(1, 0000, 19),(1, 0600, 19.5),(1, 1900, 20),(1, 2100, 19)",
+			"INSERT INTO graph(description, position, condition_id) VALUES('Default week-end', 1, 2)",
+			"INSERT INTO graph_data(graph_id, time, value) VALUES(2, 0000, 19),(2, 1000, 19.5),(2, 1900, 20),(2, 2100, 19)"
 	};
 	int nbElements = (sizeof(sqls) / sizeof(*sqls));
 

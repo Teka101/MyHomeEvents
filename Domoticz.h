@@ -6,6 +6,13 @@
 
 #include <boost/signals2/signal.hpp>
 
+enum eDomoticzDeviceType
+{
+	temperatureIn,
+	temperatureOut,
+	heater
+};
+
 struct sDomoticzDevice
 {
 	int idx;

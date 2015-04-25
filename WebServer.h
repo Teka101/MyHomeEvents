@@ -18,6 +18,9 @@ public:
 	~WebServer();
 
 	DataBase *getDataBase();
+	int sendNotFound(struct MHD_Response **response);
+	int sendPermanentRedirectTo(struct MHD_Response **response, const char *location);
+	int sendFile(struct MHD_Response **response, const char *url);
 };
 
 #endif /* WEBSERVER_H_ */

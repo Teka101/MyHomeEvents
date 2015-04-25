@@ -26,26 +26,9 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 	std::cout << "HTTP-request: url=" << url << " method=" << method << " version=" << version << std::endl;
 	if (boost::equals(url, "/"))
-	{
-		const char *errorPage = "Redirect to home";
-
-		response = MHD_create_response_from_buffer(strlen(errorPage), (void *)errorPage, MHD_RESPMEM_PERSISTENT);
-		MHD_add_response_header(response, "Location", "/static/index.html");
-		httpCode = MHD_HTTP_MOVED_PERMANENTLY;
-	}
+		httpCode = ws->sendPermanentRedirectTo(&response, "/static/index.html");
 	else if (boost::starts_with(url, "/static/"))
-	{
-		int fd;
-
-		if ((fd = open(&url[1], O_RDONLY)) >= 0)
-		{
-			struct stat st;
-
-			fstat(fd, &st);
-			std::cout << "Send file: size=" << st.st_size << std::endl;
-			response = MHD_create_response_from_fd(st.st_size, fd);
-		}
-	}
+		httpCode = ws->sendFile(&response, &url[1]);
 	else if (boost::equals(url, "/graphs"))
 	{
 		if (boost::equals(method, "POST"))
@@ -175,13 +158,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		}
 	}
 	if (response == nullptr)
-	{
-		const char *errorPage = "Ressource not found";
-
-		response = MHD_create_response_from_buffer(strlen(errorPage), (void *)errorPage, MHD_RESPMEM_PERSISTENT);
-		MHD_add_response_header(response, "Content-Type", "text/html");
-		httpCode = MHD_HTTP_NOT_FOUND;
-	}
+		httpCode = ws->sendNotFound(&response);
 	MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
 	MHD_add_response_header(response, "Age", "0");
 	MHD_add_response_header(response, "Server", "MyHomeEvents");
@@ -204,4 +181,44 @@ WebServer::~WebServer()
 DataBase *WebServer::getDataBase()
 {
 	return this->db;
+}
+
+int WebServer::sendNotFound(struct MHD_Response **response)
+{
+	const char *errorPage = "Ressource not found";
+
+	*response = MHD_create_response_from_buffer(strlen(errorPage), (void *)errorPage, MHD_RESPMEM_PERSISTENT);
+	MHD_add_response_header(*response, "Content-Type", "text/html");
+	return MHD_HTTP_NOT_FOUND;
+}
+
+int WebServer::sendPermanentRedirectTo(struct MHD_Response **response, const char *location)
+{
+	const char *errorPage = "Redirect to home";
+
+	*response = MHD_create_response_from_buffer(strlen(errorPage), (void *)errorPage, MHD_RESPMEM_PERSISTENT);
+	MHD_add_response_header(*response, "Location", "/static/index.html");
+	return MHD_HTTP_MOVED_PERMANENTLY;
+}
+
+int WebServer::sendFile(struct MHD_Response **response, const char *url)
+{
+	int fd;
+
+	if ((fd = open(url, O_RDONLY)) >= 0)
+	{
+		struct stat st;
+
+		fstat(fd, &st);
+		std::cout << "Send file: size=" << st.st_size << std::endl;
+		*response = MHD_create_response_from_fd(st.st_size, fd);
+		if (boost::ends_with(url, ".css"))
+			MHD_add_response_header(*response, "Content-Type", "text/css");
+		else if (boost::ends_with(url, ".js"))
+			MHD_add_response_header(*response, "Content-Type", "application/javascript");
+		else
+			MHD_add_response_header(*response, "Content-Type", "text/html");
+		return MHD_HTTP_OK;
+	}
+	return MHD_HTTP_NOT_FOUND;
 }
