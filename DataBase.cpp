@@ -163,6 +163,39 @@ bool DataBase::updateGraphData(sGraph &graph)
 	return (rc == SQLITE_OK || rc == SQLITE_DONE);
 }
 
+static int selectCondition(void *param, int ac, char **av, char **column)
+{
+	std::vector<sCondition> *r = static_cast<std::vector<sCondition>*>(param);
+
+	if (ac == 7)
+	{
+		sCondition cond;
+
+		cond.id = boost::lexical_cast<int>(av[0]);
+		cond.description = av[1];
+		cond.domoticzDeviceType = static_cast<eDomoticzDeviceType>(av[2] == nullptr ? -1 : boost::lexical_cast<int>(av[2]));
+		cond.temperatureMin = (av[3] == nullptr ? -1 : boost::lexical_cast<float>(av[3]));
+		cond.temperatureMax = (av[4] == nullptr ? -1 : boost::lexical_cast<float>(av[4]));
+		cond.day = (av[5] == nullptr ? -1 : boost::lexical_cast<int>(av[5]));
+		cond.calendarId = (av[6] == nullptr ? -1 : boost::lexical_cast<int>(av[6]));
+		r->push_back(cond);
+	}
+	else
+		std::cerr << "selectCondition()-not expected arguments: []" << ac << std::endl;
+	return 0;
+}
+
+std::vector<sCondition> DataBase::getConditions()
+{//CREATE TABLE condition(description TEXT, domoticz_device_type INTEGER, temperature_min REAL, temperature_max REAL, day INTEGER, calendar_id INTEGER REFERENCES calendar(rowid))
+	std::vector<sCondition> ret;
+	int rc;
+
+	rc = sqlite3_exec(db, "SELECT rowid,description,domoticz_device_type,temperature_min,temperature_max,day,calendar_id FROM condition ORDER BY rowid", selectCondition, &ret, nullptr);
+	if (rc != SQLITE_OK)
+		std::cerr << "getGraphs()-SQL error" << std::endl;
+	return ret;
+}
+
 static int selectGraph(void *param, int ac, char **av, char **column)
 {
 	std::vector<sGraph> *r = static_cast<std::vector<sGraph>*>(param);

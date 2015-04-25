@@ -19,6 +19,17 @@ void readFromPTree(boost::property_tree::ptree &pTree, sGraph &graph, bool readD
 		}
 }
 
+void writeToPTree(boost::property_tree::ptree &pTree, sCondition &cond)
+{
+	pTree.put("id", cond.id);
+	pTree.put("description", cond.description);
+	pTree.put("domoticzDeviceType", cond.domoticzDeviceType);
+	pTree.put("temperatureMin", cond.temperatureMin);
+	pTree.put("temperatureMax", cond.temperatureMax);
+	pTree.put("day", cond.day);
+	pTree.put("calendarId", cond.calendarId);
+}
+
 void writeToPTree(boost::property_tree::ptree &pTree, sGraph &graph)
 {
 	pTree.put("id", graph.id);

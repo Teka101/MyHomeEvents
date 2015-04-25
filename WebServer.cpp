@@ -29,6 +29,24 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		httpCode = ws->sendPermanentRedirectTo(&response, "/static/index.html");
 	else if (boost::starts_with(url, "/static/"))
 		httpCode = ws->sendFile(&response, &url[1]);
+	else if (boost::equals(url, "/conditions"))
+	{
+		boost::property_tree::ptree pt;
+		boost::property_tree::ptree ptChildren;
+		std::ostringstream ss;
+
+		for (sCondition cond : ws->getDataBase()->getConditions())
+		{
+			boost::property_tree::ptree ptChild;
+
+			writeToPTree(ptChild, cond);
+			ptChildren.push_back(std::make_pair("", ptChild));
+		}
+		pt.add_child("conditions", ptChildren);
+		boost::property_tree::write_json(ss, pt, false);
+		response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
+	}
 	else if (boost::equals(url, "/graphs"))
 	{
 		if (boost::equals(method, "POST"))

@@ -4,6 +4,17 @@
 #include <vector>
 
 #include <sqlite3.h>
+#include "Domoticz.h"
+
+struct sCondition
+{
+	int id;
+	std::string description;
+	eDomoticzDeviceType domoticzDeviceType;
+	float temperatureMin, temperatureMax;
+	int day;
+	int calendarId;
+};
 
 struct sGraphData
 {
@@ -35,6 +46,7 @@ public:
 	bool addGraph(std::string &description);
 	bool updateGraph(sGraph &graph);
 	bool updateGraphData(sGraph &graph);
+	std::vector<sCondition> getConditions();
 	std::vector<sGraph> getGraphs();
 	sGraph getGraph(int id);
 };
