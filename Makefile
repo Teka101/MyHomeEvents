@@ -1,10 +1,10 @@
 NAME=MyHomeEvents
-SRC=Main.cpp DataBase.cpp DeviceDHT22.cpp Domoticz.cpp WebServer.cpp
+SRC=Main.cpp DataBase.cpp DataBaseHelpers.cpp DeviceDHT22.cpp Domoticz.cpp WebServer.cpp
 OBJ=$(SRC:.cpp=.o)
 
 DEPS_PATH=$(HOME)/deps
 CPPFLAGS=-g3 -Wall -Wunused -Wpointer-arith -Wno-uninitialized -std=c++11 `curl-config --cflags` -DDODEBUG -I$(DEPS_PATH)/include
-LDFLAGS=`curl-config --libs` -lmicrohttpd -lsqlite3 -lboost_program_options -lboost_system -lboost_thread -lboost_date_time -lboost_regex -L$(DEPS_PATH)/lib
+LDFLAGS=`curl-config --libs` -lmicrohttpd -lsqlite3 -lboost_program_options -lboost_filesystem -lboost_system -lboost_thread -lboost_date_time -lboost_regex -L$(DEPS_PATH)/lib
 CPP=g++
 RM=rm -f
 
@@ -29,7 +29,7 @@ prepare: prepare-boost prepare-log4cplus
 
 prepare-boost:
 	@echo "Prepare boost"
-	@cd $(DEPS_PATH)/boost && ./bootstrap.sh --without-icu --with-libraries=chrono,date_time,program_options,regex,serialization,system,thread --prefix=$(DEPS_PATH)
+	@cd $(DEPS_PATH)/boost && ./bootstrap.sh --without-icu --with-libraries=chrono,date_time,filesystem,program_options,regex,serialization,system,thread --prefix=$(DEPS_PATH)
 	@echo "Compilation and installation of boost"
 	@cd $(DEPS_PATH)/boost && ./b2 install
 
