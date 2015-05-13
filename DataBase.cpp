@@ -33,8 +33,8 @@ void DataBase::createTables()
 {
 	const char sqls[][256] =
 	{
-			"CREATE TABLE condition(description TEXT, domoticz_device_type INTEGER, temperature_min REAL, temperature_max REAL, day INTEGER, calendar_id INTEGER REFERENCES calendar(rowid))",
 			"CREATE TABLE calendar(date INTEGER)",
+			"CREATE TABLE condition(description TEXT, domoticz_device_type INTEGER, temperature_min REAL, temperature_max REAL, day INTEGER, calendar_id INTEGER REFERENCES calendar(rowid))",
 			"CREATE TABLE graph(description TEXT, position INTEGER DEFAULT 99, condition_id INTEGER REFERENCES condition(rowid))",
 			"CREATE TABLE graph_data(graph_id INTEGER REFERENCES graph(rowid), time INTEGER NOT NULL, value REAL)",
 	};
@@ -60,7 +60,7 @@ void DataBase::insertDefaultData()
 {
 	const char sqls[][256] =
 	{
-			"INSERT INTO condition(description, domoticz_device_type, day) VALUES('Monday to friday', 0, 124),('Saturday to sunday', 0, 3)",
+			"INSERT INTO condition(description, domoticz_device_type, day) VALUES('Monday to friday', NULL, 124),('Saturday to sunday', NULL, 3)",
 			"INSERT INTO graph(description, position, condition_id) VALUES('Default week', 0, 1)",
 			"INSERT INTO graph_data(graph_id, time, value) VALUES(1, 0000, 19),(1, 0600, 19.5),(1, 1900, 20),(1, 2100, 19)",
 			"INSERT INTO graph(description, position, condition_id) VALUES('Default week-end', 1, 2)",
@@ -84,6 +84,25 @@ void DataBase::insertDefaultData()
 	}
 }
 
+bool DataBase::addCondition(std::string &description)
+{
+	sqlite3_stmt *stmt = nullptr;
+	const char *sql = "INSERT INTO condition(description) VALUES(?)";
+	int rc;
+
+	rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, nullptr);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_text(stmt, 1, description.c_str(), description.length(), nullptr);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		return (rc == SQLITE_DONE);
+	}
+	else
+		std::cerr << "addCondition()-SQL error prepare: " << sqlite3_errmsg(db) << std::endl;
+	return false;
+}
+
 bool DataBase::addGraph(std::string &description)
 {
 	sqlite3_stmt *stmt = nullptr;
@@ -100,6 +119,46 @@ bool DataBase::addGraph(std::string &description)
 	}
 	else
 		std::cerr << "addGraph()-SQL error prepare: " << sqlite3_errmsg(db) << std::endl;
+	return false;
+}
+
+bool DataBase::updateCondition(sCondition &cond)
+{
+	sqlite3_stmt *stmt = nullptr;
+	const char *sql = "UPDATE condition SET description=?,domoticz_device_type=?,temperature_min=?,temperature_max=?,day=?,calendar_id=? WHERE rowid=?";
+	int rc;
+
+	rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, nullptr);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_text(stmt, 1, cond.description.c_str(), cond.description.length(), nullptr);
+		if (cond.domoticzDeviceType != -1)
+			sqlite3_bind_int(stmt, 2, cond.domoticzDeviceType);
+		else
+			sqlite3_bind_null(stmt, 2);
+		if (cond.temperatureMin != -1)
+			sqlite3_bind_double(stmt, 3, cond.temperatureMin);
+		else
+			sqlite3_bind_null(stmt, 3);
+		if (cond.temperatureMax != -1)
+			sqlite3_bind_double(stmt, 4, cond.temperatureMax);
+		else
+			sqlite3_bind_null(stmt, 4);
+		if (cond.day != -1)
+			sqlite3_bind_int(stmt, 5, cond.day);
+		else
+			sqlite3_bind_null(stmt, 5);
+		if (cond.calendarId != -1)
+			sqlite3_bind_int(stmt, 6, cond.calendarId);
+		else
+			sqlite3_bind_null(stmt, 6);
+		sqlite3_bind_int(stmt, 7, cond.id);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		return (rc == SQLITE_DONE);
+	}
+	else
+		std::cerr << "updateCondition()-SQL error prepare: " << sqlite3_errmsg(db) << std::endl;
 	return false;
 }
 
@@ -186,7 +245,7 @@ static int selectCondition(void *param, int ac, char **av, char **column)
 }
 
 std::vector<sCondition> DataBase::getConditions()
-{//CREATE TABLE condition(description TEXT, domoticz_device_type INTEGER, temperature_min REAL, temperature_max REAL, day INTEGER, calendar_id INTEGER REFERENCES calendar(rowid))
+{
 	std::vector<sCondition> ret;
 	int rc;
 
@@ -243,6 +302,22 @@ static int selectGraphData(void *param, int ac, char **av, char **column)
 	return 0;
 }
 
+sCondition DataBase::getCondition(int id)
+{
+	std::stringstream ss;
+	std::vector<sCondition> conds;
+	sCondition ret;
+	int rc;
+
+	ss << "SELECT rowid,description,domoticz_device_type,temperature_min,temperature_max,day,calendar_id FROM condition WHERE rowid=" << id;
+	rc = sqlite3_exec(db, ss.str().c_str(), selectCondition, &conds, nullptr);
+	if (rc != SQLITE_OK)
+		std::cerr << "getCondition()-SQL error graph" << std::endl;
+	else if (conds.size() == 1)
+		ret = conds[0];
+	return ret;
+}
+
 sGraph DataBase::getGraph(int id)
 {
 	std::stringstream ss;
@@ -263,6 +338,8 @@ sGraph DataBase::getGraph(int id)
 		if (rc != SQLITE_OK)
 			std::cerr << "getGraph()-SQL error graph_data" << std::endl;
 	}
+	else
+		std::cerr << "getGraph()-no data..." << std::endl;
 	return ret;
 }
 

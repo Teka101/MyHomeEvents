@@ -1,76 +1,217 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
 <head>
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <link rel="stylesheet" href="css/bootstrap.min.css">
  <style type="text/css">
-body {
-	font-family: Arial, Verdana, sans-serif;
-	font-size: 0.8em;
+body.dragging, body.dragging * {
+  cursor: move !important;
+}
+
+.dragged {
+  position: absolute;
+  opacity: 0.5;
+  z-index: 2000;
+}
+
+ol.graphs li.placeholder {
+  position: relative;
+  /** More li styles **/
+}
+ol.graphs li.placeholder:before {
+  position: absolute;
+  /** Define arrowhead **/
 }
  </style>
  <script src="js/jquery.min.js"></script>
- <script src="js/highcharts.js"></script>
- <script src="js/highcharts-more.js"></script>
- <script src="js/draggable-points.js"></script>
+ <script src="js/jquery-sortable-min.js"></script>
 </head>
-<body>
- <div id="container" style="height: 400px"></div>
- <div id="drop"></div>
+<body class="container">
+ <div class="row text-center">
+  <h1>Conditions</h1>
+  <div class="col-md-8 col-md-offset-4 text-left">
+   <ul class="conds">
+     <li>First</li>
+     <li>Second</li>
+     <li>Third</li>
+   </ul>
+  </div>
+ </div>
+ <div class="row text-center">
+  <button type="button" class="btn btn-primary" onClick="addCond()">Add</button>
+ </div>
+ <br/><br/>
+ <div class="row text-center">
+  <h1>Graphics</h1>
+  <div class="col-md-8 col-md-offset-4 text-left">
+   <ol class="graphs">
+     <li>First</li>
+     <li>Second</li>
+     <li>Third</li>
+   </ol>
+  </div>
+ </div>
+ <div class="row text-center">
+  <button type="button" class="btn btn-default" onClick="updateGraphs()">Update</button>
+  <button type="button" class="btn btn-primary" onClick="addGraph()">Add</button>
+ </div>
  <script>
-//http://www.highcharts.com/docs/chart-concepts/axes
-var chart = new Highcharts.Chart({
-	chart: {
-		renderTo: 'container',
-		animation: false
-		},
-	title: {
-			text: 'Heating control'
-		},
-	xAxis: {
-		categories: [ '00:00', '00:30' ]
-	},
-	yAxis: {
-		title: {
-			text: 'Temperature'
-		},
-		min: 0,
-		max: 30
-	},
-	plotOptions: {
-		series: {
-			cursor: 'ns-resize',
-			point: {
-				events: {
-					drop: function () {
-						var msg = 'In <b>' + this.series.name + '</b> ';
+$(document).ready(function() {
+	reloadConds();
+	reloadGraphs();
+});
 
-						for (var k in this.series.data)
-						{
-							var d = this.series.data[k];
+function reloadConds()
+{
+	$.ajax({
+			type: 'GET',
+			url:  '/conditions',
+			dataType: 'json',
+			success: function(json)
+			{
+				$('ul.conds').empty();
+				for (var key in json.conditions)
+				{
+					var data = json.conditions[key];
+					var html = '<form class="form-inline">';
 
-							msg += d.y + ', ';
-						}
-						$('#drop').html(msg);
-					}
+					html += ' <div class="form-group">';
+					html += '  <div class="input-group">';
+					html += '   <div class="input-group-addon">Desc</div>';
+					html += '   <input type="text" name="desc" class="form-control" placeholder="Description" value="' + data.description + '" readonly>';
+					html += '  </div>';
+					html += ' </div>';
+					html += '&nbsp;&nbsp;';
+					html += '<a href="editCond.html?id=' + data.id + '"><span class="glyphicon glyphicon-pencil"></span></a>';
+					html += '</form>';
+					$('ul.conds').append('<li id="' + data.id + '">' + html + '</li>');					
 				}
 			},
-			stickyTracking: false
+			error: function(e)
+			{
+				alert('Communication error: ' + e.message);
+			}
+		});
+}
+
+function addCond()
+{
+	var condDesc = window.prompt('Give a description for the new condition','My description');
+
+	if (condDesc == null)
+		return;
+	condDesc = condDesc.trim();
+	if (condDesc.length == 0)
+		return;
+	$.ajax({
+			type: 'POST',
+			url:  '/condition/',
+			data: JSON.stringify({description: condDesc}),
+			dataType: 'json',
+			success: function(json)
+			{
+				reloadConds();
 			},
-		column: {
-			stacking: 'normal'
-		}
-	},
-	tooltip: {
-		yDecimals: 1
-	},
-	series: [{
-		name: 'Chauffage',
-		data: [0, 10.5, 11, 15.2, 21.0, 17.0, 19.6, 2.5, 10.4],
-		draggableY: true,
-		dragMinY: 0,
-		dragMaxY: 30,
-		roundY: 10
-	}]
-});
+			error: function(e)
+			{
+				alert('Communication error: ' + e.message);
+			}
+		});
+}
+
+function reloadGraphs()
+{
+	$.ajax({
+			type: 'GET',
+			url:  '/graphs',
+			dataType: 'json',
+			success: function(json)
+			{
+				$('ol.graphs').empty();
+				for (var key in json.graphs)
+				{
+					var data = json.graphs[key];
+					var html = '<form class="form-inline">';
+
+					html += ' <div class="form-group">';
+					html += '  <div class="input-group">';
+					html += '   <div class="input-group-addon">Desc</div>';
+					html += '   <input type="text" name="desc" class="form-control" placeholder="Description" value="' + data.description + '">';
+					html += '  </div>';
+					html += ' </div>';
+					html += ' <div class="form-group">';
+					html += '  <div class="input-group">';
+					html += '   <div class="input-group-addon">Cond</div>';
+					html += '   <input type="text" name="condid" style="width: 40px" class="form-control" placeholder="Condition id" value="' + data.conditionId + '">';
+					html += '  </div>';
+					html += ' </div>';
+					html += '&nbsp;&nbsp;';
+					html += '<a href="editGraph.html?id=' + data.id + '"><span class="glyphicon glyphicon-pencil"></span></a>';
+					html += '</form>';
+					$('ol.graphs').append('<li id="' + data.id + '">' + html + '</li>');
+				}
+				$('ol.graphs').sortable();
+			},
+			error: function(e)
+			{
+				alert('Communication error: ' + e.message);
+			}
+		});
+}
+
+function updateGraphs()
+{
+	var graphs = [];
+
+	$('ol.graphs').children('li').each(function(idx)
+		{
+			graphs.push({
+					id: $(this).attr('id'),
+					position: idx,
+					description: $(this).find('input[name="desc"]').val(),
+					conditionId: $(this).find('input[name="condid"]').val()
+				});
+		});
+	$.ajax({
+			type: 'POST',
+			url:  '/graphs',
+			data: JSON.stringify({graphs: graphs }),
+			dataType: 'json',
+			success: function(json)
+			{
+				reloadGraphs();
+			},
+			error: function(e)
+			{
+				alert('Communication error: ' + e.message);
+			}
+		});
+}
+
+function addGraph()
+{
+	var graphDesc = window.prompt('Give a description for the new graph','My description');
+
+	if (graphDesc == null)
+		return;
+	graphDesc = graphDesc.trim();
+	if (graphDesc.length == 0)
+		return;
+	$.ajax({
+			type: 'POST',
+			url:  '/graph/',
+			data: JSON.stringify({description: graphDesc}),
+			dataType: 'json',
+			success: function(json)
+			{
+				reloadGraphs();
+			},
+			error: function(e)
+			{
+				alert('Communication error: ' + e.message);
+			}
+		});
+}
  </script>
 </body>
 </html>

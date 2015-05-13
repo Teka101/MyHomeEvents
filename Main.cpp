@@ -4,10 +4,9 @@
 #include <string>
 
 #include <boost/program_options.hpp>
-#include "DataBase.h"
+#include "Brain.h"
 #include "DeviceDHT22.h"
 #include "Domoticz.h"
-#include "WebServer.h"
 
 class TestUpdate
 {
@@ -51,25 +50,24 @@ int main(int ac, char **av)
 	boost::program_options::notify(vm);
 
 	//
+	Brain *brain = new Brain(webPort);
 	TestUpdate *tu = new TestUpdate();
 	Domoticz *d = new Domoticz(domoURL, domoAuth, domoPlan, domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater);
 	//DeviceDHT22 *ddht22 = new DeviceDHT22(d, dht22Cmd);
-	DataBase *db = new DataBase();
-	WebServer *web = new WebServer(webPort, db);
 
 	d->listenerDHT22.connect(boost::bind(&TestUpdate::hello, tu, _1));
 	d->listenerDHT22.connect(&helloMe);
 
-	db->getGraphs();
+	brain->doMe(22, 10);
+	//db->getGraphs();
 	//d->setValuesDHT22(0, 1, 2);
 
 	std::cout << "Press ENTER to quit..." << std::endl;
 	getchar();
 
-	delete web;
-	//FIXME bugged delete ddht22;
+	//FIXME bugged delete dht22;
 	delete d;
 	delete tu;
-	delete db;
+	delete brain;
 	return 0;
 }

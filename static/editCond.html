@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <link rel="stylesheet" href="css/bootstrap.min.css">
+ <script src="js/jquery.min.js"></script>
+</head>
+<body class="container" style="width: 100%">
+ <div class="row">
+  <div class="col-md-2 col-md-offset-4">
+   <form>
+    <div class="form-group">
+      <label for="inputDesc">Description</label>
+      <input type="text" name="desc" class="form-control" id="inputDesc" placeholder="Enter description">
+    </div>
+    <div class="form-group">
+      <label for="inputDeviceType">Domoticz device type</label>
+      <select name="deviceType" class="form-control" id="inputDeviceType">
+       <option value="-1">None</option>
+       <option value="0">Temperature in</option>
+       <option value="1">Temperature out</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="inputTempMin">Temperature min</label>
+      <input type="number" name="tempMin" class="form-control" id="inputTempMin" placeholder="Enter temperature min">
+    </div>
+    <div class="form-group">
+      <label for="inputTempMax">Temperature max</label>
+      <input type="number" name="tempMax" class="form-control" id="inputTempMax" placeholder="Enter temperature max">
+    </div>
+    <div class="checkbox">
+      <label><input type="checkbox" name="dayMon">Monday</label>
+      <label><input type="checkbox" name="dayTue">Tuesday</label>
+      <label><input type="checkbox" name="dayWed">Wednesday</label>
+      <label><input type="checkbox" name="dayThu">Thurday</label>
+      <label><input type="checkbox" name="dayFri">Friday</label>
+      <label><input type="checkbox" name="daySat">Saturday</label>
+      <label><input type="checkbox" name="daySun">Sunday</label>
+    </div>
+    <div class="form-group">
+      <label for="inputCal">Calendar id</label>
+      <input type="number" name="calId" class="form-control" id="inputCal" placeholder="Enter calendar id">
+    </div>
+    <button type="button" class="btn btn-primary" onClick="saveCondition()">Save</button>
+   </form>
+  </div>
+ </div>
+ <script>
+$(document).ready(function() {
+	$.urlParam = function(name) {
+			var results = new RegExp('[\?&amp;]' + name + '=([^&amp;#]*)').exec(window.location.href);
+			return (results != null && results[1]) || null;
+		};
+
+	var condId = $.urlParam('id');
+
+	if (condId != null)
+		$.ajax({
+				type: 'GET',
+				url:  '/condition/' + condId,
+				dataType: 'json',
+				success: function(json)
+				{
+					console.dir(json);
+					$('input[name="desc"]').val(json.description);
+					$('select[name="deviceType"]').val(json.domoticzDeviceType);
+					$('input[name="tempMin"]').val(json.temperatureMin);
+					$('input[name="tempMax"]').val(json.temperatureMax);
+					$('input[name="dayMon"]').prop('checked', (parseInt(json.day) & 64) == 64);
+					$('input[name="dayTue"]').prop('checked', (parseInt(json.day) & 32) == 32);
+					$('input[name="dayWed"]').prop('checked', (parseInt(json.day) & 16) == 16);
+					$('input[name="dayThu"]').prop('checked', (parseInt(json.day) & 8) == 8);
+					$('input[name="dayFri"]').prop('checked', (parseInt(json.day) & 4) == 4);
+					$('input[name="daySat"]').prop('checked', (parseInt(json.day) & 2) == 2);
+					$('input[name="daySun"]').prop('checked', (parseInt(json.day) & 1) == 1);
+					$('input[name="calId"]').val(json.calendarId);
+				},
+				error: function(e)
+				{
+					alert('Communication error: ' + e.message);
+				}
+			});
+	else
+		alert('No condition id provided !!!');
+});
+
+function saveCondition()
+{
+	var condId = $.urlParam('id');
+	var cond = {};
+
+	cond.id = condId;
+	cond.description = $('input[name="desc"]').val();
+	cond.deviceType = $('select[name="deviceType"]').val();
+	cond.temperatureMin = $('input[name="tempMin"]').val();
+	cond.temperatureMax = $('input[name="tempMax"]').val();
+	cond.day =
+		($('input[name="dayMon"]').prop('checked') ? 64 : 0)
+		| ($('input[name="dayTue"]').prop('checked') ? 32 : 0)
+		| ($('input[name="dayWed"]').prop('checked') ? 16 : 0)
+		| ($('input[name="dayThu"]').prop('checked') ? 8 : 0)
+		| ($('input[name="dayFri"]').prop('checked') ? 4 : 0)
+		| ($('input[name="daySat"]').prop('checked') ? 2 : 0)
+		| ($('input[name="daySun"]').prop('checked') ? 1 : 0)
+		;
+	cond.calendarId = $('input[name="calId"]').val();
+	$.ajax({
+			type: 'POST',
+			url:  '/condition/' + cond.id,
+			data: JSON.stringify(cond),
+			dataType: 'json',
+			success: function(json)
+			{
+				alert('Data saved !');
+			},
+			error: function(e)
+			{
+				alert('Communication error: ' + e.message);
+			}
+		});
+}
+ </script>
+</body>
+</html>

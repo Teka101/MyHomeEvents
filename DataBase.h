@@ -43,11 +43,14 @@ public:
 	DataBase();
 	~DataBase();
 
+	bool addCondition(std::string &description);
 	bool addGraph(std::string &description);
+	bool updateCondition(sCondition &cond);
 	bool updateGraph(sGraph &graph);
 	bool updateGraphData(sGraph &graph);
 	std::vector<sCondition> getConditions();
 	std::vector<sGraph> getGraphs();
+	sCondition getCondition(int id);
 	sGraph getGraph(int id);
 };
 

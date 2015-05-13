@@ -47,6 +47,85 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
 	}
+	else if (boost::starts_with(url, "/condition/"))
+	{
+		if (boost::equals(method, "POST") && boost::equals(url, "/condition/"))
+		{
+			if (postData == nullptr)
+			{
+				postData = new std::stringstream();
+				*con_cls = postData;
+				return MHD_YES;
+			}
+			if (*upload_data_size > 0)
+			{
+				*postData << upload_data;
+				*upload_data_size = 0;
+				return MHD_YES;
+			}
+			boost::property_tree::ptree pTree;
+			std::string description;
+
+			boost::property_tree::read_json(*postData, pTree);
+			description = pTree.get<std::string>("description");
+			response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
+			if (!ws->getDataBase()->addCondition(description))
+				httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
+			delete postData;
+		}
+		else if (boost::equals(method, "POST") && boost::starts_with(url, "/condition/"))
+		{
+			if (postData == nullptr)
+			{
+				postData = new std::stringstream();
+				*con_cls = postData;
+				return MHD_YES;
+			}
+			if (*upload_data_size > 0)
+			{
+				*postData << upload_data;
+				*upload_data_size = 0;
+				return MHD_YES;
+			}
+			boost::property_tree::ptree pTree;
+			std::string description;
+			sCondition cond;
+
+			boost::property_tree::read_json(*postData, pTree);
+			readFromPTree(pTree, cond);
+			response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
+			if (!ws->getDataBase()->updateCondition(cond))
+				httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
+			delete postData;
+		}
+		else
+		{
+			const char *idSTR = &url[11];
+
+			if (*idSTR != '\0')
+			{
+				boost::property_tree::ptree pt;
+				boost::property_tree::ptree ptChildren;
+				std::ostringstream ss;
+				sCondition cond;
+				int id = boost::lexical_cast<int>(idSTR);
+
+				cond = ws->getDataBase()->getCondition(id);
+				writeToPTree(pt, cond);
+				/*for (sGraphData data : graph.data)
+				{
+					boost::property_tree::ptree ptChild;
+
+					writeToPTree(ptChild, data);
+					ptChildren.push_back(std::make_pair("", ptChild));
+				}
+				pt.add_child("data", ptChildren);*/
+				boost::property_tree::write_json(ss, pt, false);
+				response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
+				MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
+			}
+		}
+	}
 	else if (boost::equals(url, "/graphs"))
 	{
 		if (boost::equals(method, "POST"))
@@ -154,21 +233,12 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 			if (*idSTR != '\0')
 			{
 				boost::property_tree::ptree pt;
-				boost::property_tree::ptree ptChildren;
 				std::ostringstream ss;
 				sGraph graph;
 				int id = boost::lexical_cast<int>(idSTR);
 
 				graph = ws->getDataBase()->getGraph(id);
-				writeToPTree(pt, graph);
-				for (sGraphData data : graph.data)
-				{
-					boost::property_tree::ptree ptChild;
-
-					writeToPTree(ptChild, data);
-					ptChildren.push_back(std::make_pair("", ptChild));
-				}
-				pt.add_child("data", ptChildren);
+				writeToPTree(pt, graph, true);
 				boost::property_tree::write_json(ss, pt, false);
 				response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
 				MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");

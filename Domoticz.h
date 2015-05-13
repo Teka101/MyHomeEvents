@@ -8,9 +8,10 @@
 
 enum eDomoticzDeviceType
 {
-	temperatureIn,
-	temperatureOut,
-	heater
+	none = -1,
+	temperatureIn = 0,
+	temperatureOut = 1,
+	heater = 2
 };
 
 struct sDomoticzDevice

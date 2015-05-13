@@ -150,7 +150,7 @@
                             y: draggableY ? newY : dragPoint.y
                         });
                     }
-                    dragPoint.firePointEvent('drop');
+                    dragPoint.firePointEvent('drop', dragPoint);
                 }
                 dragPoint = dragX = dragY = undefined;
             }

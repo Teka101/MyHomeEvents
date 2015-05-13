@@ -2,6 +2,17 @@
 #include "DataBase.h"
 #include "DataBaseHelpers.h"
 
+void readFromPTree(boost::property_tree::ptree &pTree, sCondition &cond)
+{
+	cond.id = pTree.get<int>("id");
+	cond.description = pTree.get<std::string>("description");
+	cond.domoticzDeviceType = static_cast<eDomoticzDeviceType>(pTree.get<int>("domoticzDeviceType", -1));
+	cond.temperatureMin = pTree.get<int>("temperatureMin", -1);
+	cond.temperatureMax = pTree.get<int>("temperatureMax", -1);
+	cond.day = pTree.get<int>("day", -1);
+	cond.calendarId = pTree.get<int>("calendarId", -1);
+}
+
 void readFromPTree(boost::property_tree::ptree &pTree, sGraph &graph, bool readData)
 {
 	graph.id = pTree.get<int>("id");
@@ -30,16 +41,24 @@ void writeToPTree(boost::property_tree::ptree &pTree, sCondition &cond)
 	pTree.put("calendarId", cond.calendarId);
 }
 
-void writeToPTree(boost::property_tree::ptree &pTree, sGraph &graph)
+void writeToPTree(boost::property_tree::ptree &pTree, sGraph &graph, bool writeData)
 {
 	pTree.put("id", graph.id);
 	pTree.put("position", graph.position);
 	pTree.put("description", graph.description);
 	pTree.put("conditionId", graph.conditionId);
-}
+	if (writeData)
+	{
+		boost::property_tree::ptree ptChildren;
 
-void writeToPTree(boost::property_tree::ptree &pTree, sGraphData &data)
-{
-	pTree.put("time", data.time);
-	pTree.put("value", data.value);
+		for (sGraphData data : graph.data)
+		{
+			boost::property_tree::ptree ptChild;
+
+			ptChild.put("time", data.time);
+			ptChild.put("value", data.value);
+			ptChildren.push_back(std::make_pair("", ptChild));
+		}
+		pTree.add_child("data", ptChildren);
+	}
 }
