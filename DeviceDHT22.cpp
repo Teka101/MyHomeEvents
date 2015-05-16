@@ -46,7 +46,7 @@ void DeviceDHT22::launch()
 	FILE *fh;
 
 	fh = popen(this->command.c_str(), "r");
-	if (fh == nullptr)
+	if (fh == NULL)
 		std::cerr << "popen() failed" << std::endl;
 	else
 	{
@@ -55,7 +55,7 @@ void DeviceDHT22::launch()
 		char line[1024];
 		int execReturn;
 
-		while (fgets(line, sizeof(line), fh) != nullptr)
+		while (fgets(line, sizeof(line), fh) != NULL)
 			if (boost::regex_match(line, what, expression))
 			{
 				float humidity = boost::lexical_cast<float>(what[1]);
@@ -74,9 +74,9 @@ void DeviceDHT22::launch()
 void DeviceDHT22::updateData(float temperature, float humidity)
 {
 	sDomoticzDevice *dev = domo->getDeviceDTH22();
-	time_t now = time(nullptr);
+	time_t now = time(NULL);
 
-	if (dev != nullptr)
+	if (dev != NULL)
 	{
 		time_t diffDate = std::abs(now - dev->lastUpdate);
 		float diffTemperature = std::abs(temperature - dev->temperature);

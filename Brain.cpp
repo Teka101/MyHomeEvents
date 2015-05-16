@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/foreach.hpp>
 #include "Brain.h"
 
 Brain::Brain(int webPort)
@@ -14,9 +15,9 @@ Brain::Brain(int webPort)
 
 Brain::~Brain()
 {
-	if (this->db != nullptr)
+	if (this->db != NULL)
 		delete this->db;
-	if (this->web != nullptr)
+	if (this->web != NULL)
 		delete this->web;
 }
 
@@ -25,14 +26,14 @@ void Brain::doMe(float tempIn, float tempOut)
 	std::vector<sCondition> conds = this->db->getConditions();
 	std::vector<sGraph> graphs = this->db->getGraphs();
 	std::map<int,sCondition> condById;
-	sGraph *applyMe = nullptr;
+	sGraph *applyMe = NULL;
 	boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 	int weekDayStartMonday = ((int)now.date().day_of_week() - 1 + 7) % 7;
 	int dayMask = pow(2, weekDayStartMonday);
 
-	for (sCondition cond : conds)
+	BOOST_FOREACH(sCondition cond, conds)
 		condById[cond.id] = cond;
-	for (sGraph graph : graphs)
+	BOOST_FOREACH(sGraph graph, graphs)
 		if (graph.conditionId == -1)
 			applyMe = &graph;
 		else if (condById.find(graph.conditionId) != condById.end())
@@ -52,13 +53,13 @@ void Brain::doMe(float tempIn, float tempOut)
 				)
 				applyMe = &graph;
 		}
-	if (applyMe != nullptr)
+	if (applyMe != NULL)
 	{
 		sGraph fullGraph = this->db->getGraph(applyMe->id);
 		long currentMS = now.time_of_day().hours() * 100L + now.time_of_day().minutes();
 		float applyTemperature = NAN;
 
-		for (sGraphData data : fullGraph.data)
+		BOOST_FOREACH(sGraphData data, fullGraph.data)
 			if (currentMS >= data.time)
 				applyTemperature = data.value;
 		if (isnan(applyTemperature))

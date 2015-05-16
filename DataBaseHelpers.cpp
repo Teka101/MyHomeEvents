@@ -1,6 +1,9 @@
+#include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include "DataBase.h"
 #include "DataBaseHelpers.h"
+
+typedef std::pair<const std::string, boost::property_tree::ptree> ptreePair;
 
 void readFromPTree(boost::property_tree::ptree &pTree, sCondition &cond)
 {
@@ -20,7 +23,8 @@ void readFromPTree(boost::property_tree::ptree &pTree, sGraph &graph, bool readD
 	graph.description = pTree.get<std::string>("description");
 	graph.conditionId = pTree.get<int>("conditionId", -1);
 	if (readData)
-		for (auto it : pTree.get_child("data"))
+	{
+		BOOST_FOREACH(ptreePair it, pTree.get_child("data"))
 		{
 			sGraphData data;
 
@@ -28,6 +32,7 @@ void readFromPTree(boost::property_tree::ptree &pTree, sGraph &graph, bool readD
 			data.value = it.second.get<float>("value");
 			graph.data.push_back(data);
 		}
+	}
 }
 
 void writeToPTree(boost::property_tree::ptree &pTree, sCondition &cond)
@@ -51,7 +56,7 @@ void writeToPTree(boost::property_tree::ptree &pTree, sGraph &graph, bool writeD
 	{
 		boost::property_tree::ptree ptChildren;
 
-		for (sGraphData data : graph.data)
+		BOOST_FOREACH(sGraphData data, graph.data)
 		{
 			boost::property_tree::ptree ptChild;
 

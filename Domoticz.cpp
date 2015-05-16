@@ -3,12 +3,14 @@
 #include <time.h>
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <curl/curl.h>
 #include "Domoticz.h"
 
 #define DOMOTICZ_REFRESH_EVERY 300
+typedef std::pair<const std::string, boost::property_tree::ptree> ptreePair;
 
 static size_t writeMemoryCallback(void *ptr, size_t size, size_t nmemb, void *data)
 {
@@ -35,7 +37,7 @@ void Domoticz::removeDevices()
 #ifdef DODEBUG
 	std::cout << "Domoticz::removeDevices() - clean devices []:" << this->devices.size() << std::endl;
 #endif
-	for (sDomoticzDevice *d : this->devices)
+	BOOST_FOREACH(sDomoticzDevice *d, this->devices)
 		delete d;
 	devices.erase(devices.begin(), devices.end());
 }
@@ -43,7 +45,7 @@ void Domoticz::removeDevices()
 
 void Domoticz::refreshData()
 {
-	time_t currentTime = time(nullptr);
+	time_t currentTime = time(NULL);
 	time_t diff = currentTime - lastUpdateDevices;
 	CURL *curl;
 
@@ -52,7 +54,7 @@ void Domoticz::refreshData()
 	lastUpdateDevices = currentTime;
 
 	curl = curl_easy_init();
-	if (curl != nullptr)
+	if (curl != NULL)
 	{
 		std::stringstream ss, ssUrl;
 		CURLcode res;
@@ -77,12 +79,12 @@ void Domoticz::refreshData()
 
 			boost::property_tree::read_json(ss, pTree);
 			this->removeDevices();
-			for (auto it : pTree.get_child("result"))
+			BOOST_FOREACH(ptreePair it, pTree.get_child("result"))
 				if (it.second.size() > 0)
 				{
 					sDomoticzDevice *device = new sDomoticzDevice();
 
-					for (auto itChild : it.second)
+					BOOST_FOREACH(ptreePair itChild, it.second)
 					{
 						if (itChild.first == "idx")
 							device->idx = itChild.second.get_value<int>();
@@ -96,7 +98,7 @@ void Domoticz::refreshData()
 							memset(&tm, 0, sizeof(tm));
 							tm.tm_zone = *tzname;
 							tm.tm_isdst = daylight;
-							if (strptime(date.c_str(), "%Y-%m-%d %H:%M:%S", &tm) != nullptr)
+							if (strptime(date.c_str(), "%Y-%m-%d %H:%M:%S", &tm) != NULL)
 								device->lastUpdate = mktime(&tm);
 						}
 						else if (itChild.first == "Status")
@@ -124,10 +126,10 @@ void Domoticz::refreshData()
 sDomoticzDevice *Domoticz::getDeviceDTH22()
 {
 	refreshData();
-	for (sDomoticzDevice *d : this->devices)
+	BOOST_FOREACH(sDomoticzDevice *d, this->devices)
 		if (d->idx == this->idxDHT22)
 			return d;
-	return nullptr;
+	return NULL;
 }
 
 bool Domoticz::setValuesDHT22(time_t timestamp, float temperature, float humidity)
@@ -137,7 +139,7 @@ bool Domoticz::setValuesDHT22(time_t timestamp, float temperature, float humidit
 
 	ssURL << this->serverUrl << "json.htm?type=command&param=udevice&idx=" << this->idxDHT22 << "&nvalue=0&svalue=" << temperature << ';' << humidity << ";2";
 	curl = curl_easy_init();
-	if (curl != nullptr)
+	if (curl != NULL)
 	{
 		CURLcode res;
 
@@ -167,7 +169,7 @@ bool Domoticz::setValuesDHT22(time_t timestamp, float temperature, float humidit
 				{
 					sDomoticzDevice *dev = this->getDeviceDTH22();
 
-					if (dev != nullptr)
+					if (dev != NULL)
 					{
 						dev->lastUpdate = timestamp;
 						dev->humidity = humidity;
@@ -188,7 +190,7 @@ bool Domoticz::setStatusHeater(bool activate)
 
 	ssURL << this->serverUrl << "json.htm?type=command&param=switchlight&idx=" << this->idxHeater << "&switchcmd=" << (activate ? "On" : "Off") << "&level=0";
 	curl = curl_easy_init();
-	if (curl != nullptr)
+	if (curl != NULL)
 	{
 		CURLcode res;
 

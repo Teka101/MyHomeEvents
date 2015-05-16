@@ -1,10 +1,11 @@
 #include <iostream>
 
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include "DataBase.h"
 
-DataBase::DataBase() : db(nullptr)
+DataBase::DataBase() : db(NULL)
 {
 	const char *fileName = "test.db";
 	bool isExistingDB;
@@ -25,7 +26,7 @@ DataBase::DataBase() : db(nullptr)
 
 DataBase::~DataBase()
 {
-	if (db != nullptr)
+	if (db != NULL)
 		sqlite3_close(db);
 }
 
@@ -42,10 +43,10 @@ void DataBase::createTables()
 
 	for (int i = 0; i < nbElements; i++)
 	{
-		char *zErrMsg = nullptr;
+		char *zErrMsg = NULL;
 		int rc;
 
-		rc = sqlite3_exec(db, sqls[i], nullptr, nullptr, &zErrMsg);
+		rc = sqlite3_exec(db, sqls[i], NULL, NULL, &zErrMsg);
 		if (rc != SQLITE_OK)
 		{
 			std::cerr << "SQL error: " << zErrMsg << " ### " << sqls[i] << std::endl;
@@ -70,10 +71,10 @@ void DataBase::insertDefaultData()
 
 	for (int i = 0; i < nbElements; i++)
 	{
-		char *zErrMsg = nullptr;
+		char *zErrMsg = NULL;
 		int rc;
 
-		rc = sqlite3_exec(db, sqls[i], nullptr, nullptr, &zErrMsg);
+		rc = sqlite3_exec(db, sqls[i], NULL, NULL, &zErrMsg);
 		if (rc != SQLITE_OK)
 		{
 			std::cerr << "SQL error: " << zErrMsg << " ### " << sqls[i] << std::endl;
@@ -86,14 +87,14 @@ void DataBase::insertDefaultData()
 
 bool DataBase::addCondition(std::string &description)
 {
-	sqlite3_stmt *stmt = nullptr;
+	sqlite3_stmt *stmt = NULL;
 	const char *sql = "INSERT INTO condition(description) VALUES(?)";
 	int rc;
 
-	rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, nullptr);
+	rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, NULL);
 	if (rc == SQLITE_OK)
 	{
-		sqlite3_bind_text(stmt, 1, description.c_str(), description.length(), nullptr);
+		sqlite3_bind_text(stmt, 1, description.c_str(), description.length(), NULL);
 		rc = sqlite3_step(stmt);
 		sqlite3_finalize(stmt);
 		return (rc == SQLITE_DONE);
@@ -105,14 +106,14 @@ bool DataBase::addCondition(std::string &description)
 
 bool DataBase::addGraph(std::string &description)
 {
-	sqlite3_stmt *stmt = nullptr;
+	sqlite3_stmt *stmt = NULL;
 	const char *sql = "INSERT INTO graph(description,condition_id) VALUES(?,NULL)";
 	int rc;
 
-	rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, nullptr);
+	rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, NULL);
 	if (rc == SQLITE_OK)
 	{
-		sqlite3_bind_text(stmt, 1, description.c_str(), description.length(), nullptr);
+		sqlite3_bind_text(stmt, 1, description.c_str(), description.length(), NULL);
 		rc = sqlite3_step(stmt);
 		sqlite3_finalize(stmt);
 		return (rc == SQLITE_DONE);
@@ -124,14 +125,14 @@ bool DataBase::addGraph(std::string &description)
 
 bool DataBase::updateCondition(sCondition &cond)
 {
-	sqlite3_stmt *stmt = nullptr;
+	sqlite3_stmt *stmt = NULL;
 	const char *sql = "UPDATE condition SET description=?,domoticz_device_type=?,temperature_min=?,temperature_max=?,day=?,calendar_id=? WHERE rowid=?";
 	int rc;
 
-	rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, nullptr);
+	rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, NULL);
 	if (rc == SQLITE_OK)
 	{
-		sqlite3_bind_text(stmt, 1, cond.description.c_str(), cond.description.length(), nullptr);
+		sqlite3_bind_text(stmt, 1, cond.description.c_str(), cond.description.length(), NULL);
 		if (cond.domoticzDeviceType != -1)
 			sqlite3_bind_int(stmt, 2, cond.domoticzDeviceType);
 		else
@@ -164,15 +165,15 @@ bool DataBase::updateCondition(sCondition &cond)
 
 bool DataBase::updateGraph(sGraph &graph)
 {
-	sqlite3_stmt *stmt = nullptr;
+	sqlite3_stmt *stmt = NULL;
 	const char *sql = "UPDATE graph SET position=?,description=?,condition_id=? WHERE rowid=?";
 	int rc;
 
-	rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, nullptr);
+	rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, NULL);
 	if (rc == SQLITE_OK)
 	{
 		sqlite3_bind_int(stmt, 1, graph.position);
-		sqlite3_bind_text(stmt, 2, graph.description.c_str(), graph.description.length(), nullptr);
+		sqlite3_bind_text(stmt, 2, graph.description.c_str(), graph.description.length(), NULL);
 		if (graph.conditionId != -1)
 			sqlite3_bind_int(stmt, 3, graph.conditionId);
 		else
@@ -189,12 +190,12 @@ bool DataBase::updateGraph(sGraph &graph)
 
 bool DataBase::updateGraphData(sGraph &graph)
 {
-	sqlite3_stmt *stmt = nullptr;
+	sqlite3_stmt *stmt = NULL;
 	const char *sqlDelete = "DELETE FROM graph_data WHERE graph_id=?";
 	const char *sql = "INSERT INTO graph_data(graph_id, time, value) VALUES(?,?,?)";
 	int rc;
 
-	rc = sqlite3_prepare(db, sqlDelete, strlen(sqlDelete), &stmt, nullptr);
+	rc = sqlite3_prepare(db, sqlDelete, strlen(sqlDelete), &stmt, NULL);
 	if (rc == SQLITE_OK)
 	{
 		sqlite3_bind_int(stmt, 1, graph.id);
@@ -202,10 +203,10 @@ bool DataBase::updateGraphData(sGraph &graph)
 		sqlite3_finalize(stmt);
 		if (rc == SQLITE_DONE)
 		{
-			rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, nullptr);
+			rc = sqlite3_prepare(db, sql, strlen(sql), &stmt, NULL);
 			if (rc == SQLITE_OK)
 			{
-				for (sGraphData data : graph.data)
+				BOOST_FOREACH(sGraphData data, graph.data)
 				{
 					sqlite3_bind_int(stmt, 1, graph.id);
 					sqlite3_bind_int(stmt, 2, data.time);
@@ -232,11 +233,11 @@ static int selectCondition(void *param, int ac, char **av, char **column)
 
 		cond.id = boost::lexical_cast<int>(av[0]);
 		cond.description = av[1];
-		cond.domoticzDeviceType = static_cast<eDomoticzDeviceType>(av[2] == nullptr ? -1 : boost::lexical_cast<int>(av[2]));
-		cond.temperatureMin = (av[3] == nullptr ? -1 : boost::lexical_cast<float>(av[3]));
-		cond.temperatureMax = (av[4] == nullptr ? -1 : boost::lexical_cast<float>(av[4]));
-		cond.day = (av[5] == nullptr ? -1 : boost::lexical_cast<int>(av[5]));
-		cond.calendarId = (av[6] == nullptr ? -1 : boost::lexical_cast<int>(av[6]));
+		cond.domoticzDeviceType = static_cast<eDomoticzDeviceType>(av[2] == NULL ? -1 : boost::lexical_cast<int>(av[2]));
+		cond.temperatureMin = (av[3] == NULL ? -1 : boost::lexical_cast<float>(av[3]));
+		cond.temperatureMax = (av[4] == NULL ? -1 : boost::lexical_cast<float>(av[4]));
+		cond.day = (av[5] == NULL ? -1 : boost::lexical_cast<int>(av[5]));
+		cond.calendarId = (av[6] == NULL ? -1 : boost::lexical_cast<int>(av[6]));
 		r->push_back(cond);
 	}
 	else
@@ -249,7 +250,7 @@ std::vector<sCondition> DataBase::getConditions()
 	std::vector<sCondition> ret;
 	int rc;
 
-	rc = sqlite3_exec(db, "SELECT rowid,description,domoticz_device_type,temperature_min,temperature_max,day,calendar_id FROM condition ORDER BY rowid", selectCondition, &ret, nullptr);
+	rc = sqlite3_exec(db, "SELECT rowid,description,domoticz_device_type,temperature_min,temperature_max,day,calendar_id FROM condition ORDER BY rowid", selectCondition, &ret, NULL);
 	if (rc != SQLITE_OK)
 		std::cerr << "getGraphs()-SQL error" << std::endl;
 	return ret;
@@ -266,7 +267,7 @@ static int selectGraph(void *param, int ac, char **av, char **column)
 		graph.id = boost::lexical_cast<int>(av[0]);
 		graph.position = boost::lexical_cast<int>(av[1]);
 		graph.description = av[2];
-		graph.conditionId = (av[3] == nullptr ? -1 : boost::lexical_cast<int>(av[3]));
+		graph.conditionId = (av[3] == NULL ? -1 : boost::lexical_cast<int>(av[3]));
 		r->push_back(graph);
 	}
 	else
@@ -279,7 +280,7 @@ std::vector<sGraph> DataBase::getGraphs()
 	std::vector<sGraph> ret;
 	int rc;
 
-	rc = sqlite3_exec(db, "SELECT rowid,position,description,condition_id FROM graph ORDER BY position", selectGraph, &ret, nullptr);
+	rc = sqlite3_exec(db, "SELECT rowid,position,description,condition_id FROM graph ORDER BY position", selectGraph, &ret, NULL);
 	if (rc != SQLITE_OK)
 		std::cerr << "getGraphs()-SQL error" << std::endl;
 	return ret;
@@ -310,7 +311,7 @@ sCondition DataBase::getCondition(int id)
 	int rc;
 
 	ss << "SELECT rowid,description,domoticz_device_type,temperature_min,temperature_max,day,calendar_id FROM condition WHERE rowid=" << id;
-	rc = sqlite3_exec(db, ss.str().c_str(), selectCondition, &conds, nullptr);
+	rc = sqlite3_exec(db, ss.str().c_str(), selectCondition, &conds, NULL);
 	if (rc != SQLITE_OK)
 		std::cerr << "getCondition()-SQL error graph" << std::endl;
 	else if (conds.size() == 1)
@@ -326,7 +327,7 @@ sGraph DataBase::getGraph(int id)
 	int rc;
 
 	ss << "SELECT rowid,position,description,condition_id FROM graph WHERE rowid=" << id;
-	rc = sqlite3_exec(db, ss.str().c_str(), selectGraph, &graphs, nullptr);
+	rc = sqlite3_exec(db, ss.str().c_str(), selectGraph, &graphs, NULL);
 	if (rc != SQLITE_OK)
 		std::cerr << "getGraph()-SQL error graph" << std::endl;
 	else if (graphs.size() == 1)
@@ -334,7 +335,7 @@ sGraph DataBase::getGraph(int id)
 		ret = graphs[0];
 		ss.str(std::string());
 		ss << "SELECT time,value FROM graph_data WHERE graph_id=" << id;
-		rc = sqlite3_exec(db, ss.str().c_str(), selectGraphData, &ret, nullptr);
+		rc = sqlite3_exec(db, ss.str().c_str(), selectGraphData, &ret, NULL);
 		if (rc != SQLITE_OK)
 			std::cerr << "getGraph()-SQL error graph_data" << std::endl;
 	}

@@ -8,11 +8,14 @@
 #include <unistd.h>
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include "DataBaseHelpers.h"
 #include "WebServer.h"
+
+typedef std::pair<const std::string, boost::property_tree::ptree> ptreePair;
 
 static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		const char *url, const char *method, const char *version,
@@ -20,7 +23,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 {
 	std::stringstream *postData = static_cast<std::stringstream*>(*con_cls);
 	WebServer *ws = static_cast<WebServer*>(cls);
-	struct MHD_Response *response = nullptr;
+	struct MHD_Response *response = NULL;
 	int httpCode = MHD_HTTP_OK;
 	int ret;
 
@@ -35,7 +38,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		boost::property_tree::ptree ptChildren;
 		std::ostringstream ss;
 
-		for (sCondition cond : ws->getDataBase()->getConditions())
+		BOOST_FOREACH(sCondition cond, ws->getDataBase()->getConditions())
 		{
 			boost::property_tree::ptree ptChild;
 
@@ -51,7 +54,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	{
 		if (boost::equals(method, "POST") && boost::equals(url, "/condition/"))
 		{
-			if (postData == nullptr)
+			if (postData == NULL)
 			{
 				postData = new std::stringstream();
 				*con_cls = postData;
@@ -75,7 +78,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		}
 		else if (boost::equals(method, "POST") && boost::starts_with(url, "/condition/"))
 		{
-			if (postData == nullptr)
+			if (postData == NULL)
 			{
 				postData = new std::stringstream();
 				*con_cls = postData;
@@ -130,7 +133,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	{
 		if (boost::equals(method, "POST"))
 		{
-			if (postData == nullptr)
+			if (postData == NULL)
 			{
 				postData = new std::stringstream();
 				*con_cls = postData;
@@ -145,7 +148,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 			boost::property_tree::ptree pTree;
 
 			boost::property_tree::read_json(*postData, pTree);
-			for (auto it : pTree.get_child("graphs"))
+			BOOST_FOREACH(ptreePair it, pTree.get_child("graphs"))
 			{
 				sGraph graph;
 
@@ -162,7 +165,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 			boost::property_tree::ptree ptChildren;
 			std::ostringstream ss;
 
-			for (sGraph graph : ws->getDataBase()->getGraphs())
+			BOOST_FOREACH(sGraph graph, ws->getDataBase()->getGraphs())
 			{
 				boost::property_tree::ptree ptChild;
 
@@ -179,7 +182,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	{
 		if (boost::equals(method, "POST") && boost::equals(url, "/graph/"))
 		{
-			if (postData == nullptr)
+			if (postData == NULL)
 			{
 				postData = new std::stringstream();
 				*con_cls = postData;
@@ -203,7 +206,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		}
 		else if (boost::equals(method, "POST") && boost::starts_with(url, "/graph/"))
 		{
-			if (postData == nullptr)
+			if (postData == NULL)
 			{
 				postData = new std::stringstream();
 				*con_cls = postData;
@@ -245,7 +248,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 			}
 		}
 	}
-	if (response == nullptr)
+	if (response == NULL)
 		httpCode = ws->sendNotFound(&response);
 	MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
 	MHD_add_response_header(response, "Age", "0");
@@ -257,12 +260,12 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 WebServer::WebServer(int port, DataBase *dbConnection) : db(dbConnection)
 {
-	daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, nullptr, nullptr, &answer_to_connection, this, MHD_OPTION_END);
+	daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &answer_to_connection, this, MHD_OPTION_END);
 }
 
 WebServer::~WebServer()
 {
-	if (daemon != nullptr)
+	if (daemon != NULL)
 		MHD_stop_daemon(daemon);
 }
 
