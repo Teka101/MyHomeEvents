@@ -14,13 +14,14 @@ private:
 	boost::asio::deadline_timer *timer;
 	boost::thread_group threads;
 	std::string command;
+	int refreshInSeconds;
 
 	void computeNextLaunch();
 	void launch();
 	void updateData(float temperature, float humidity);
 
 public:
-	DeviceDHT22(Domoticz *domoticz, std::string &execCmd);
+	DeviceDHT22(Domoticz *domoticz, std::string &execCmd, int refreshInSeconds);
 	~DeviceDHT22();
 };
 

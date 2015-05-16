@@ -7,9 +7,10 @@
 #include <boost/foreach.hpp>
 #include "Brain.h"
 
-Brain::Brain(int webPort)
+Brain::Brain(int webPort, Domoticz *domoticz)
 {
 	this->db = new DataBase();
+	this->domo = domoticz;
 	this->web = new WebServer(webPort, db);
 }
 
@@ -19,6 +20,12 @@ Brain::~Brain()
 		delete this->db;
 	if (this->web != NULL)
 		delete this->web;
+}
+
+void Brain::update(sDomoticzDevice *dev)
+{
+	std::cout << "YOUHOU ! temp=" << dev->temperature << " hum=" << dev->humidity << std::endl;
+	this->doMe(domo->getDeviceDTH22()->temperature, domo->getDeviceOutdoor()->temperature);
 }
 
 void Brain::doMe(float tempIn, float tempOut)
@@ -31,6 +38,9 @@ void Brain::doMe(float tempIn, float tempOut)
 	int weekDayStartMonday = ((int)now.date().day_of_week() - 1 + 7) % 7;
 	int dayMask = pow(2, weekDayStartMonday);
 
+#ifdef DODEBUG
+	std::cout << "Brain::doMe(" << tempIn << ", " << tempOut << ")" << std::endl;
+#endif
 	BOOST_FOREACH(sCondition cond, conds)
 		condById[cond.id] = cond;
 	BOOST_FOREACH(sGraph graph, graphs)
@@ -41,14 +51,15 @@ void Brain::doMe(float tempIn, float tempOut)
 			sCondition cond = condById[graph.conditionId];
 			float temp = (cond.domoticzDeviceType == temperatureIn ? tempIn : tempOut);
 
+			std::cout << "graph[" << graph.id << "][condition:"  << graph.conditionId << "]";
+			std::cout << "cond.day=" << cond.day << " day.validity=" << ((cond.day & dayMask) == dayMask) << " deviceType=" << cond.domoticzDeviceType << " deviceTypeIsNone=" << (cond.domoticzDeviceType == none) << std::endl;
 			if (
 				(cond.day == -1 || (cond.day & dayMask) == dayMask)
 				&& (cond.domoticzDeviceType == none
-					|| (cond.domoticzDeviceType == temperatureIn && cond.temperatureMin != -1 && cond.temperatureMax == -1 && cond.temperatureMin <= temp)
-					|| (cond.domoticzDeviceType == temperatureIn && cond.temperatureMin == -1 && cond.temperatureMax != -1 && temp <= cond.temperatureMax)
-					|| (cond.domoticzDeviceType == temperatureIn && cond.temperatureMin != -1 && cond.temperatureMax != -1 && cond.temperatureMin <= temp && temp <= cond.temperatureMax)
+					|| (cond.domoticzDeviceType != none && cond.temperatureMin != -1 && cond.temperatureMax == -1 && cond.temperatureMin <= temp)
+					|| (cond.domoticzDeviceType != none && cond.temperatureMin == -1 && cond.temperatureMax != -1 && temp <= cond.temperatureMax)
+					|| (cond.domoticzDeviceType != none && cond.temperatureMin != -1 && cond.temperatureMax != -1 && cond.temperatureMin <= temp && temp <= cond.temperatureMax)
 					)
-				//TODO domoticzDeviceType temperatureMin|temperatureMax
 				//TODO calendarId
 				)
 				applyMe = &graph;
@@ -63,10 +74,20 @@ void Brain::doMe(float tempIn, float tempOut)
 			if (currentMS >= data.time)
 				applyTemperature = data.value;
 		if (isnan(applyTemperature))
+		{
+#ifdef DODEBUG
 			std::cerr << "doMe()-no graph data found !!! currentMS=" << currentMS << std::endl;
+#endif
+		}
 		else
-			std::cout << "apply temperature:" << applyTemperature << std::endl;
+		{
+			time_t now = time(NULL);
+
+			this->domo->setValuesHeating(now, applyTemperature);
+		}
 	}
+#ifdef DODEBUG
 	else
 		std::cerr << "doMe()-no valid graph found !!!" << std::endl;
+#endif
 }

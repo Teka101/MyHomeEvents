@@ -21,8 +21,9 @@ static size_t writeMemoryCallback(void *ptr, size_t size, size_t nmemb, void *da
 	return length;
 }
 
-Domoticz::Domoticz(std::string &domoURL, std::string &domoAuth, int planIdx, int deviceIdxDHT22, int deviceIdxHeating, int deviceIdxHeater)
-	: serverUrl(domoURL), serverAuth(domoAuth), plan(planIdx), lastUpdateDevices(0), idxDHT22(deviceIdxDHT22), idxHeating(deviceIdxHeating), idxHeater(deviceIdxHeater)
+Domoticz::Domoticz(std::string &domoURL, std::string &domoAuth, int planIdx, int deviceIdxDHT22, int deviceIdxHeating, int deviceIdxHeater, int domoDeviceIdxOutdoor)
+	: serverUrl(domoURL), serverAuth(domoAuth), plan(planIdx), lastUpdateDevices(0),
+	  idxDHT22(deviceIdxDHT22), idxHeating(deviceIdxHeating), idxHeater(deviceIdxHeater), idxOutdoor(domoDeviceIdxOutdoor)
 {
 	tzset();
 }
@@ -50,7 +51,12 @@ void Domoticz::refreshData()
 	CURL *curl;
 
 	if (diff < DOMOTICZ_REFRESH_EVERY)
+	{
+#ifdef DODEBUG
+		std::cout << "Domoticz::refreshData: data is already up-to-date: " << this->devices.size() << " items" << std::endl;
+#endif
 		return;
+	}
 	lastUpdateDevices = currentTime;
 
 	curl = curl_easy_init();
@@ -116,7 +122,7 @@ void Domoticz::refreshData()
 					std::cout << "Domoticz::refreshData() - sDomoticzDevice[idx=" << device->idx << " name=" << device->name << " lastUpdate=" << device->lastUpdate << " temperature="
 							<< device->temperature << " humidity=" << device->humidity << " isOn=" << (device->statusIsOn ? "true" : "false") << "]" << std::endl;
 #endif
-					devices.push_back(device);
+					this->devices.push_back(device);
 				}
 		}
 		curl_easy_cleanup(curl);
@@ -128,6 +134,15 @@ sDomoticzDevice *Domoticz::getDeviceDTH22()
 	refreshData();
 	BOOST_FOREACH(sDomoticzDevice *d, this->devices)
 		if (d->idx == this->idxDHT22)
+			return d;
+	return NULL;
+}
+
+sDomoticzDevice *Domoticz::getDeviceOutdoor()
+{
+	refreshData();
+	BOOST_FOREACH(sDomoticzDevice *d, this->devices)
+		if (d->idx == this->idxOutdoor)
 			return d;
 	return NULL;
 }
@@ -164,22 +179,77 @@ bool Domoticz::setValuesDHT22(time_t timestamp, float temperature, float humidit
 			std::cout << "Domoticz::setValuesDHT22 - result:" << std::endl << "[[" << ss.str() << "]]" << std::endl;
 #endif
 			res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-			if (res == CURLE_OK)
-				if (httpCode == 200)
+			if (res == CURLE_OK && httpCode == 200)
+			{
+				sDomoticzDevice *dev = this->getDeviceDTH22();
+
+				if (dev != NULL)
+				{
+					dev->lastUpdate = timestamp;
+					dev->humidity = humidity;
+					dev->temperature = temperature;
+					this->listenerDHT22(dev);
+				}
+				return true;
+			}
+#ifdef DODEBUG
+			else
+				std::cout << "Domoticz::setValuesDHT22 - curl_easy_getinfo ret=" << res << " httpCode=" << httpCode << std::endl;
+#endif
+		}
+	}
+	return false;
+}
+
+bool Domoticz::setValuesHeating(time_t timestamp, float temperature)
+{
+	std::stringstream ss, ssURL;
+		CURL *curl;
+
+		ssURL << this->serverUrl << "json.htm?type=command&param=udevice&idx=" << this->idxHeating << "&nvalue=0&svalue=" << temperature;
+		curl = curl_easy_init();
+		if (curl != NULL)
+		{
+			CURLcode res;
+
+			curl_easy_setopt(curl, CURLOPT_URL, ssURL.str().c_str());
+			if (serverAuth.size() > 0)
+			{
+				curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_ANY);
+				curl_easy_setopt(curl, CURLOPT_USERPWD, serverAuth.c_str());
+			}
+			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
+			curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&ss);
+			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+
+			res = curl_easy_perform(curl);
+			if (res != CURLE_OK)
+				std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+			else
+			{
+				long httpCode;
+
+	#ifdef DODEBUG
+				std::cout << "Domoticz::setValuesHeating - result:" << std::endl << "[[" << ss.str() << "]]" << std::endl;
+	#endif
+				res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+				if (res == CURLE_OK && httpCode == 200)
 				{
 					sDomoticzDevice *dev = this->getDeviceDTH22();
 
 					if (dev != NULL)
 					{
 						dev->lastUpdate = timestamp;
-						dev->humidity = humidity;
 						dev->temperature = temperature;
-						this->listenerDHT22(dev);
 					}
 					return true;
 				}
+	#ifdef DODEBUG
+				else
+					std::cout << "Domoticz::setValuesHeating - curl_easy_getinfo ret=" << res << " httpCode=" << httpCode << std::endl;
+	#endif
+			}
 		}
-	}
 	return false;
 }
 

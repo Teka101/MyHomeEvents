@@ -9,9 +9,7 @@
 #include <boost/regex.hpp>
 #include "DeviceDHT22.h"
 
-#define DHT2_REFRESH_EVERY 300
-
-DeviceDHT22::DeviceDHT22(Domoticz *domoticz, std::string &execCmd) : domo(domoticz), command(execCmd)
+DeviceDHT22::DeviceDHT22(Domoticz *domoticz, std::string &execCmd, int refreshInSeconds) : domo(domoticz), command(execCmd), refreshInSeconds(refreshInSeconds)
 {
 	tzset();
 	this->timer = new boost::asio::deadline_timer(io);
@@ -33,7 +31,7 @@ void DeviceDHT22::computeNextLaunch()
 #ifdef DODEBUG
 	std::cout << "DeviceDHT22::computeNextLaunch() - currentTime=" << to_simple_string(now.time_of_day());
 #endif
-	currentMS = DHT2_REFRESH_EVERY - (currentMS % DHT2_REFRESH_EVERY);
+	currentMS = this->refreshInSeconds - (currentMS % this->refreshInSeconds);
 #ifdef DODEBUG
 	std::cout << " waiting=" << currentMS << std::endl;
 #endif
@@ -61,6 +59,9 @@ void DeviceDHT22::launch()
 				float humidity = boost::lexical_cast<float>(what[1]);
 				float temperature = boost::lexical_cast<float>(what[2]);
 
+#ifdef DODEBUG
+		std::cout << "DeviceDHT22::launch() - Update: humidity=" << humidity << " temperature=" << temperature << std::endl;
+#endif
 				this->updateData(temperature, humidity);
 			}
 		execReturn = pclose(fh);
@@ -85,6 +86,10 @@ void DeviceDHT22::updateData(float temperature, float humidity)
 		if (diffDate >= 1200 || (diffHumidity <= 15.0 && diffTemperature <= 5.0))
 			domo->setValuesDHT22(now, temperature, humidity);
 		else
-			std::cerr << "DeviceDHT22::updateData - invalid value : temperature=" << temperature << " d" << diffTemperature << " humdity=" << humidity << " d" << diffHumidity << std::endl;
+			std::cerr << "DeviceDHT22::updateData - invalid value : temperature=" << temperature << " delta:" << diffTemperature << " humdity=" << humidity << " delta:" << diffHumidity << " last delta-time=" << diffDate << std::endl;
 	}
+#ifdef DODEBUG
+	else
+		std::cout << "DeviceDHT22::updateData() - No device DHT22 founded !?!" << std::endl;
+#endif
 }

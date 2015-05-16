@@ -4,19 +4,23 @@
 #include <vector>
 
 #include "DataBase.h"
+#include "Domoticz.h"
 #include "WebServer.h"
 
 class Brain
 {
 private:
 	DataBase *db;
+	Domoticz *domo;
 	WebServer *web;
 
+	void doMe(float tempIn, float tempOut);
+
 public:
-	Brain(int webPort);
+	Brain(int webPort, Domoticz *domoticz);
 	~Brain();
 
-	void doMe(float tempIn, float tempOut);
+	void update(sDomoticzDevice *dev);
 };
 
 #endif /* BRAIN_H_ */

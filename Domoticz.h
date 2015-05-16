@@ -36,7 +36,7 @@ private:
 	int plan;
 	time_t lastUpdateDevices;
 	std::vector<sDomoticzDevice*> devices;
-	int idxDHT22, idxHeating, idxHeater;
+	int idxDHT22, idxHeating, idxHeater, idxOutdoor;
 
 	void removeDevices();
 	void refreshData();
@@ -44,11 +44,13 @@ private:
 public:
 	boost::signals2::signal<void(sDomoticzDevice *dev)> listenerDHT22;
 
-	Domoticz(std::string &domoURL, std::string &domoAuth, int planIdx, int deviceIdxDHT22, int deviceIdxHeating, int deviceIdxHeater);
+	Domoticz(std::string &domoURL, std::string &domoAuth, int planIdx, int deviceIdxDHT22, int deviceIdxHeating, int deviceIdxHeater, int domoDeviceIdxOutdoor);
 	~Domoticz();
 
 	sDomoticzDevice *getDeviceDTH22();
+	sDomoticzDevice *getDeviceOutdoor();
 	bool setValuesDHT22(time_t timestamp, float temperature, float humidity);
+	bool setValuesHeating(time_t timestamp, float temperature);
 	bool setStatusHeater(bool activate);
 };
 

@@ -8,6 +8,7 @@ plan=0
 device_idx_dht22=1
 device_idx_heating=2
 device_idx_heater=3
+device_idx_outdoor=4
 
 [DHT22]
 command=/bin/readDht22.sh
