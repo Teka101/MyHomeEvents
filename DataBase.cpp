@@ -233,7 +233,7 @@ static int selectCondition(void *param, int ac, char **av, char **column)
 
 		cond.id = boost::lexical_cast<int>(av[0]);
 		cond.description = av[1];
-		cond.domoticzDeviceType = static_cast<eDomoticzDeviceType>(av[2] == NULL ? -1 : boost::lexical_cast<int>(av[2]));
+		cond.domoticzDeviceType = static_cast<eDomoticzDeviceType>(av[2] == NULL ? none : boost::lexical_cast<int>(av[2]));
 		cond.temperatureMin = (av[3] == NULL ? -1 : boost::lexical_cast<float>(av[3]));
 		cond.temperatureMax = (av[4] == NULL ? -1 : boost::lexical_cast<float>(av[4]));
 		cond.day = (av[5] == NULL ? -1 : boost::lexical_cast<int>(av[5]));
