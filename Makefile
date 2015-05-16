@@ -4,7 +4,7 @@ OBJ=$(SRC:.cpp=.o)
 
 DEPS_PATH=$(HOME)/deps
 CPPFLAGS=-g3 -Wall -Wunused -Wpointer-arith -Wno-uninitialized `curl-config --cflags` -DDODEBUG -I$(DEPS_PATH)/include
-LDFLAGS=`curl-config --libs` -lmicrohttpd -lsqlite3 -lboost_program_options -lboost_filesystem -lboost_system -lboost_thread -lboost_date_time -lboost_regex -L$(DEPS_PATH)/lib
+LDFLAGS=`curl-config --libs` -lmicrohttpd -lpthread -lsqlite3 -lboost_program_options -lboost_filesystem -lboost_system -lboost_thread -lboost_date_time -lboost_regex -L$(DEPS_PATH)/lib
 CPP=g++
 RM=rm -f
 
