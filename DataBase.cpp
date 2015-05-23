@@ -62,11 +62,17 @@ void DataBase::insertDefaultData()
 {
 	const char sqls[][256] =
 	{
-			"INSERT INTO condition(description, domoticz_device_type, day) VALUES('Monday to friday', NULL, 124),('Saturday to sunday', NULL, 3)",
+			"INSERT INTO condition(description, day) VALUES('Monday to friday', 124),('Saturday to sunday', 3)",
 			"INSERT INTO graph(description, position, condition_id) VALUES('Default week', 0, 1)",
 			"INSERT INTO graph_data(graph_id, time, value) VALUES(1, 0000, 19),(1, 0600, 19.5),(1, 1900, 20),(1, 2100, 19)",
 			"INSERT INTO graph(description, position, condition_id) VALUES('Default week-end', 1, 2)",
-			"INSERT INTO graph_data(graph_id, time, value) VALUES(2, 0000, 19),(2, 1000, 19.5),(2, 1900, 20),(2, 2100, 19)"
+			"INSERT INTO graph_data(graph_id, time, value) VALUES(2, 0000, 19),(2, 1000, 19.5),(2, 1900, 20),(2, 2100, 19)",
+
+			"INSERT INTO condition(description, domoticz_device_type, temperature_min, day) VALUES('Monday to friday - hot', 1, 14, 124),('Saturday to sunday - hot', 1, 14, 3)",
+			"INSERT INTO graph(description, position, condition_id) VALUES('Hot week', 2, 3)",
+			"INSERT INTO graph_data(graph_id, time, value) VALUES(3, 0000, 18),(3, 0600, 18.5),(3, 1900, 19),(3, 2100, 18)",
+			"INSERT INTO graph(description, position, condition_id) VALUES('Hot week-end', 3, 4)",
+			"INSERT INTO graph_data(graph_id, time, value) VALUES(4, 0000, 18),(4, 1000, 18.5),(4, 1900, 19),(4, 2100, 18)"
 	};
 	int nbElements = (sizeof(sqls) / sizeof(*sqls));
 
