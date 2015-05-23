@@ -11,17 +11,18 @@ DataBase::DataBase() : db(NULL)
 	bool isExistingDB;
 	int rc;
 
+	this->log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("DataBase"));
 	isExistingDB = boost::filesystem::exists(fileName);
 	rc = sqlite3_open(fileName, &db);
 	if (rc != 0)
-		std::cerr << "sqlite3_open() failed: " << sqlite3_errmsg(db) << std::endl;
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::DataBase - sqlite3_open() failed: " << sqlite3_errmsg(db)));
 	else if (!isExistingDB)
 	{
 		this->createTables();
 		this->insertDefaultData();
 	}
 	else
-		std::cout << "Opening existing database..." << std::endl;
+		LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("DataBase::DataBase - Opening existing database..."));
 }
 
 DataBase::~DataBase()
@@ -49,11 +50,11 @@ void DataBase::createTables()
 		rc = sqlite3_exec(db, sqls[i], NULL, NULL, &zErrMsg);
 		if (rc != SQLITE_OK)
 		{
-			std::cerr << "SQL error: " << zErrMsg << " ### " << sqls[i] << std::endl;
+			LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::createTables - SQL error: " << zErrMsg << " ### " << sqls[i]));
 			sqlite3_free(zErrMsg);
 		}
 		else
-			std::cout << "Table created successfully" << std::endl;
+			LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("DataBase::createTables - table created successfully"));
 	}
 }
 
@@ -77,11 +78,11 @@ void DataBase::insertDefaultData()
 		rc = sqlite3_exec(db, sqls[i], NULL, NULL, &zErrMsg);
 		if (rc != SQLITE_OK)
 		{
-			std::cerr << "SQL error: " << zErrMsg << " ### " << sqls[i] << std::endl;
+			LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::insertDefaultData - SQL error: " << zErrMsg << " ### " << sqls[i]));
 			sqlite3_free(zErrMsg);
 		}
 		else
-			std::cout << "Data inserted successfully" << std::endl;
+			LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("DataBase::createTables - data inserted successfully"));
 	}
 }
 
@@ -100,7 +101,7 @@ bool DataBase::addCondition(std::string &description)
 		return (rc == SQLITE_DONE);
 	}
 	else
-		std::cerr << "addCondition()-SQL error prepare: " << sqlite3_errmsg(db) << std::endl;
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::addCondition - sqlite3_prepare() failed: " << sqlite3_errmsg(db)));
 	return false;
 }
 
@@ -119,7 +120,7 @@ bool DataBase::addGraph(std::string &description)
 		return (rc == SQLITE_DONE);
 	}
 	else
-		std::cerr << "addGraph()-SQL error prepare: " << sqlite3_errmsg(db) << std::endl;
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::addGraph - sqlite3_prepare() failed: " << sqlite3_errmsg(db)));
 	return false;
 }
 
@@ -159,7 +160,7 @@ bool DataBase::updateCondition(sCondition &cond)
 		return (rc == SQLITE_DONE);
 	}
 	else
-		std::cerr << "updateCondition()-SQL error prepare: " << sqlite3_errmsg(db) << std::endl;
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::updateCondition - sqlite3_prepare() failed: " << sqlite3_errmsg(db)));
 	return false;
 }
 
@@ -184,7 +185,7 @@ bool DataBase::updateGraph(sGraph &graph)
 		return (rc == SQLITE_DONE);
 	}
 	else
-		std::cerr << "updateGraph()-SQL error prepare: " << sqlite3_errmsg(db) << std::endl;
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::updateGraph - sqlite3_prepare() failed: " << sqlite3_errmsg(db)));
 	return false;
 }
 
@@ -219,7 +220,7 @@ bool DataBase::updateGraphData(sGraph &graph)
 		}
 	}
 	if (rc != SQLITE_OK && rc != SQLITE_DONE)
-		std::cerr << "updateGraphData()-SQL error prepare: " << sqlite3_errmsg(db) << std::endl;
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::updateGraphData - sqlite3_prepare() failed: " << sqlite3_errmsg(db)));
 	return (rc == SQLITE_OK || rc == SQLITE_DONE);
 }
 
@@ -240,8 +241,6 @@ static int selectCondition(void *param, int ac, char **av, char **column)
 		cond.calendarId = (av[6] == NULL ? -1 : boost::lexical_cast<int>(av[6]));
 		r->push_back(cond);
 	}
-	else
-		std::cerr << "selectCondition()-not expected arguments: []" << ac << std::endl;
 	return 0;
 }
 
@@ -252,7 +251,7 @@ std::vector<sCondition> DataBase::getConditions()
 
 	rc = sqlite3_exec(db, "SELECT rowid,description,domoticz_device_type,temperature_min,temperature_max,day,calendar_id FROM condition ORDER BY rowid", selectCondition, &ret, NULL);
 	if (rc != SQLITE_OK)
-		std::cerr << "getGraphs()-SQL error" << std::endl;
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::getConditions - SQL error"));
 	return ret;
 }
 
@@ -270,8 +269,6 @@ static int selectGraph(void *param, int ac, char **av, char **column)
 		graph.conditionId = (av[3] == NULL ? -1 : boost::lexical_cast<int>(av[3]));
 		r->push_back(graph);
 	}
-	else
-		std::cerr << "selectGraph()-not expected arguments: []" << ac << std::endl;
 	return 0;
 }
 
@@ -282,7 +279,7 @@ std::vector<sGraph> DataBase::getGraphs()
 
 	rc = sqlite3_exec(db, "SELECT rowid,position,description,condition_id FROM graph ORDER BY position", selectGraph, &ret, NULL);
 	if (rc != SQLITE_OK)
-		std::cerr << "getGraphs()-SQL error" << std::endl;
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::getGraphs - SQL error"));
 	return ret;
 }
 
@@ -298,8 +295,6 @@ static int selectGraphData(void *param, int ac, char **av, char **column)
 		data.value = boost::lexical_cast<float>(av[1]);
 		r->data.push_back(data);
 	}
-	else
-		std::cerr << "selectGraphData()-not expected arguments: []" << ac << std::endl;
 	return 0;
 }
 
@@ -313,7 +308,7 @@ sCondition DataBase::getCondition(int id)
 	ss << "SELECT rowid,description,domoticz_device_type,temperature_min,temperature_max,day,calendar_id FROM condition WHERE rowid=" << id;
 	rc = sqlite3_exec(db, ss.str().c_str(), selectCondition, &conds, NULL);
 	if (rc != SQLITE_OK)
-		std::cerr << "getCondition()-SQL error graph" << std::endl;
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::getCondition - SQL error graph"));
 	else if (conds.size() == 1)
 		ret = conds[0];
 	return ret;
@@ -329,7 +324,7 @@ sGraph DataBase::getGraph(int id)
 	ss << "SELECT rowid,position,description,condition_id FROM graph WHERE rowid=" << id;
 	rc = sqlite3_exec(db, ss.str().c_str(), selectGraph, &graphs, NULL);
 	if (rc != SQLITE_OK)
-		std::cerr << "getGraph()-SQL error graph" << std::endl;
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::getGraph - SQL error graph"));
 	else if (graphs.size() == 1)
 	{
 		ret = graphs[0];
@@ -337,10 +332,10 @@ sGraph DataBase::getGraph(int id)
 		ss << "SELECT time,value FROM graph_data WHERE graph_id=" << id;
 		rc = sqlite3_exec(db, ss.str().c_str(), selectGraphData, &ret, NULL);
 		if (rc != SQLITE_OK)
-			std::cerr << "getGraph()-SQL error graph_data" << std::endl;
+			LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::getGraph - SQL error graph_data"));
 	}
 	else
-		std::cerr << "getGraph()-no data..." << std::endl;
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("DataBase::getGraph - no data"));
 	return ret;
 }
 

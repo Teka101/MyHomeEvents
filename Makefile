@@ -1,10 +1,10 @@
 NAME=MyHomeEvents
-SRC=Main.cpp Brain.cpp DataBase.cpp DataBaseHelpers.cpp DeviceDHT22.cpp Domoticz.cpp WebServer.cpp
+SRC=Main.cpp Brain.cpp CurlHelpers.cpp DataBase.cpp DataBaseHelpers.cpp DeviceDHT22.cpp Domoticz.cpp WebServer.cpp
 OBJ=$(SRC:.cpp=.o)
 
 DEPS_PATH=$(HOME)/deps
-CPPFLAGS=-g3 -Wall -Wunused -Wpointer-arith -Wno-uninitialized `curl-config --cflags` -DDODEBUG -I$(DEPS_PATH)/include
-LDFLAGS=`curl-config --libs` -lmicrohttpd -lpthread -lsqlite3 -lboost_program_options -lboost_filesystem -lboost_system -lboost_thread -lboost_date_time -lboost_regex -L$(DEPS_PATH)/lib
+CPPFLAGS=-g3 -Wall -Wunused -Wpointer-arith -Wno-uninitialized `curl-config --cflags` -I$(DEPS_PATH)/include
+LDFLAGS=`curl-config --libs` -lmicrohttpd -lpthread -lsqlite3 -lboost_program_options -lboost_filesystem -lboost_system -lboost_thread -lboost_date_time -lboost_regex -llog4cplus -L$(DEPS_PATH)/lib
 CPP=g++
 RM=rm -f
 

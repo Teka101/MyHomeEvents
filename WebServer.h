@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include <log4cplus/loggingmacros.h>
 #include <microhttpd.h>
 #include "DataBase.h"
 
@@ -14,6 +15,8 @@ private:
 	DataBase *db;
 
 public:
+	log4cplus::Logger log;
+
 	WebServer(int port, DataBase *dbConnection);
 	~WebServer();
 

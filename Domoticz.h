@@ -5,6 +5,8 @@
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
+#include <log4cplus/logger.h>
+#include <log4cplus/loggingmacros.h>
 
 enum eDomoticzDeviceType
 {
@@ -31,6 +33,7 @@ struct sDomoticzDevice
 class Domoticz
 {
 private:
+	log4cplus::Logger log;
 	std::string serverUrl;
 	std::string serverAuth;
 	int plan;
@@ -51,6 +54,7 @@ public:
 	sDomoticzDevice *getDeviceOutdoor();
 	bool setValuesDHT22(time_t timestamp, float temperature, float humidity);
 	bool setValuesHeating(time_t timestamp, float temperature);
+	bool setStatusHeater(float temperatureMeasured, float temperatureOrder);
 	bool setStatusHeater(bool activate);
 };
 

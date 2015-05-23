@@ -4,14 +4,18 @@
 #include <string>
 
 #include <boost/program_options.hpp>
+#include <log4cplus/configurator.h>
+#include <log4cplus/loggingmacros.h>
 #include "Brain.h"
 #include "DeviceDHT22.h"
 #include "Domoticz.h"
 
-static void helloMe(sDomoticzDevice *dev)
-{
-	std::cout << "YOUHOU ! temp=" << dev->temperature << " hum=" << dev->humidity << std::endl;
-}
+static log4cplus::Logger logger;
+
+//static void helloMe(sDomoticzDevice *dev)
+//{
+//	std::cout << "YOUHOU ! temp=" << dev->temperature << " hum=" << dev->humidity << std::endl;
+//}
 
 int main(int ac, char **av)
 {
@@ -21,6 +25,8 @@ int main(int ac, char **av)
 	int dht22Speed, domoPlan, domoDeviceIdxDHT22, domoDeviceIdxHeating, domoDeviceIdxHeater, domoDeviceIdxOutdoor;
 	int webPort;
 
+	log4cplus::PropertyConfigurator::doConfigure("log4cplus.properties");
+	logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("Main"));
 	desc.add_options()
 		("WebServer.port", boost::program_options::value<int>(&webPort)->default_value(8080))
 	    ("Domoticz.url", boost::program_options::value<std::string>(&domoURL))
@@ -44,15 +50,12 @@ int main(int ac, char **av)
 	DeviceDHT22 *dht22 = new DeviceDHT22(d, dht22Cmd, dht22Speed);
 
 	d->listenerDHT22.connect(boost::bind(&Brain::update, brain, _1));
-	d->listenerDHT22.connect(&helloMe);
+	//d->listenerDHT22.connect(&helloMe);
 
-	//db->getGraphs();
-	//d->setValuesDHT22(0, 1, 2);
-
-	std::cout << "Press ENTER to quit..." << std::endl;
+	LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Press ENTER to quit..."));
 	getchar();
 
-	delete dht22;//FIXME bugged delete
+	delete dht22;
 	delete d;
 	delete brain;
 	return 0;

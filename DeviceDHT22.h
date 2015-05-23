@@ -4,11 +4,14 @@
 #include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
+#include <log4cplus/logger.h>
+#include <log4cplus/loggingmacros.h>
 #include "Domoticz.h"
 
 class DeviceDHT22
 {
 private:
+	log4cplus::Logger log;
 	Domoticz *domo;
 	boost::asio::io_service io;
 	boost::asio::deadline_timer *timer;

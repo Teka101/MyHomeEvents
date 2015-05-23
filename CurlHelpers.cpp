@@ -1,0 +1,59 @@
+#include <iostream>
+#include <sstream>
+
+#include <curl/curl.h>
+#include <log4cplus/logger.h>
+#include <log4cplus/loggingmacros.h>
+#include "CurlHelpers.h"
+
+static log4cplus::Logger log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("CurlHelpers"));
+
+static size_t writeMemoryCallback(void *ptr, size_t size, size_t nmemb, void *data)
+{
+	size_t length = (size * nmemb);
+
+	if (data != NULL)
+	{
+		std::stringstream *ss = static_cast<std::stringstream*>(data);
+
+		ss->write(static_cast<char*>(ptr), length);
+	}
+	return length;
+}
+
+bool curlExecute(const std::string &url, const std::string &serverAuth, std::stringstream *output)
+{
+	CURL *curl;
+
+	LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("curlExecute - url=" << url));
+	curl = curl_easy_init();
+	if (curl != NULL)
+	{
+		CURLcode res;
+		int httpCode;
+
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		if (serverAuth.size() > 0)
+		{
+			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+			curl_easy_setopt(curl, CURLOPT_USERPWD, serverAuth.c_str());
+		}
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, output);
+		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+
+		res = curl_easy_perform(curl);
+		if (res == CURLE_OK)
+		{
+			if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode) == CURLE_OK)
+			{
+				LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("curlExecute - HttpCode=" << httpCode));
+				return (httpCode == 200);
+			}
+		}
+		else
+			LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("curlExecute - curl_easy_perform() failed: " << curl_easy_strerror(res)));
+		return false;
+	}
+	return false;
+}

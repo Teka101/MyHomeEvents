@@ -9,6 +9,7 @@
 
 Brain::Brain(int webPort, Domoticz *domoticz)
 {
+	this->log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("Brain"));
 	this->db = new DataBase();
 	this->domo = domoticz;
 	this->web = new WebServer(webPort, db);
@@ -24,8 +25,13 @@ Brain::~Brain()
 
 void Brain::update(sDomoticzDevice *dev)
 {
-	std::cout << "YOUHOU ! temp=" << dev->temperature << " hum=" << dev->humidity << std::endl;
-	this->doMe(domo->getDeviceDTH22()->temperature, domo->getDeviceOutdoor()->temperature);
+	sDomoticzDevice *devDTH22, *devOutdoor;
+
+	LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("Brain::update - invoke : temp=" << dev->temperature << " hum=" << dev->humidity));
+	devDTH22 = domo->getDeviceDTH22();
+	devOutdoor = domo->getDeviceOutdoor();
+	if (devDTH22 != NULL && devOutdoor != NULL)
+		this->doMe(devDTH22->temperature, devOutdoor->temperature);
 }
 
 void Brain::doMe(float tempIn, float tempOut)
@@ -38,9 +44,7 @@ void Brain::doMe(float tempIn, float tempOut)
 	int weekDayStartMonday = ((int)now.date().day_of_week() - 1 + 7) % 7;
 	int dayMask = pow(2, weekDayStartMonday);
 
-#ifdef DODEBUG
-	std::cout << "Brain::doMe(" << tempIn << ", " << tempOut << ")" << std::endl;
-#endif
+	LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("Brain::doMe - invoke(" << tempIn << ", " << tempOut << ")"));
 	BOOST_FOREACH(sCondition cond, conds)
 		condById[cond.id] = cond;
 	BOOST_FOREACH(sGraph graph, graphs)
@@ -51,8 +55,7 @@ void Brain::doMe(float tempIn, float tempOut)
 			sCondition cond = condById[graph.conditionId];
 			float temp = (cond.domoticzDeviceType == temperatureIn ? tempIn : tempOut);
 
-			std::cout << "graph[" << graph.id << "][condition:"  << graph.conditionId << "]";
-			std::cout << "cond.day=" << cond.day << " day.validity=" << ((cond.day & dayMask) == dayMask) << " deviceType=" << cond.domoticzDeviceType << " deviceTypeIsNone=" << (cond.domoticzDeviceType == none) << std::endl;
+			LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("Brain::doMe - graph[" << graph.id << "][condition:"  << graph.conditionId << "]cond.day=" << cond.day << " day.validity=" << ((cond.day & dayMask) == dayMask) << " deviceType=" << cond.domoticzDeviceType << " deviceTypeIsNone=" << (cond.domoticzDeviceType == none)));
 			if (
 				(cond.day == -1 || (cond.day & dayMask) == dayMask)
 				&& (cond.domoticzDeviceType == none
@@ -74,20 +77,15 @@ void Brain::doMe(float tempIn, float tempOut)
 			if (currentMS >= data.time)
 				applyTemperature = data.value;
 		if (isnan(applyTemperature))
-		{
-#ifdef DODEBUG
-			std::cerr << "doMe()-no graph data found !!! currentMS=" << currentMS << std::endl;
-#endif
-		}
+			LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("Brain::doMe - no graph data found !!! currentMS=" << currentMS));
 		else
 		{
 			time_t now = time(NULL);
 
 			this->domo->setValuesHeating(now, applyTemperature);
+			this->domo->setStatusHeater(tempIn, applyTemperature);
 		}
 	}
-#ifdef DODEBUG
 	else
-		std::cerr << "doMe()-no valid graph found !!!" << std::endl;
-#endif
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("Brain::doMe - no valid graph found !!!"));
 }

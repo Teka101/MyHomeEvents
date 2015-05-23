@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include <log4cplus/logger.h>
+#include <log4cplus/loggingmacros.h>
 #include <sqlite3.h>
 #include "Domoticz.h"
 
@@ -34,6 +36,7 @@ struct sGraph
 class DataBase
 {
 private:
+	log4cplus::Logger log;
 	sqlite3 *db;
 
 	void createTables();

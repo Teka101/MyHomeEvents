@@ -11,4 +11,5 @@ device_idx_heater=3
 device_idx_outdoor=4
 
 [DHT22]
+refresh=300
 command=/bin/readDht22.sh

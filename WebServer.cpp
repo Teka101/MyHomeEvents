@@ -27,7 +27,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	int httpCode = MHD_HTTP_OK;
 	int ret;
 
-	std::cout << "HTTP-request: url=" << url << " method=" << method << " version=" << version << std::endl;
+	LOG4CPLUS_DEBUG(ws->log, LOG4CPLUS_TEXT("WebServer::sendFile - HTTP-request: url=" << url << " method=" << method << " version=" << version));
 	if (boost::equals(url, "/"))
 		httpCode = ws->sendPermanentRedirectTo(&response, "/static/index.html");
 	else if (boost::starts_with(url, "/static/"))
@@ -115,14 +115,6 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 				cond = ws->getDataBase()->getCondition(id);
 				writeToPTree(pt, cond);
-				/*for (sGraphData data : graph.data)
-				{
-					boost::property_tree::ptree ptChild;
-
-					writeToPTree(ptChild, data);
-					ptChildren.push_back(std::make_pair("", ptChild));
-				}
-				pt.add_child("data", ptChildren);*/
 				boost::property_tree::write_json(ss, pt, false);
 				response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
 				MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
@@ -260,6 +252,8 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 WebServer::WebServer(int port, DataBase *dbConnection) : db(dbConnection)
 {
+	this->log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("WebServer"));
+	LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("WebServer::WebServer - start web server on port " << port));
 	daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &answer_to_connection, this, MHD_OPTION_END);
 }
 
@@ -301,7 +295,7 @@ int WebServer::sendFile(struct MHD_Response **response, const char *url)
 		struct stat st;
 
 		fstat(fd, &st);
-		std::cout << "Send file: size=" << st.st_size << std::endl;
+		LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("WebServer::sendFile - send file: size=" << st.st_size));
 		*response = MHD_create_response_from_fd(st.st_size, fd);
 		if (boost::ends_with(url, ".css"))
 			MHD_add_response_header(*response, "Content-Type", "text/css");
