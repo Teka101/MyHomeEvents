@@ -65,7 +65,10 @@ void Brain::doMe(float tempIn, float tempOut)
 					)
 				//TODO calendarId
 				)
+			{
+				LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("Brain::doMe - keepIt #" << graph.id));
 				applyMe = &graph;
+			}
 		}
 	if (applyMe != NULL)
 	{
