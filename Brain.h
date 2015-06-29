@@ -1,29 +1,30 @@
 #ifndef BRAIN_H_
 #define BRAIN_H_
 
-#include <vector>
-
+#include <boost/asio.hpp>
+#include <boost/thread/thread.hpp>
 #include <log4cplus/logger.h>
-#include <log4cplus/loggingmacros.h>
-#include "DataBase.h"
-#include "Domoticz.h"
-#include "WebServer.h"
+#include "MHEDatabase.h"
+#include "MHEHardDevContainer.h"
 
 class Brain
 {
 private:
-	log4cplus::Logger log;
-	DataBase *db;
-	Domoticz *domo;
-	WebServer *web;
+	log4cplus::Logger _log;
+	MHEDatabase *_db;
+	MHEHardDevContainer *_hardDevContainer;
+	int _refreshInSeconds;
+	boost::asio::io_service _io;
+	boost::asio::deadline_timer *_timer;
 
-	void doMe(float tempIn, float tempOut);
+	void computeNextLaunch();
+	void launch();
 
 public:
-	Brain(int webPort, Domoticz *domoticz);
+	Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer);
 	~Brain();
 
-	void update(sDomoticzDevice *dev);
+	void start();
 };
 
 #endif /* BRAIN_H_ */

@@ -8,6 +8,20 @@
 
 static log4cplus::Logger log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("CurlHelpers"));
 
+void curlInit()
+{
+	CURLcode res;
+
+	res = curl_global_init(CURL_GLOBAL_ALL);
+	if (res != CURLE_OK)
+		LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("curlInit - curl_global_init() failed: " << curl_easy_strerror(res)));
+}
+
+void curlDestroy()
+{
+	curl_global_cleanup();
+}
+
 static size_t writeMemoryCallback(void *ptr, size_t size, size_t nmemb, void *data)
 {
 	size_t length = (size * nmemb);
@@ -21,6 +35,36 @@ static size_t writeMemoryCallback(void *ptr, size_t size, size_t nmemb, void *da
 	return length;
 }
 
+bool curlExecute(const std::string &url, std::stringstream *output)
+{
+	CURL *curl;
+
+	LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("curlExecute - url=" << url));
+	curl = curl_easy_init();
+	if (curl != NULL)
+	{
+		CURLcode res;
+		int httpCode = -1;
+
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, output);
+		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+
+		res = curl_easy_perform(curl);
+		if (res == CURLE_OK)
+		{
+			if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode) == CURLE_OK)
+				LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("curlExecute - HttpCode=" << httpCode));
+		}
+		else
+			LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("curlExecute - curl_easy_perform() failed: " << curl_easy_strerror(res)));
+		curl_easy_cleanup(curl);
+		return (httpCode == 200);
+	}
+	return false;
+}
+
 bool curlExecute(const std::string &url, const std::string &serverAuth, std::stringstream *output)
 {
 	CURL *curl;
@@ -30,7 +74,7 @@ bool curlExecute(const std::string &url, const std::string &serverAuth, std::str
 	if (curl != NULL)
 	{
 		CURLcode res;
-		int httpCode;
+		int httpCode = -1;
 
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		if (serverAuth.size() > 0)
@@ -46,14 +90,12 @@ bool curlExecute(const std::string &url, const std::string &serverAuth, std::str
 		if (res == CURLE_OK)
 		{
 			if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode) == CURLE_OK)
-			{
 				LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("curlExecute - HttpCode=" << httpCode));
-				return (httpCode == 200);
-			}
 		}
 		else
 			LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("curlExecute - curl_easy_perform() failed: " << curl_easy_strerror(res)));
-		return false;
+		curl_easy_cleanup(curl);
+		return (httpCode == 200);
 	}
 	return false;
 }

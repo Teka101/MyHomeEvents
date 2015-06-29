@@ -19,6 +19,7 @@
        <option value="-1">None</option>
        <option value="0">Temperature in</option>
        <option value="1">Temperature out</option>
+       <option value="2">Temperature out (24h average)</option>
       </select>
     </div>
     <div class="form-group">
@@ -39,8 +40,11 @@
       <label><input type="checkbox" name="daySun">Sunday</label>
     </div>
     <div class="form-group">
-      <label for="inputCal">Calendar id</label>
-      <input type="number" name="calId" class="form-control" id="inputCal" placeholder="Enter calendar id">
+     <label><input type="checkbox" name="inputCal">Use calendar</label>
+    </div>
+    <div class="form-group">
+     Dates: <ul id="lDates"></ul>
+     <button type="button" class="btn btn-default" onClick="addDate()">Add date</button>
     </div>
     <button type="button" class="btn btn-primary" onClick="saveCondition()">Save</button>
    </form>
@@ -74,7 +78,18 @@ $(document).ready(function() {
 					$('input[name="dayFri"]').prop('checked', (parseInt(json.day) & 4) == 4);
 					$('input[name="daySat"]').prop('checked', (parseInt(json.day) & 2) == 2);
 					$('input[name="daySun"]').prop('checked', (parseInt(json.day) & 1) == 1);
-					$('input[name="calId"]').val(json.calendarId);
+					$('input[name="inputCal"]').prop('checked', parseInt(json.useCalendar) == 1);
+					if (json.dates || parseInt(json.useCalendar) == 1)
+					{
+						for (var k in json.dates)
+						{
+							var v = json.dates[k];
+
+							$('#lDates').append('<li>' + v + '</li>');
+						}
+					}
+					else
+						$('#lDates').parent().remove();
 				},
 				error: function(e)
 				{
@@ -104,7 +119,13 @@ function saveCondition()
 		| ($('input[name="daySat"]').prop('checked') ? 2 : 0)
 		| ($('input[name="daySun"]').prop('checked') ? 1 : 0)
 		;
-	cond.calendarId = $('input[name="calId"]').val();
+	cond.useCalendar = ($('input[name="inputCal"]').prop('checked') ? 1 : 0);
+	$('#lDates li').each(function( index ) {
+			if (!cond.dates)
+				cond.dates = [];
+			cond.dates.push(parseInt($(this).text()));
+		});
+	console.dir(cond);	
 	$.ajax({
 			type: 'POST',
 			url:  '/condition/' + cond.id,
@@ -119,6 +140,18 @@ function saveCondition()
 				alert('Communication error: ' + e.message);
 			}
 		});
+}
+
+function addDate()
+{
+	var dateStr = window.prompt('Give a date (format YYYYMMDD)','20101231');
+
+	if (dateStr == null)
+		return;
+	dateStr = dateStr.trim();
+	if (dateStr.length == 0)
+		return;
+	$('#lDates').append('<li>' + dateStr + '</li>');
 }
  </script>
 </body>
