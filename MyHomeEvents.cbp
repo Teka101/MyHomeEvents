@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="MyHomeEvents" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/MyHomeEvents" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+		</Compiler>
+		<Linker>
+			<Add library="microhttpd" />
+			<Add library="pthread" />
+			<Add library="sqlite3" />
+			<Add library="boost_program_options" />
+			<Add library="boost_filesystem" />
+			<Add library="boost_system" />
+			<Add library="boost_thread" />
+			<Add library="boost_date_time" />
+			<Add library="boost_regex" />
+			<Add library="log4cplus" />
+			<Add library="curl" />
+			<Add directory="../../deps/lib" />
+		</Linker>
+		<Unit filename="Brain.cpp" />
+		<Unit filename="Brain.h" />
+		<Unit filename="CurlHelpers.cpp" />
+		<Unit filename="CurlHelpers.h" />
+		<Unit filename="DataBase.cpp" />
+		<Unit filename="DataBase.h" />
+		<Unit filename="DataBaseHelpers.cpp" />
+		<Unit filename="DataBaseHelpers.h" />
+		<Unit filename="DeviceDHT22.cpp" />
+		<Unit filename="DeviceDHT22.h" />
+		<Unit filename="Domoticz.cpp" />
+		<Unit filename="Domoticz.h" />
+		<Unit filename="DriverDomoticz.cpp" />
+		<Unit filename="DriverDomoticz.h" />
+		<Unit filename="DriverShell.cpp" />
+		<Unit filename="DriverShell.h" />
+		<Unit filename="MHEDatabase.cpp" />
+		<Unit filename="MHEDatabase.h" />
+		<Unit filename="MHEDevice.cpp" />
+		<Unit filename="MHEDevice.h" />
+		<Unit filename="MHEHardDevContainer.cpp" />
+		<Unit filename="MHEHardDevContainer.h" />
+		<Unit filename="MHEHardware.cpp" />
+		<Unit filename="MHEHardware.h" />
+		<Unit filename="MHEWeb.cpp" />
+		<Unit filename="MHEWeb.h" />
+		<Unit filename="Main.cpp" />
+		<Unit filename="WebServer.cpp" />
+		<Unit filename="WebServer.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

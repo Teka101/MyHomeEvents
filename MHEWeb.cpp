@@ -1,38 +1,36 @@
+#include "MHEWeb.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <iostream>
-#include <sstream>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include "DataBaseHelpers.h"
-#include "WebServer.h"
-
-typedef std::pair<const std::string, boost::property_tree::ptree> ptreePair;
+#include <iostream>
+#include <sstream>
+#include "MHEWeb.h"
 
 static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		const char *url, const char *method, const char *version,
 		const char *upload_data, size_t *upload_data_size, void **con_cls)
 {
-	std::stringstream *postData = static_cast<std::stringstream*>(*con_cls);
-	WebServer *ws = static_cast<WebServer*>(cls);
+	//std::stringstream *postData = static_cast<std::stringstream*>(*con_cls);
+	MHEWeb *ws = static_cast<MHEWeb*>(cls);
 	struct MHD_Response *response = NULL;
 	int httpCode = MHD_HTTP_OK;
 	int ret;
 
-	LOG4CPLUS_DEBUG(ws->log, LOG4CPLUS_TEXT("WebServer::sendFile - HTTP-request: url=" << url << " method=" << method << " version=" << version));
+	LOG4CPLUS_DEBUG(ws->log, LOG4CPLUS_TEXT("MHEWeb::sendFile - HTTP-request: url=" << url << " method=" << method << " version=" << version));
 	if (boost::equals(url, "/"))
 		httpCode = ws->sendPermanentRedirectTo(&response, "/static/index.html");
 	else if (boost::starts_with(url, "/static/"))
 		httpCode = ws->sendFile(&response, &url[1]);
-	else if (boost::equals(url, "/conditions"))
+	/*else if (boost::equals(url, "/conditions"))
 	{
 		boost::property_tree::ptree pt;
 		boost::property_tree::ptree ptChildren;
@@ -239,7 +237,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 				MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
 			}
 		}
-	}
+	}*/
 	if (response == NULL)
 		httpCode = ws->sendNotFound(&response);
 	MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
@@ -250,25 +248,20 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	return ret;
 }
 
-WebServer::WebServer(int port, DataBase *dbConnection) : db(dbConnection)
+MHEWeb::MHEWeb(int port)
 {
-	this->log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("WebServer"));
-	LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("WebServer::WebServer - start web server on port " << port));
-	daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &answer_to_connection, this, MHD_OPTION_END);
+    this->log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MHEWeb"));
+	LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("MHEWeb::MHEWeb - start web server on port " << port));
+	_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &answer_to_connection, this, MHD_OPTION_END);
 }
 
-WebServer::~WebServer()
+MHEWeb::~MHEWeb()
 {
-	if (daemon != NULL)
-		MHD_stop_daemon(daemon);
+    if (_daemon != NULL)
+		MHD_stop_daemon(_daemon);
 }
 
-DataBase *WebServer::getDataBase()
-{
-	return this->db;
-}
-
-int WebServer::sendNotFound(struct MHD_Response **response)
+int MHEWeb::sendNotFound(struct MHD_Response **response)
 {
 	const char *errorPage = "Ressource not found";
 
@@ -277,7 +270,7 @@ int WebServer::sendNotFound(struct MHD_Response **response)
 	return MHD_HTTP_NOT_FOUND;
 }
 
-int WebServer::sendPermanentRedirectTo(struct MHD_Response **response, const char *location)
+int MHEWeb::sendPermanentRedirectTo(struct MHD_Response **response, const char *location)
 {
 	const char *errorPage = "Redirect to home";
 
@@ -286,7 +279,7 @@ int WebServer::sendPermanentRedirectTo(struct MHD_Response **response, const cha
 	return MHD_HTTP_MOVED_PERMANENTLY;
 }
 
-int WebServer::sendFile(struct MHD_Response **response, const char *url)
+int MHEWeb::sendFile(struct MHD_Response **response, const char *url)
 {
 	int fd;
 
@@ -295,7 +288,7 @@ int WebServer::sendFile(struct MHD_Response **response, const char *url)
 		struct stat st;
 
 		fstat(fd, &st);
-		LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("WebServer::sendFile - send file: size=" << st.st_size));
+		LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("MHEWeb::sendFile - send file: size=" << st.st_size));
 		*response = MHD_create_response_from_fd(st.st_size, fd);
 		if (boost::ends_with(url, ".css"))
 			MHD_add_response_header(*response, "Content-Type", "text/css");
