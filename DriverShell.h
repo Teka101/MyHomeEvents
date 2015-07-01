@@ -26,6 +26,7 @@ class DeviceShell : public MHEDevice
         log4cplus::Logger _log;
 
         void refreshCache();
+        bool checkValidity(float newHumidty, float newTemperature);
 
     public:
         DeviceShell(DBDevice &dev);

@@ -1,2 +1,5 @@
 [WebServer]
 port=8080
+
+[Brain]
+refresh=300

@@ -38,12 +38,8 @@
 		<Unit filename="Brain.h" />
 		<Unit filename="CurlHelpers.cpp" />
 		<Unit filename="CurlHelpers.h" />
-		<Unit filename="DataBase.cpp" />
-		<Unit filename="DataBase.h" />
 		<Unit filename="DataBaseHelpers.cpp" />
 		<Unit filename="DataBaseHelpers.h" />
-		<Unit filename="DeviceDHT22.cpp" />
-		<Unit filename="DeviceDHT22.h" />
 		<Unit filename="Domoticz.cpp" />
 		<Unit filename="Domoticz.h" />
 		<Unit filename="DriverDomoticz.cpp" />

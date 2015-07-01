@@ -14,6 +14,7 @@
 #include <iostream>
 #include <sstream>
 #include "MHEWeb.h"
+#include "DataBaseHelpers.h"
 
 static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		const char *url, const char *method, const char *version,
@@ -30,6 +31,14 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		httpCode = ws->sendPermanentRedirectTo(&response, "/static/index.html");
 	else if (boost::starts_with(url, "/static/"))
 		httpCode = ws->sendFile(&response, &url[1]);
+    else if (boost::equals(url, "/world"))
+    {
+        std::stringstream ss;
+
+        ws->buildJsonWorld(ss);
+        response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
+    }
 	/*else if (boost::equals(url, "/conditions"))
 	{
 		boost::property_tree::ptree pt;
@@ -240,7 +249,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	}*/
 	if (response == NULL)
 		httpCode = ws->sendNotFound(&response);
-	MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
+	//MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
 	MHD_add_response_header(response, "Age", "0");
 	MHD_add_response_header(response, "Server", "MyHomeEvents");
 	ret = MHD_queue_response(connection, httpCode, response);
@@ -248,7 +257,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	return ret;
 }
 
-MHEWeb::MHEWeb(int port)
+MHEWeb::MHEWeb(int port, MHEDatabase *db, MHEHardDevContainer *hardDev) : _db(db), _hardDev(hardDev)
 {
     this->log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MHEWeb"));
 	LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("MHEWeb::MHEWeb - start web server on port " << port));
@@ -299,4 +308,95 @@ int MHEWeb::sendFile(struct MHD_Response **response, const char *url)
 		return MHD_HTTP_OK;
 	}
 	return MHD_HTTP_NOT_FOUND;
+}
+
+void MHEWeb::buildJsonWorld(std::stringstream &ss)
+{
+    std::vector<DBHarware> hards = _db->getHardwares();
+    std::vector<DBDevice> devs = _db->getDevices();
+    std::vector<DBGraph> graphs = _db->getGraphs();
+    std::vector<DBCondition> conds = _db->getConditions();
+    std::vector<DBRoom> rooms = _db->getRooms();
+    std::vector<DBRoomGraphCond> rgcs = _db->getRoomGraphConds();
+    boost::property_tree::ptree pt;
+
+    if (hards.size() > 0)
+    {
+        boost::property_tree::ptree ptChildren;
+
+        BOOST_FOREACH(DBHarware hard, hards)
+        {
+            boost::property_tree::ptree ptChild;
+
+            writeToPTree(ptChild, hard);
+            ptChildren.push_back(std::make_pair("", ptChild));
+        }
+        pt.add_child("hardwares", ptChildren);
+    }
+    if (devs.size() > 0)
+    {
+        boost::property_tree::ptree ptChildren;
+
+        BOOST_FOREACH(DBDevice dev, devs)
+        {
+            boost::property_tree::ptree ptChild;
+
+            writeToPTree(ptChild, dev);
+            ptChildren.push_back(std::make_pair("", ptChild));
+        }
+        pt.add_child("devices", ptChildren);
+    }
+    if (graphs.size() > 0)
+    {
+        boost::property_tree::ptree ptChildren;
+
+        BOOST_FOREACH(DBGraph graph, graphs)
+        {
+            boost::property_tree::ptree ptChild;
+
+            writeToPTree(ptChild, graph);
+            ptChildren.push_back(std::make_pair("", ptChild));
+        }
+        pt.add_child("graphics", ptChildren);
+    }
+    if (conds.size() > 0)
+    {
+        boost::property_tree::ptree ptChildren;
+
+        BOOST_FOREACH(DBCondition cond, conds)
+        {
+            boost::property_tree::ptree ptChild;
+
+            writeToPTree(ptChild, cond);
+            ptChildren.push_back(std::make_pair("", ptChild));
+        }
+        pt.add_child("conditions", ptChildren);
+    }
+    if (rooms.size() > 0)
+    {
+        boost::property_tree::ptree ptChildren;
+
+        BOOST_FOREACH(DBRoom room, rooms)
+        {
+            boost::property_tree::ptree ptChild;
+
+            writeToPTree(ptChild, room);
+            ptChildren.push_back(std::make_pair("", ptChild));
+        }
+        pt.add_child("rooms", ptChildren);
+    }
+    if (rgcs.size() > 0)
+    {
+        boost::property_tree::ptree ptChildren;
+
+        BOOST_FOREACH(DBRoomGraphCond rgc, rgcs)
+        {
+            boost::property_tree::ptree ptChild;
+
+            writeToPTree(ptChild, rgc);
+            ptChildren.push_back(std::make_pair("", ptChild));
+        }
+        pt.add_child("roomGraphConds", ptChildren);
+    }
+	boost::property_tree::write_json(ss, pt, false);
 }

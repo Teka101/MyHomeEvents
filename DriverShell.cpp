@@ -61,17 +61,38 @@ void DeviceShell::refreshCache()
             char line[1024];
             int execReturn;
 
+            LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("DeviceShell::refreshCache - popen() for command: " << _shellCmd));
             while (fgets(line, sizeof(line), fh) != NULL)
                 if (boost::regex_match(line, what, expression))
                 {
-                    _humidity = boost::lexical_cast<float>(what[1]);
-                    _temperature = boost::lexical_cast<float>(what[2]);
-                    now = time(NULL);
-                    _lastUpdate = now;
-                    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("DeviceShell::refreshCache - Update: humidity=" << _humidity << " temperature=" << _temperature));
+                    float newHumidity = boost::lexical_cast<float>(what[1]);
+                    float newTemperature = boost::lexical_cast<float>(what[2]);
+                    bool isSucess = checkValidity(newHumidity, newTemperature);
+
+                    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("DeviceShell::refreshCache - Update: humidity=" << _humidity << " temperature=" << _temperature << " isSucess=" << (isSucess ? "true" : "false")));
                 }
             execReturn = pclose(fh);
             LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("DeviceShell::refreshCache - Exec return: " << execReturn));
         }
     }
+}
+
+bool DeviceShell::checkValidity(float newHumidty, float newTemperature)
+{
+    time_t now = time(NULL);
+    time_t diffDate = std::abs(now - _lastUpdate);
+    float diffTemperature = std::abs(newTemperature - _temperature);
+    float diffHumidity = std::abs(newHumidty - _humidity);
+
+    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("DeviceShell::checkValidity - values : temperature=" << newTemperature << " d=" << diffTemperature << " humdity=" << newHumidty << " d=" << diffHumidity << " dT=" << diffDate));
+    if (diffDate >= 2400 || (diffHumidity <= 15.0 && diffTemperature <= 5.0))
+    {
+		_temperature = newTemperature;
+		_humidity = newHumidty;
+		_lastUpdate = now;
+		if (_cloneTo != NULL)
+            _cloneTo->setTempHum(newTemperature, newHumidty);
+		return true;
+    }
+    return false;
 }

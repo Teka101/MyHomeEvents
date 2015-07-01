@@ -3,187 +3,468 @@
 <head>
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <link rel="stylesheet" href="css/bootstrap.min.css">
- <style type="text/css">
-body.dragging, body.dragging * {
-  cursor: move !important;
-}
-
-.dragged {
-  position: absolute;
-  opacity: 0.5;
-  z-index: 2000;
-}
-
-ol.graphs li.placeholder {
-  position: relative;
-  /** More li styles **/
-}
-ol.graphs li.placeholder:before {
-  position: absolute;
-  /** Define arrowhead **/
-}
- </style>
  <script src="js/jquery.min.js"></script>
- <script src="js/jquery-sortable-min.js"></script>
+ <script src="js/bootstrap.min.js"></script>
+ <script src="js/highcharts.js"></script>
+ <script src="js/highcharts-more.js"></script>
+ <script src="js/draggable-points.js"></script>
 </head>
 <body class="container">
- <div class="row text-center">
-  <h1>Conditions</h1>
-  <div class="col-md-8 col-md-offset-4 text-left">
-   <ul class="conds">
-     <li>First</li>
-     <li>Second</li>
-     <li>Third</li>
-   </ul>
+ <ul id="myTabs" class="nav nav-tabs" role="tablist">
+  <li role="presentation" class="active"><a href="#room" aria-controls="room" role="tab" data-toggle="tab">Room</a></li>
+  <li role="presentation"><a href="#cond" aria-controls="cond" role="tab" data-toggle="tab">Condition</a></li>
+  <li role="presentation"><a href="#graph" aria-controls="graph" role="tab" data-toggle="tab">Graphic</a></li>
+  <li role="presentation"><a href="#hard" aria-controls="hard" role="tab" data-toggle="tab">Hardwares / Devices</a></li>
+ </ul>
+<br>
+ <div class="tab-content" style="height:100%">
+  <div role="tabpanel" class="tab-pane fade in active" id="room">
+   <form class="form-horizontal" role="form">
+    <div class="form-group">
+     <label class="col-sm-2 control-label">1 - Rooms</label>
+     <div class="col-sm-10"><select id="selectRooms" class="form-control"></select></div>
+    </div>
+    <hr>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Room.id</label>
+     <div class="col-sm-10"><input id="room_id" type="text" class="form-control" disabled></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Room.name</label>
+     <div class="col-sm-10"><input id="room_name" type="text" class="form-control"></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Room.deviceTemperatureId</label>
+     <div class="col-sm-10"><select id="room_deviceTemperatureId" class="form-control"></select></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Room.deviceHeatingId</label>
+     <div class="col-sm-10"><select id="room_deviceHeatingId" class="form-control"></select></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Room.deviceHeaterId</label>
+     <div class="col-sm-10"><select id="room_deviceHeaterId" class="form-control"></select></div>
+    </div>
+    <hr>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">2 - RoomGraphCond</label>
+     <div class="col-sm-10"><select id="selectRGCs" class="form-control"></select></div>
+    </div>
+    <hr>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">RGC.id</label>
+     <div class="col-sm-10"><input id="rgc_id" type="text" class="form-control" disabled></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">RGC.roomId</label>
+     <div class="col-sm-10"><input id="rgc_roomId" type="text" class="form-control" disabled></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">RGC.graphId</label>
+     <div class="col-sm-10"><select id="rgc_graphId" class="form-control"></select></div>
+    </div>
+	<div class="form-group">
+     <label class="col-sm-2 control-label">RGC.conditionId</label>
+     <div class="col-sm-10"><select id="rgc_conditionId" class="form-control"></select></div>
+    </div>
+   </form>
   </div>
- </div>
- <div class="row text-center">
-  <button type="button" class="btn btn-primary" onClick="addCond()">Add</button>
- </div>
- <br/><br/>
- <div class="row text-center">
-  <h1>Graphics</h1>
-  <div class="col-md-8 col-md-offset-4 text-left">
-   <ol class="graphs">
-     <li>First</li>
-     <li>Second</li>
-     <li>Third</li>
-   </ol>
+  <div role="tabpanel" class="tab-pane fade" id="cond">
+   <form class="form-horizontal" role="form">
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Conditions</label>
+     <div class="col-sm-10"><select id="selectConds" class="form-control"></select></div>
+    </div>
+    <hr>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Condition.id</label>
+     <div class="col-sm-10"><input id="cond_id" type="text" class="form-control" disabled></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Condition.name</label>
+     <div class="col-sm-10"><input id="cond_name" type="text" class="form-control"></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Condition.deviceId</label>
+     <div class="col-sm-10"><select id="cond_deviceId" class="form-control"></select></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Condition.temperatureMin</label>
+     <div class="col-sm-10"><input id="cond_temperatureMin" type="text" class="form-control"></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Condition.temperatureMax</label>
+     <div class="col-sm-10"><input id="cond_temperatureMax" type="text" class="form-control"></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Condition.days</label>
+     <div class="col-sm-10"><input id="cond_days" type="text" class="form-control"></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Condition.useCalendar</label>
+     <div class="col-sm-10"><input id="cond_useCalendar" type="checkbox" class="form-control"></div>
+    </div>
+   </form>
   </div>
- </div>
- <div class="row text-center">
-  <button type="button" class="btn btn-default" onClick="updateGraphs()">Update</button>
-  <button type="button" class="btn btn-primary" onClick="addGraph()">Add</button>
+  <div role="tabpanel" class="tab-pane fade" id="graph">
+   <form class="form-horizontal" role="form">
+    <div class="form-group">
+     <label class="col-sm-2 control-label">1 - Graphics</label>
+     <div class="col-sm-12"><select id="selectGraphs" class="form-control"></select></div>
+    </div>
+   </form>
+   <hr>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Graphic.description</label>
+     <div class="col-sm-10"><input id="graph_description" type="text" class="form-control"></div>
+    </div>
+   <div class="col-sm-10 text-center">
+    <div id="graphContainer" style="width: 100%; height: 400px"></div>
+    <button type="button" class="btn btn-primary" onClick="chartSaveData()">Save</button>
+   </div>
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="hard">
+   <form class="form-horizontal" role="form">
+    <div class="form-group">
+     <label class="col-sm-2 control-label">1 - Hardwares</label>
+     <div class="col-sm-10"><select id="selectHards" class="form-control"></select></div>
+    </div>
+    <hr>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Hardware.id</label>
+     <div class="col-sm-10"><input id="hard_id" type="text" class="form-control" disabled></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Hardware.type</label>
+     <div class="col-sm-10"><input id="hard_type" type="text" class="form-control"></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Hardware.name</label>
+     <div class="col-sm-10"><input id="hard_name" type="text" class="form-control"></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Hardware.param1</label>
+     <div class="col-sm-10"><input id="hard_param1" type="text" class="form-control"></div>
+    </div>
+    <hr>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">2 - Devices</label>
+     <div class="col-sm-10"><select id="selectDevs" class="form-control"></select></div>
+    </div>
+    <hr>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Device.id</label>
+     <div class="col-sm-10"><input id="dev_id" type="text" class="form-control" disabled></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Device.type</label>
+     <div class="col-sm-10"><select id="dev_type" class="form-control"><option>devTempHum</option><option>devInterruptor</option></select></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Device.name</label>
+     <div class="col-sm-10"><input id="dev_name" type="text" class="form-control"></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Device.hardwareId</label>
+     <div class="col-sm-10"><input id="dev_hardwareId" type="text" class="form-control" disabled></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Device.cacheLifetime</label>
+     <div class="col-sm-10"><input id="dev_cacheLifetime" type="text" class="form-control"></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Device.param1</label>
+     <div class="col-sm-10"><input id="dev_param1" type="text" class="form-control"></div>
+    </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Device.cloneToDeviceId</label>
+     <div class="col-sm-10"><input id="dev_cloneToDeviceId" type="text" class="form-control"></div>
+    </div>
+   </form>
+  </div>
  </div>
  <script>
+var chart; //http://www.highcharts.com/docs/chart-concepts/axes
+var lastSerie;
+var world;
+
 $(document).ready(function() {
-	reloadConds();
-	reloadGraphs();
+	$('#myTabs a').click(function (e) {
+			e.preventDefault();
+			$(this).tab('show');
+		})
+	initChart();
+	reloadWorld();
+	$('#selectHards').change(changeHardware);
+	$('#selectDevs').change(changeDevice);
+	$('#selectGraphs').change(changeGraph);
+	$('#selectConds').change(changeCondition);
+	$('#selectRooms').change(changeRoom);
+	$('#selectRGCs').change(changeRGC);
 });
 
-function reloadConds()
+function reloadWorld()
 {
 	$.ajax({
 			type: 'GET',
-			url:  '/conditions',
+			url:  '/world',
 			dataType: 'json',
 			success: function(json)
 			{
-				$('ul.conds').empty();
-				for (var key in json.conditions)
+				world = json;
+				$.each(json.hardwares, function(i, item) {
+						$('#selectHards').append($('<option>', { value: item.id, text: item.name }));
+					});
+				resetHardware();
+
+				$.each(json.devices, function(i, item) {
+						$('#cond_deviceId').append($('<option>', { value: item.id, text: item.name }));
+						if (item.type == 'devTempHum')
+						{
+							$('#room_deviceTemperatureId').append($('<option>', { value: item.id, text: item.name }));
+							$('#room_deviceHeatingId').append($('<option>', { value: item.id, text: item.name }));
+						}
+						else if (item.type == 'devInterruptor')
+							$('#room_deviceHeaterId').append($('<option>', { value: item.id, text: item.name }));
+					});
+				$('#cond_deviceId').val([]);
+				$('#room_deviceTemperatureId').val([]);
+				$('#room_deviceHeatingId').val([]);
+				$('#room_deviceHeaterId').val([]);
+
+				$.each(json.graphics, function(i, item) {
+						$('#selectGraphs').append($('<option>', { value: item.id, text: item.description }));
+						$('#rgc_graphId').append($('<option>', { value: item.id, text: item.description }));
+					});
+				$('#selectGraphs').val([]);
+
+				$.each(json.conditions, function(i, item) {
+						$('#selectConds').append($('<option>', { value: item.id, text: item.name }));
+						$('#rgc_conditionId').append($('<option>', { value: item.id, text: item.name }));
+					});
+				$('#selectConds').val([]);
+				$.each(json.rooms, function(i, item) {
+						$('#selectRooms').append($('<option>', { value: item.id, text: item.name }));
+					});
+				resetRoom();
+			},
+			error: function(e)
+			{
+				alert('Communication error: ' + e.message);
+			}
+		});
+}
+
+function changeHardware()
+{
+	var hardwareId = $(this).val();
+
+	$.each(world.hardwares, function(i, item) {
+			if (item.id == hardwareId)
+				for (var k in item)
+					$('#hard_' + k).val(item[k]);
+		});
+	$('#selectDevs option').remove();
+	$.each(world.devices, function(i, item) {
+			if (item.hardwareId == hardwareId)
+				$('#selectDevs').append($('<option>', { value: item.id, text: item.name }));
+		});
+	resetDevice();
+}
+
+function changeDevice()
+{
+	var deviceId = $(this).val();
+
+	$.each(world.devices, function(i, item) {
+			if (item.id == deviceId)
+				for (var k in item)
+					$('#dev_' + k).val(item[k]);
+		});
+}
+
+function changeGraph()
+{
+	var graphId = $(this).val();
+
+	$.each(world.graphics, function(i, item) {
+			if (item.id == graphId)
+			{
+				chartUpdate(item);
+				for (var k in item)
+					$('#graph_' + k).val(item[k]);
+			}
+		});
+}
+
+function changeCondition()
+{
+	var conditionId = $(this).val();
+
+	$.each(world.conditions, function(i, item) {
+			if (item.id == conditionId)
+				for (var k in item)
 				{
-					var data = json.conditions[key];
-					var html = '<form class="form-inline">';
+					var v = item[k];
 
-					html += ' <div class="form-group">';
-					html += '  <div class="input-group">';
-					html += '   <div class="input-group-addon">Id</div>';
-					html += '   <input type="text" name="id" style="width: 40px" class="form-control" placeholder="Id" value="' + data.id + '" readonly>';
-					html += '  </div>';
-					html += '  <div class="input-group">';
-					html += '   <div class="input-group-addon">Desc</div>';
-					html += '   <input type="text" name="desc" class="form-control" placeholder="Description" value="' + data.description + '" readonly>';
-					html += '  </div>';
-					html += ' </div>';
-					html += '&nbsp;&nbsp;';
-					html += '<a href="editCond.html?id=' + data.id + '"><span class="glyphicon glyphicon-pencil"></span></a>';
-					html += '</form>';
-					$('ul.conds').append('<li id="' + data.id + '">' + html + '</li>');					
+					if (k == 'deviceId' && v == -1)
+						$('#cond_' + k).val([]);
+					else if (v == 'true' || v == 'false')
+						$('#cond_' + k).prop('checked', v == 'true');
+					else
+						$('#cond_' + k).val(v);
 				}
-			},
-			error: function(e)
-			{
-				alert('Communication error: ' + e.message);
-			}
 		});
 }
 
-function addCond()
+function changeRoom()
 {
-	var condDesc = window.prompt('Give a description for the new condition','My description');
+	var roomId = $(this).val();
 
-	if (condDesc == null)
-		return;
-	condDesc = condDesc.trim();
-	if (condDesc.length == 0)
-		return;
-	$.ajax({
-			type: 'POST',
-			url:  '/condition/',
-			data: JSON.stringify({description: condDesc}),
-			dataType: 'json',
-			success: function(json)
-			{
-				reloadConds();
-			},
-			error: function(e)
-			{
-				alert('Communication error: ' + e.message);
-			}
-		});
-}
-
-function reloadGraphs()
-{
-	$.ajax({
-			type: 'GET',
-			url:  '/graphs',
-			dataType: 'json',
-			success: function(json)
-			{
-				$('ol.graphs').empty();
-				for (var key in json.graphs)
+	$.each(world.rooms, function(i, item) {
+			if (item.id == roomId)
+				for (var k in item)
 				{
-					var data = json.graphs[key];
-					var html = '<form class="form-inline">';
+					var v = item[k];
 
-					html += ' <div class="form-group">';
-					html += '  <div class="input-group">';
-					html += '   <div class="input-group-addon">Desc</div>';
-					html += '   <input type="text" name="desc" class="form-control" placeholder="Description" value="' + data.description + '">';
-					html += '  </div>';
-					html += ' </div>';
-					html += ' <div class="form-group">';
-					html += '  <div class="input-group">';
-					html += '   <div class="input-group-addon">Cond</div>';
-					html += '   <input type="text" name="condid" style="width: 40px" class="form-control" placeholder="Condition id" value="' + data.conditionId + '">';
-					html += '  </div>';
-					html += ' </div>';
-					html += '&nbsp;&nbsp;';
-					html += '<a href="editGraph.html?id=' + data.id + '"><span class="glyphicon glyphicon-pencil"></span></a>';
-					html += '</form>';
-					$('ol.graphs').append('<li id="' + data.id + '">' + html + '</li>');
+					if (k.startsWith('device') && v == -1)
+						$('#room_' + k).val([]);
+					else
+						$('#room_' + k).val(v);
 				}
-				$('ol.graphs').sortable();
-			},
-			error: function(e)
-			{
-				alert('Communication error: ' + e.message);
-			}
+		});
+	$.each(world.roomGraphConds, function(i, item) {
+			if (item.roomId == roomId)
+				$('#selectRGCs').append($('<option>', { value: item.id, text: '#' + item.id }));
+		});
+	resetRGC();
+}
+
+function changeRGC()
+{
+	var rgcId = $(this).val();
+
+	resetRGC();
+	$.each(world.roomGraphConds, function(i, item) {
+			if (item.id == rgcId)
+				for (var k in item)
+				{
+					var v = item[k];
+
+					if (v == -1)
+						$('#rgc_' + k).val([]);
+					else
+						$('#rgc_' + k).val(v);
+				}
 		});
 }
 
-function updateGraphs()
+function resetHardware()
 {
-	var graphs = [];
+	$('#selectHards').val([]);
+	$('[id^="hard_"]').val([]);
+	resetDevice();
+}
 
-	$('ol.graphs').children('li').each(function(idx)
+function resetDevice()
+{
+	$('#selectDevs').val([]);
+	$('[id^="dev_"]').val([]);
+}
+
+function resetRoom()
+{
+	$('#selectRooms').val([]);
+	$('[id^="room_"]').val([]);
+	resetRGC();
+}
+
+function resetRGC()
+{
+	$('[id^="rgc_"]').val([]);
+	$('#selectRGCs').val([]);
+}
+
+function chartUpdate(json)
+{
+	var serie = [];
+	var lastValue = 12;
+	var lastTime = 0;
+
+	for (var key in json.data)
+	{
+		var data = json.data[key];
+		var dataTime = parseInt(data.time);
+		var dataValue = parseFloat(data.value);
+
+		chartAddToSerie(serie, dataTime, lastValue, lastTime);
+		lastValue = dataValue;
+		lastTime = dataTime;
+	}
+	chartAddToSerie(serie, 2400, lastValue, lastTime);
+	for (var i in chart.series)
+		chart.series[i].remove(false);
+	chart.addSeries({
+			id: json.id,
+			name: json.description,
+			position: json.position,
+			conditionId: json.conditionId,
+			data: serie,
+			draggableY: true,
+			dragMinY: 0,
+			dragMaxY: 30,
+			roundY: 10
+		});
+}
+
+function chartAddToSerie(serie, dataTime, dataValue, lastTime)
+{
+	var diffTime = (dataTime - lastTime);
+	var diffCount = Math.floor(diffTime / 100) * 2 + (diffTime % 100);
+
+	for (var i = 0; i < diffCount; i++)
+		serie.push(dataValue);
+}
+
+function chartSaveData()
+{
+	if (lastSerie == null)
+	{
+		alert('No changed in graph !');
+		return;
+	}
+
+	var serie = lastSerie;
+	var oldValue;
+	var graph;
+	var data = [];
+
+	for (var i = 0; i < serie.data.length; i++)
+	{
+		var point = serie.data[i];
+
+		if (oldValue != point.y)
 		{
-			graphs.push({
-					id: $(this).attr('id'),
-					position: idx,
-					description: $(this).find('input[name="desc"]').val(),
-					conditionId: $(this).find('input[name="condid"]').val()
-				});
-		});
+			data.push({time: parseInt(point.category.replace(':', '')), value: point.y});
+			oldValue = point.y;
+		}
+	}
+	graph = {
+			id: serie.options.id,
+			description: serie.options.name,
+			position: serie.options.position,
+			conditionId: serie.options.conditionId,
+			data: data
+		};
+	console.dir(graph);
 	$.ajax({
 			type: 'POST',
-			url:  '/graphs',
-			data: JSON.stringify({graphs: graphs }),
+			url:  '/graph/' + graph.id,
+			data: JSON.stringify(graph),
 			dataType: 'json',
 			success: function(json)
 			{
-				reloadGraphs();
+				alert('Data saved !');
 			},
 			error: function(e)
 			{
@@ -192,27 +473,75 @@ function updateGraphs()
 		});
 }
 
-function addGraph()
+function initChart()
 {
-	var graphDesc = window.prompt('Give a description for the new graph','My description');
+	var category = [];
 
-	if (graphDesc == null)
-		return;
-	graphDesc = graphDesc.trim();
-	if (graphDesc.length == 0)
-		return;
-	$.ajax({
-			type: 'POST',
-			url:  '/graph/',
-			data: JSON.stringify({description: graphDesc}),
-			dataType: 'json',
-			success: function(json)
-			{
-				reloadGraphs();
+	for (var i = 0; i < 24; i += 0.5)
+	{
+		var h = Math.floor(i);
+		var m = (i - h) * 60;
+
+		category.push((h < 10 ? '0' + h : h) + ':' + (m == 0 ? '00' : m));
+	}
+	chart = new Highcharts.Chart({
+			chart: {
+				renderTo: 'graphContainer',
+				animation: false
 			},
-			error: function(e)
-			{
-				alert('Communication error: ' + e.message);
+			title: {
+				text: 'Heating control'
+			},
+			xAxis: {
+				categories: category
+			},
+			yAxis: {
+				title: {
+					text: 'Temperature'
+				},
+				min: 12,
+				max: 25
+			},
+			plotOptions: {
+				series: {
+					cursor: 'ns-resize',
+					point: {
+						events: {
+							drag: function (e) {
+								var serie = e.target.series;
+
+								for (var i = 0; i < serie.data.length; i++)
+								{
+									var point = serie.data[i];
+
+									if (point.x == e.target.x)
+									{
+										var idx = i + 1;
+
+										while (idx < serie.data.length)
+										{
+											if (serie.data[idx].y != e.target.y)
+												break;
+											serie.data[idx].y = e.newY;
+											idx++;
+										}
+										break;
+									}
+								}
+							},
+							drop: function (dragPoint) {
+								lastSerie = this.series;
+							}
+						}
+					},
+					stickyTracking: false
+					},
+				column: {
+					stacking: 'normal'
+				}
+			},
+			tooltip: {
+				yDecimals: 1
 			}
 		});
 }

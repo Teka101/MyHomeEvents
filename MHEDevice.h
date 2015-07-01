@@ -9,11 +9,13 @@ class MHEDevice
         int _id;
         DBDeviceType _type;
         int _cacheLifetime;
+        MHEDevice *_cloneTo;
 
     public:
         MHEDevice(int id, DBDeviceType type, int cacheLifetime);
         virtual ~MHEDevice();
 
+        virtual void setCloneTo(MHEDevice *cloneTo);
         virtual float getTemperature();
         virtual float getHumidity();
         virtual bool setTempHum(float temperature, float humidity);

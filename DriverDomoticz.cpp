@@ -130,6 +130,8 @@ void DeviceDomoticz::refreshCache()
                             _cache.humidity = itChild.second.get_value<float>();
                     }
                     LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("DeviceDomoticz::refreshCache - Refresh(" << (std::string)*this << ") = " << (std::string)_cache));
+                    if (_cloneTo != NULL)
+                        _cloneTo->setTempHum(_cache.temperature, _cache.humidity);
                 }
             }
         }

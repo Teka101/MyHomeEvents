@@ -21,7 +21,7 @@ private:
 	void launch();
 
 public:
-	Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer);
+	Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer, int refreshInSeconds);
 	~Brain();
 
 	void start();

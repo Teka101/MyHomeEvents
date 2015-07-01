@@ -53,6 +53,16 @@ void MHEHardDevContainer::buildDevices(MHEDatabase &db)
         else
             LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("buildDevices - unable to build: " << (std::string)dev << " unknown hardware with id=" << dev.hardwareId));
     }
+    BOOST_FOREACH(DBDevice &dev, devs)
+    {
+        if (dev.cloneToDeviceId != -1)
+        {
+            MHEDevice *d = _devById[dev.id];
+            MHEDevice *cloneTo = _devById[dev.id];
+
+            d->setCloneTo(cloneTo);
+        }
+    }
 }
 
 MHEDevice *MHEHardDevContainer::getDeviceById(int id)

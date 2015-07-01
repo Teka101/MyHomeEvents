@@ -41,6 +41,7 @@ struct DBDevice
     int hardwareId;
     int cacheLifetime;
     std::string param1;
+    int cloneToDeviceId;
 
     operator std::string() const
     {
@@ -53,6 +54,7 @@ struct DBDevice
             << " hardwareId=" << hardwareId
             << " cacheLifetime=" << cacheLifetime
             << " param1=" << param1
+            << " cloneToDeviceId=" << cloneToDeviceId
             << "]";
         return ss.str();
     }
@@ -174,6 +176,7 @@ class MHEDatabase
         std::vector<DBGraph> getGraphs();
         std::vector<DBCondition> getConditions();
         std::vector<DBRoom> getRooms();
+        std::vector<DBRoomGraphCond> getRoomGraphConds();
         std::vector<DBRoomGraphCond> getRoomGraphCondByActiveDaysAndCalendar();
         std::vector<DBRoomGraphCond> getRoomGraphCondByActiveDaysAndCalendar(int dayMask, int dateYYYYMMDD);
 };

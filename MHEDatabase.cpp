@@ -1,8 +1,8 @@
-#include <cfloat>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
+#include <cfloat>
 #include <iostream>
 #include <math.h>
 #include "MHEDatabase.h"
@@ -38,7 +38,7 @@ void MHEDatabase::createTables()
 	const char sqls[][512] =
 	{
             "CREATE TABLE IF NOT EXISTS hardware(type TEXT INTEGER NOT NULL, name TEXT NOT NULL, param1 TEXT)",
-            "CREATE TABLE IF NOT EXISTS device(type INTEGER NOT NULL, name TEXT NOT NULL, hardware_id INTEGER NOT NULL REFERENCES hardware(rowid), cache_lifetime INTEGER NOT NULL, param1 TEXT)",
+            "CREATE TABLE IF NOT EXISTS device(type INTEGER NOT NULL, name TEXT NOT NULL, hardware_id INTEGER NOT NULL REFERENCES hardware(rowid), cache_lifetime INTEGER NOT NULL, param1 TEXT, clone_to_device_id INTEGER REFERENCES device(rowid))",
 
 			"CREATE TABLE IF NOT EXISTS graph(description TEXT, position INTEGER DEFAULT 99)",
 			"CREATE TABLE IF NOT EXISTS graph_data(graph_id INTEGER REFERENCES graph(rowid), time INTEGER NOT NULL, value REAL)",
@@ -74,7 +74,7 @@ void MHEDatabase::insertDefaultData()
             "INSERT INTO hardware(type,name,param1) VALUES('domoticz','MyDomoticz','http://127.0.0.1:8080/')",
             "INSERT INTO device(type,name,hardware_id,cache_lifetime,param1) VALUES(0,'TempIn',1,300,8),(0,'TempOut',1,300,5),(0,'TempHeating',1,300,6),(1,'Heater',1,300,7)",
             "INSERT INTO hardware(type,name) VALUES('shell','Scripts shell')",
-            "INSERT INTO device(type,name,hardware_id,cache_lifetime,param1) VALUES(0,'DHT22',2,240,'echo \"Humidity = 50 % Temperature = 19.5 *C\"')",
+            "INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,clone_to_device_id) VALUES(0,'DHT22',2,240,'echo \"Humidity = 50 % Temperature = 19.5 *C\"', 1)",
 
             "INSERT INTO graph(description,position) VALUES('Default week', 0)",
 			"INSERT INTO graph_data(graph_id,time,value) VALUES(1,0000,19),(1,0600,19.5),(1,1900,20),(1,2100,19)",
@@ -94,7 +94,7 @@ void MHEDatabase::insertDefaultData()
 			"INSERT INTO condition(name,use_calendar) VALUES('Absence less than 1 week',1),('Absence more than 1 week',1)",
 			"INSERT INTO condition_calendar(condition_id,date) VALUES(6, 20150605),(6, 20150606),(6, 20150623)",
 
-            "INSERT INTO room(name,device_temperature_id,device_heater_id,device_heating_id) VALUES('Home',1,4,3)",
+            "INSERT INTO room(name,device_temperature_id,device_heater_id,device_heating_id) VALUES('Home',5,4,3)",
 			"INSERT INTO room_graphcond(room_id,graph_id,condition_id) VALUES(1,1,1),(1,2,2),(1,3,3),(1,4,4),(1,5,5),(1,6,6)",
 	};
 	int nbElements = (sizeof(sqls) / sizeof(*sqls));
@@ -148,7 +148,7 @@ static int selectDevice(void *param, int ac, char **av, char **column)
 {
 	std::vector<DBDevice> *r = static_cast<std::vector<DBDevice>*>(param);
 
-	if (ac == 6)
+	if (ac == 7)
 	{
 		DBDevice dev;
 
@@ -158,6 +158,7 @@ static int selectDevice(void *param, int ac, char **av, char **column)
         dev.hardwareId = boost::lexical_cast<int>(av[3]);
         dev.cacheLifetime = boost::lexical_cast<int>(av[4]);
 		dev.param1 = av[5];
+		dev.cloneToDeviceId = (av[6] == NULL ? -1 : boost::lexical_cast<int>(av[6]));
 		r->push_back(dev);
 	}
 	return 0;
@@ -168,7 +169,7 @@ std::vector<DBDevice> MHEDatabase::getDevices()
     std::vector<DBDevice> ret;
 	int rc;
 
-	rc = sqlite3_exec(_db, "SELECT rowid,type,name,hardware_id,cache_lifetime,param1 FROM device ORDER BY rowid", selectDevice, &ret, NULL);
+	rc = sqlite3_exec(_db, "SELECT rowid,type,name,hardware_id,cache_lifetime,param1,clone_to_device_id FROM device ORDER BY rowid", selectDevice, &ret, NULL);
 	if (rc != SQLITE_OK)
 		LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::getDevices - SQL error: " << sqlite3_errmsg(_db)));
 	return ret;
@@ -328,4 +329,15 @@ std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphCondByActiveDaysAndCalenda
     if (rc != SQLITE_OK)
         LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::getRoomGraphCondByActiveDaysAndCalendar - SQL error: " << sqlite3_errmsg(_db)));
     return ret;
+}
+
+std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphConds()
+{
+    std::vector<DBRoomGraphCond> ret;
+	int rc;
+
+	rc = sqlite3_exec(_db, "SELECT rowid,room_id,graph_id,condition_id FROM room_graphcond ORDER BY rowid", selectRoomGraphCond, &ret, NULL);
+	if (rc != SQLITE_OK)
+		LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::getRooms - SQL error: " << sqlite3_errmsg(_db)));
+	return ret;
 }

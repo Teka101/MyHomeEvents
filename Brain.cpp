@@ -7,7 +7,7 @@
 
 #define TEMP_HYSTERESIS 0.5
 
-Brain::Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer) : _db(db), _hardDevContainer(hardDevContainer), _refreshInSeconds(300)
+Brain::Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer, int refreshInSeconds) : _db(db), _hardDevContainer(hardDevContainer), _refreshInSeconds(refreshInSeconds)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MHEDatabase"));
     _timer = new boost::asio::deadline_timer(_io);
