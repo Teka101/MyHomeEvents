@@ -38,7 +38,7 @@ void MHEDatabase::createTables()
 	const char sqls[][512] =
 	{
             "CREATE TABLE IF NOT EXISTS hardware(type TEXT INTEGER NOT NULL, name TEXT NOT NULL, param1 TEXT)",
-            "CREATE TABLE IF NOT EXISTS device(type INTEGER NOT NULL, name TEXT NOT NULL, hardware_id INTEGER NOT NULL REFERENCES hardware(rowid), cache_lifetime INTEGER NOT NULL, param1 TEXT, clone_to_device_id INTEGER REFERENCES device(rowid))",
+            "CREATE TABLE IF NOT EXISTS device(type INTEGER NOT NULL, name TEXT NOT NULL, hardware_id INTEGER NOT NULL REFERENCES hardware(rowid), cache_lifetime INTEGER NOT NULL, param1 TEXT, param2 TEXT, clone_to_device_id INTEGER REFERENCES device(rowid))",
 
 			"CREATE TABLE IF NOT EXISTS graph(description TEXT, position INTEGER DEFAULT 99)",
 			"CREATE TABLE IF NOT EXISTS graph_data(graph_id INTEGER REFERENCES graph(rowid), time INTEGER NOT NULL, value REAL)",
@@ -72,7 +72,7 @@ void MHEDatabase::insertDefaultData()
 	const char sqls[][256] =
 	{
             "INSERT INTO hardware(type,name,param1) VALUES('domoticz','MyDomoticz','http://127.0.0.1:8080/')",
-            "INSERT INTO device(type,name,hardware_id,cache_lifetime,param1) VALUES(0,'TempIn',1,300,8),(0,'TempOut',1,300,5),(0,'TempHeating',1,300,6),(1,'Heater',1,300,7)",
+            "INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,param2) VALUES(0,'TempIn',1,300,'8',NULL),(0,'TempOut',1,300,'5','24havg'),(0,'TempHeating',1,300,'6',NULL),(1,'Heater',1,300,'7',NULL)",
             "INSERT INTO hardware(type,name) VALUES('shell','Scripts shell')",
             "INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,clone_to_device_id) VALUES(0,'DHT22',2,240,'echo \"Humidity = 50 % Temperature = 19.5 *C\"', 1)",
 
@@ -148,7 +148,7 @@ static int selectDevice(void *param, int ac, char **av, char **column)
 {
 	std::vector<DBDevice> *r = static_cast<std::vector<DBDevice>*>(param);
 
-	if (ac == 7)
+	if (ac == 8)
 	{
 		DBDevice dev;
 
@@ -158,7 +158,9 @@ static int selectDevice(void *param, int ac, char **av, char **column)
         dev.hardwareId = boost::lexical_cast<int>(av[3]);
         dev.cacheLifetime = boost::lexical_cast<int>(av[4]);
 		dev.param1 = av[5];
-		dev.cloneToDeviceId = (av[6] == NULL ? -1 : boost::lexical_cast<int>(av[6]));
+		if (av[6] != NULL)
+            dev.param2 = av[6];
+		dev.cloneToDeviceId = (av[7] == NULL ? -1 : boost::lexical_cast<int>(av[7]));
 		r->push_back(dev);
 	}
 	return 0;
@@ -169,7 +171,7 @@ std::vector<DBDevice> MHEDatabase::getDevices()
     std::vector<DBDevice> ret;
 	int rc;
 
-	rc = sqlite3_exec(_db, "SELECT rowid,type,name,hardware_id,cache_lifetime,param1,clone_to_device_id FROM device ORDER BY rowid", selectDevice, &ret, NULL);
+	rc = sqlite3_exec(_db, "SELECT rowid,type,name,hardware_id,cache_lifetime,param1,param2,clone_to_device_id FROM device ORDER BY rowid", selectDevice, &ret, NULL);
 	if (rc != SQLITE_OK)
 		LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::getDevices - SQL error: " << sqlite3_errmsg(_db)));
 	return ret;
@@ -340,4 +342,61 @@ std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphConds()
 	if (rc != SQLITE_OK)
 		LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::getRooms - SQL error: " << sqlite3_errmsg(_db)));
 	return ret;
+}
+
+bool MHEDatabase::updateGraph(DBGraph &graph)
+{
+    sqlite3_stmt *stmt = NULL;
+	const std::string sql = "UPDATE graph SET position=?,description=? WHERE rowid=?";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_int(stmt, 1, graph.position);
+		sqlite3_bind_text(stmt, 2, graph.description.c_str(), graph.description.length(), NULL);
+		sqlite3_bind_int(stmt, 3, graph.id);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		if (rc == SQLITE_DONE)
+            return updateGraphData(graph);
+	}
+	if (rc != SQLITE_OK && rc != SQLITE_DONE)
+		LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::updateGraph - SQL error: " << sqlite3_errmsg(_db)));
+	return false;
+}
+
+bool MHEDatabase::updateGraphData(DBGraph &graph)
+{
+    sqlite3_stmt *stmt = NULL;
+	const std::string sqlDelete = "DELETE FROM graph_data WHERE graph_id=?";
+	const std::string sql = "INSERT INTO graph_data(graph_id, time, value) VALUES(?,?,?)";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sqlDelete.c_str(), sqlDelete.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_int(stmt, 1, graph.id);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		if (rc == SQLITE_DONE)
+		{
+			rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+			if (rc == SQLITE_OK)
+			{
+				BOOST_FOREACH(DBGraphData &data, graph.data)
+				{
+					sqlite3_bind_int(stmt, 1, graph.id);
+					sqlite3_bind_int(stmt, 2, data.time);
+					sqlite3_bind_double(stmt, 3, data.value);
+					rc = sqlite3_step(stmt);
+					sqlite3_reset(stmt);
+				}
+				sqlite3_finalize(stmt);
+			}
+		}
+	}
+	if (rc != SQLITE_OK && rc != SQLITE_DONE)
+        LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::updateGraphData - SQL error: " << sqlite3_errmsg(_db)));
+	return (rc == SQLITE_OK || rc == SQLITE_DONE);
 }
