@@ -49,13 +49,16 @@ class DeviceDomoticz : public MHEDevice
     private:
         std::string _urlDomoticz;
         std::string _deviceIdx;
+        bool _isDayAverage;
         CacheDeviceDomoticz _cache;
         log4cplus::Logger _log;
 
         void refreshCache();
+        bool refreshNormal();
+        bool refreshDayAverage();
 
     public:
-        DeviceDomoticz(std::string &urlDomoticz, DBDevice &dev);
+        DeviceDomoticz(std::string &urlDomoticz, bool isDayAverage, DBDevice &dev);
         ~DeviceDomoticz();
 
         float getTemperature();
@@ -72,6 +75,7 @@ class DeviceDomoticz : public MHEDevice
                 << "id=" << _id
                 << " type=" << _type
                 << " deviceIdx=" << _deviceIdx
+                << " isDayAverage=" << _isDayAverage
                 << "]";
             return ss.str();
         }

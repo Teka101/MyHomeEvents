@@ -2,6 +2,7 @@
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <cfloat>
 #include <time.h>
 #include "CurlHelpers.h"
 #include "DriverDomoticz.h"
@@ -18,10 +19,10 @@ HardwareDomoticz::~HardwareDomoticz()
 
 MHEDevice *HardwareDomoticz::buildObject(DBDevice &dev)
 {
-    return new DeviceDomoticz(_hw.param1, dev);
+    return new DeviceDomoticz(_hw.param1, (dev.param2 == "24havg"), dev);
 }
 
-DeviceDomoticz::DeviceDomoticz(std::string &urlDomoticz, DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.cacheLifetime), _urlDomoticz(urlDomoticz), _deviceIdx(dev.param1)
+DeviceDomoticz::DeviceDomoticz(std::string &urlDomoticz, bool isDayAverage, DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.cacheLifetime), _urlDomoticz(urlDomoticz), _deviceIdx(dev.param1), _isDayAverage(isDayAverage)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("DeviceDomoticz"));
 }
@@ -88,52 +89,99 @@ void DeviceDomoticz::refreshCache()
 
     if (_cache.lastUpdate < now)
     {
-        std::stringstream ssUrl;
-        std::stringstream ssOut;
+        bool isSuccess = false;
 
-        ssUrl << _urlDomoticz << "json.htm?type=devices&rid=" << _deviceIdx;
-        if (curlExecute(ssUrl.str(), &ssOut))
+        if (_isDayAverage)
+            isSuccess = refreshDayAverage();
+        else
+            isSuccess = refreshNormal();
+        if (isSuccess)
         {
-            boost::property_tree::ptree pTree;
+            LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("DeviceDomoticz::refreshCache - Refresh(" << (std::string)*this << ") = " << (std::string)_cache));
+            if (_cloneTo != NULL)
+                _cloneTo->setTempHum(_cache.temperature, _cache.humidity);
+        }
+    }
+}
 
-            boost::property_tree::read_json(ssOut, pTree);
-            if (pTree.count("result") == 0)
-                return;
-            BOOST_FOREACH(ptreePair &it, pTree.get_child("result"))
+bool DeviceDomoticz::refreshNormal()
+{
+    std::stringstream ssOut, ssUrl;
+
+    ssUrl << _urlDomoticz << "json.htm?type=devices&rid=" << _deviceIdx;
+    if (curlExecute(ssUrl.str(), &ssOut))
+    {
+        boost::property_tree::ptree pTree;
+
+        boost::property_tree::read_json(ssOut, pTree);
+        if (pTree.count("result") == 0)
+            return false;
+        BOOST_FOREACH(ptreePair &it, pTree.get_child("result"))
+        {
+            if (it.second.size() > 0)
             {
-                if (it.second.size() > 0)
+                BOOST_FOREACH(ptreePair &itChild, it.second)
                 {
-                    BOOST_FOREACH(ptreePair &itChild, it.second)
+                    if (itChild.first == "Name")
+                        _cache.name = itChild.second.get_value<std::string>();
+                    else if (itChild.first == "LastUpdate")
                     {
-                        if (itChild.first == "Name")
-                            _cache.name = itChild.second.get_value<std::string>();
-                        else if (itChild.first == "LastUpdate")
-                        {
-                            std::string date = itChild.second.get_value<std::string>();
-                            struct tm tm;
+                        std::string date = itChild.second.get_value<std::string>();
+                        struct tm tm;
 
-                            memset(&tm, 0, sizeof(tm));
-                            tm.tm_zone = *tzname;
-                            tm.tm_isdst = daylight;
-                            if (strptime(date.c_str(), "%Y-%m-%d %H:%M:%S", &tm) != NULL)
-                                _cache.lastUpdate = mktime(&tm);
-                        }
-                        else if (itChild.first == "Status")
-                        {
-                            std::string status = itChild.second.get_value<std::string>();
-
-                            _cache.statusIsOn = boost::starts_with(status, "On");
-                        }
-                        else if (itChild.first == "Temp")
-                            _cache.temperature = itChild.second.get_value<float>();
-                        else if (itChild.first == "Humidity")
-                            _cache.humidity = itChild.second.get_value<float>();
+                        memset(&tm, 0, sizeof(tm));
+                        tm.tm_zone = *tzname;
+                        tm.tm_isdst = daylight;
+                        if (strptime(date.c_str(), "%Y-%m-%d %H:%M:%S", &tm) != NULL)
+                            _cache.lastUpdate = mktime(&tm);
                     }
-                    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("DeviceDomoticz::refreshCache - Refresh(" << (std::string)*this << ") = " << (std::string)_cache));
-                    if (_cloneTo != NULL)
-                        _cloneTo->setTempHum(_cache.temperature, _cache.humidity);
+                    else if (itChild.first == "Status")
+                    {
+                        std::string status = itChild.second.get_value<std::string>();
+
+                        _cache.statusIsOn = boost::starts_with(status, "On");
+                    }
+                    else if (itChild.first == "Temp")
+                        _cache.temperature = itChild.second.get_value<float>();
+                    else if (itChild.first == "Humidity")
+                        _cache.humidity = itChild.second.get_value<float>();
                 }
             }
         }
+        return true;
     }
+    return false;
+}
+
+bool DeviceDomoticz::refreshDayAverage()
+{
+    std::stringstream ssOut, ssUrl;
+
+    ssUrl << _urlDomoticz << "json.htm?type=graph&sensor=temp&idx=" << _deviceIdx << "&range=day";
+    if (curlExecute(ssUrl.str(), &ssOut))
+    {
+        boost::property_tree::ptree pTree;
+        double tempTotal = 0.0, tempNumber = 0.0;
+
+        boost::property_tree::read_json(ssOut, pTree);
+        if (pTree.count("result") == 0)
+            return false;
+        BOOST_FOREACH(ptreePair it, pTree.get_child("result"))
+        {
+            float currentTemp = it.second.get<float>("te", FLT_MIN);
+
+            if (currentTemp > FLT_MIN)
+            {
+                tempTotal += currentTemp;
+                tempNumber++;
+            }
+        }
+        LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Domoticz::getLastDayAverageTemperatureOutdoor - tempReturn=" << (tempTotal / tempNumber) << " tempTotal=" << tempTotal << " tempNumber=" << tempNumber << "]"));
+        if (tempNumber > 0)
+        {
+            _cache.temperature = (tempTotal / tempNumber);
+            return true;
+        }
+    }
+    return false;
 }
