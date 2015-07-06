@@ -20,7 +20,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		const char *url, const char *method, const char *version,
 		const char *upload_data, size_t *upload_data_size, void **con_cls)
 {
-	//std::stringstream *postData = static_cast<std::stringstream*>(*con_cls);
+	std::stringstream *postData = static_cast<std::stringstream*>(*con_cls);
 	MHEWeb *ws = static_cast<MHEWeb*>(cls);
 	struct MHD_Response *response = NULL;
 	int httpCode = MHD_HTTP_OK;
@@ -39,6 +39,31 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
         response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
     }
+    else if (boost::equals(method, "POST") && boost::starts_with(url, "/graph/"))
+	{
+		if (postData == NULL)
+		{
+			postData = new std::stringstream();
+			*con_cls = postData;
+			return MHD_YES;
+		}
+		if (*upload_data_size > 0)
+		{
+			*postData << upload_data;
+			*upload_data_size = 0;
+			return MHD_YES;
+		}
+		boost::property_tree::ptree pTree;
+		std::string description;
+		DBGraph graph;
+
+		boost::property_tree::read_json(*postData, pTree);
+		readFromPTree(pTree, graph);
+		response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
+		if (!ws->getDataBase()->updateGraph(graph))
+			httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
+		delete postData;
+	}
 	/*else if (boost::equals(url, "/conditions"))
 	{
 		boost::property_tree::ptree pt;
@@ -399,4 +424,9 @@ void MHEWeb::buildJsonWorld(std::stringstream &ss)
         pt.add_child("roomGraphConds", ptChildren);
     }
 	boost::property_tree::write_json(ss, pt, false);
+}
+
+MHEDatabase *MHEWeb::getDataBase()
+{
+    return _db;
 }

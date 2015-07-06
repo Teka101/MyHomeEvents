@@ -26,6 +26,7 @@ class MHEWeb
         int sendFile(struct MHD_Response **response, const char *url);
 
         void buildJsonWorld(std::stringstream &ss);
+        MHEDatabase *getDataBase();
 };
 
 #endif // MHEWEB_H
