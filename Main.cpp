@@ -37,30 +37,33 @@ int main(int ac, char **av)
 	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Brain.refresh=" << brainRefresh));
 
     MHEDatabase *db = new MHEDatabase();
+
+    if (logger.isEnabledFor(log4cplus::DEBUG_LOG_LEVEL))
+    {
+        std::vector<DBCondition> conds = db->getConditions();
+        BOOST_FOREACH(DBCondition cond, conds)
+        {
+            LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)cond));
+        }
+        std::vector<DBGraph> graphs = db->getGraphs();
+        BOOST_FOREACH(DBGraph graph, graphs)
+        {
+            LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)graph));
+        }
+        std::vector<DBRoom> rooms = db->getRooms();
+        BOOST_FOREACH(DBRoom room, rooms)
+        {
+            LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)room));
+        }
+        std::vector<DBRoomGraphCond> roomGraphConds = db->getRoomGraphCondByActiveDaysAndCalendar();
+        BOOST_FOREACH(DBRoomGraphCond rgc, roomGraphConds)
+        {
+            LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)rgc));
+        }
+    }
+
     MHEHardDevContainer *hardDev = new MHEHardDevContainer(*db);
     MHEWeb *ws = new MHEWeb(webPort, db, hardDev);
-
-    std::vector<DBCondition> conds = db->getConditions();
-    BOOST_FOREACH(DBCondition cond, conds)
-    {
-        std::cout << (std::string)cond << std::endl;
-    }
-    std::vector<DBGraph> graphs = db->getGraphs();
-    BOOST_FOREACH(DBGraph graph, graphs)
-    {
-        std::cout << (std::string)graph << std::endl;
-    }
-    std::vector<DBRoom> rooms = db->getRooms();
-    BOOST_FOREACH(DBRoom room, rooms)
-    {
-        std::cout << (std::string)room << std::endl;
-    }
-    std::vector<DBRoomGraphCond> roomGraphConds = db->getRoomGraphCondByActiveDaysAndCalendar();
-    BOOST_FOREACH(DBRoomGraphCond rgc, roomGraphConds)
-    {
-        std::cout << (std::string)rgc << std::endl;
-    }
-
     Brain b(db, hardDev, brainRefresh);
     b.start();
 
