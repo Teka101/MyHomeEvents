@@ -24,25 +24,24 @@ typedef std::pair<const std::string, boost::property_tree::ptree> ptreePair;
 //		}
 //    }
 //}
-//
-//void readFromPTree(boost::property_tree::ptree &pTree, sGraph &graph, bool readData)
-//{
-//	graph.id = pTree.get<int>("id");
-//	graph.position = pTree.get<int>("position", -1);
-//	graph.description = pTree.get<std::string>("description");
-//	graph.conditionId = pTree.get<int>("conditionId", -1);
-//	if (readData)
-//	{
-//		BOOST_FOREACH(ptreePair it, pTree.get_child("data"))
-//		{
-//			sGraphData data;
-//
-//			data.time = it.second.get<int>("time");
-//			data.value = it.second.get<float>("value");
-//			graph.data.push_back(data);
-//		}
-//	}
-//}
+
+void readFromPTree(boost::property_tree::ptree &pTree, DBGraph &graph)
+{
+	graph.id = pTree.get<int>("id");
+	graph.position = pTree.get<int>("position", -1);
+	graph.description = pTree.get<std::string>("description");
+	if (pTree.count("data") > 0)
+	{
+		BOOST_FOREACH(ptreePair it, pTree.get_child("data"))
+		{
+			DBGraphData data;
+
+			data.time = it.second.get<int>("time");
+			data.value = it.second.get<float>("value");
+			graph.data.push_back(data);
+		}
+	}
+}
 
 void writeToPTree(boost::property_tree::ptree &pTree, DBHarware &hard)
 {
@@ -65,6 +64,7 @@ void writeToPTree(boost::property_tree::ptree &pTree, DBDevice &dev)
 	pTree.put("hardwareId", dev.hardwareId);
 	pTree.put("cacheLifetime", dev.cacheLifetime);
 	pTree.put("param1", dev.param1);
+    pTree.put("param2", dev.param2);
 	pTree.put("cloneToDeviceId", dev.cloneToDeviceId);
 }
 

@@ -3,8 +3,7 @@
 
 #include "MHEDatabase.h"
 
-//void readFromPTree(boost::property_tree::ptree &pTree, sCondition &cond);
-//void readFromPTree(boost::property_tree::ptree &pTree, sGraph &graph, bool readData = false);
+void readFromPTree(boost::property_tree::ptree &pTree, DBGraph &graph);
 
 void writeToPTree(boost::property_tree::ptree &pTree, DBHarware &hard);
 void writeToPTree(boost::property_tree::ptree &pTree, DBDevice &dev);
