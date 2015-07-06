@@ -40,8 +40,6 @@
 		<Unit filename="CurlHelpers.h" />
 		<Unit filename="DataBaseHelpers.cpp" />
 		<Unit filename="DataBaseHelpers.h" />
-		<Unit filename="Domoticz.cpp" />
-		<Unit filename="Domoticz.h" />
 		<Unit filename="DriverDomoticz.cpp" />
 		<Unit filename="DriverDomoticz.h" />
 		<Unit filename="DriverShell.cpp" />
@@ -57,8 +55,6 @@
 		<Unit filename="MHEWeb.cpp" />
 		<Unit filename="MHEWeb.h" />
 		<Unit filename="Main.cpp" />
-		<Unit filename="WebServer.cpp" />
-		<Unit filename="WebServer.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
