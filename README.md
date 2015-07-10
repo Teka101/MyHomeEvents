@@ -26,6 +26,7 @@ Install packages for Debian/Raspbian/Ubuntu:
 * libsqlite3-dev
 
 Do:
+
 	make all
 
 Configuration
