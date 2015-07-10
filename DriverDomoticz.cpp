@@ -47,19 +47,19 @@ bool DeviceDomoticz::setTempHum(float temperature, float humidity)
 {
     std::stringstream ssUrl;
 
-	ssUrl << _urlDomoticz << "json.htm?type=command&param=udevice&idx=" << _deviceIdx << "&nvalue=0&svalue=" << temperature << ';' << humidity << ";2";
-	if (curlExecute(ssUrl.str()))
-	{
+    ssUrl << _urlDomoticz << "json.htm?type=command&param=udevice&idx=" << _deviceIdx << "&nvalue=0&svalue=" << temperature << ';' << humidity << ";2";
+    if (curlExecute(ssUrl.str()))
+    {
         time_t now = time(NULL);
 
         _cache.lastUpdate = now;
-		_cache.humidity = humidity;
-		_cache.temperature = temperature;
-		if (_cloneTo != NULL)
+        _cache.humidity = humidity;
+        _cache.temperature = temperature;
+        if (_cloneTo != NULL)
             _cloneTo->setTempHum(temperature, humidity);
-		return true;
-	}
-	return false;
+        return true;
+    }
+    return false;
 }
 
 bool DeviceDomoticz::isActivated()
