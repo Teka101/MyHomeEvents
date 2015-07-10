@@ -45,6 +45,9 @@
      <label class="col-sm-2 control-label">Room.deviceHeaterId</label>
      <div class="col-sm-10"><select id="room_deviceHeaterId" class="form-control"></select></div>
     </div>
+    <div class="form-group text-center">
+     <button type="button" class="btn btn-primary" onClick="saveRoom()">Save</button>
+    </div>
     <hr>
     <div class="form-group">
      <label class="col-sm-2 control-label">2 - RoomGraphCond</label>
@@ -67,6 +70,9 @@
      <label class="col-sm-2 control-label">RGC.conditionId</label>
      <div class="col-sm-10"><select id="rgc_conditionId" class="form-control"></select></div>
     </div>
+    <div class="form-group text-center">
+     <button type="button" class="btn btn-primary" onClick="saveRGC()">Save</button>
+    </div>
    </form>
   </div>
   <div role="tabpanel" class="tab-pane fade" id="cond">
@@ -86,7 +92,7 @@
     </div>
     <div class="form-group">
      <label class="col-sm-2 control-label">Condition.deviceId</label>
-     <div class="col-sm-10"><select id="cond_deviceId" class="form-control"></select></div>
+     <div class="col-sm-10"><select id="cond_deviceId" class="form-control"><option value="-1">none</option></select></div>
     </div>
     <div class="form-group">
      <label class="col-sm-2 control-label">Condition.temperatureMin</label>
@@ -103,6 +109,9 @@
     <div class="form-group">
      <label class="col-sm-2 control-label">Condition.useCalendar</label>
      <div class="col-sm-10"><input id="cond_useCalendar" type="checkbox" class="form-control"></div>
+    </div>
+    <div class="form-group text-center">
+     <button type="button" class="btn btn-primary" onClick="saveCondition()">Save</button>
     </div>
    </form>
   </div>
@@ -136,7 +145,7 @@
     </div>
     <div class="form-group">
      <label class="col-sm-2 control-label">Hardware.type</label>
-     <div class="col-sm-10"><input id="hard_type" type="text" class="form-control"></div>
+     <div class="col-sm-10"><select id="hard_type" class="form-control"><option>domoticz</option><option>shell</option></select></div>
     </div>
     <div class="form-group">
      <label class="col-sm-2 control-label">Hardware.name</label>
@@ -145,6 +154,9 @@
     <div class="form-group">
      <label class="col-sm-2 control-label">Hardware.param1</label>
      <div class="col-sm-10"><input id="hard_param1" type="text" class="form-control"></div>
+    </div>
+    <div class="form-group text-center">
+     <button type="button" class="btn btn-primary" onClick="saveHardware()">Save</button>
     </div>
     <hr>
     <div class="form-group">
@@ -182,7 +194,10 @@
     </div>
     <div class="form-group">
      <label class="col-sm-2 control-label">Device.cloneToDeviceId</label>
-     <div class="col-sm-10"><input id="dev_cloneToDeviceId" type="text" class="form-control"></div>
+     <div class="col-sm-10"><select id="dev_cloneToDeviceId" class="form-control"><option value="-1">none</option></select></div>
+    </div>
+    <div class="form-group text-center">
+     <button type="button" class="btn btn-primary" onClick="saveDevice()">Save</button>
     </div>
    </form>
   </div>
@@ -193,10 +208,16 @@ var lastSerie;
 var world;
 
 $(document).ready(function() {
+	var results = window.location.href.split('#');
+	var selectedTab = (results == null ? null : results[1]);
+
 	$('#myTabs a').click(function (e) {
 			e.preventDefault();
 			$(this).tab('show');
-		})
+		});
+	$('a[data-toggle="tab"]').on('click', function(e) {
+			return location.hash = $(e.target).attr('href').substr(1);
+		});
 	reloadWorld();
 	$('#selectHards').bind('change keyup', changeHardware);
 	$('#selectDevs').bind('change keyup', changeDevice);
@@ -204,6 +225,11 @@ $(document).ready(function() {
 	$('#selectConds').bind('change keyup', changeCondition);
 	$('#selectRooms').bind('change keyup', changeRoom);
 	$('#selectRGCs').bind('change keyup', changeRGC);
+
+	if (selectedTab != null)
+	{
+		$('#myTabs a[href="#' + selectedTab + '"]').tab('show')
+	}
 });
 
 function reloadWorld()
@@ -218,10 +244,9 @@ function reloadWorld()
 				$.each(json.hardwares, function(i, item) {
 						$('#selectHards').append($('<option>', { value: item.id, text: item.name }));
 					});
-				resetHardware();
-
 				$.each(json.devices, function(i, item) {
 						$('#cond_deviceId').append($('<option>', { value: item.id, text: item.name }));
+						$('#dev_cloneToDeviceId').append($('<option>', { value: item.id, text: item.name }));
 						if (item.type == 'devTempHum')
 						{
 							$('#room_deviceTemperatureId').append($('<option>', { value: item.id, text: item.name }));
@@ -230,18 +255,10 @@ function reloadWorld()
 						else if (item.type == 'devInterruptor')
 							$('#room_deviceHeaterId').append($('<option>', { value: item.id, text: item.name }));
 					});
-				$('#cond_deviceId').val([]);
-				$('#room_deviceTemperatureId').val([]);
-				$('#room_deviceHeatingId').val([]);
-				$('#room_deviceHeaterId').val([]);
-
 				$.each(json.graphics, function(i, item) {
 						$('#selectGraphs').append($('<option>', { value: item.id, text: item.description }));
 						$('#rgc_graphId').append($('<option>', { value: item.id, text: item.description }));
 					});
-				$('#selectGraphs').val([]);
-				$('[id^="graph_"]').val([]);
-
 				$.each(json.conditions, function(i, item) {
 						$('#selectConds').append($('<option>', { value: item.id, text: item.name }));
 						$('#rgc_conditionId').append($('<option>', { value: item.id, text: item.name }));
@@ -251,6 +268,13 @@ function reloadWorld()
 				$.each(json.rooms, function(i, item) {
 						$('#selectRooms').append($('<option>', { value: item.id, text: item.name }));
 					});
+				resetHardware();
+				$('#cond_deviceId').val([]);
+				$('#room_deviceTemperatureId').val([]);
+				$('#room_deviceHeatingId').val([]);
+				$('#room_deviceHeaterId').val([]);
+				$('#selectGraphs').val([]);
+				$('[id^="graph_"]').val([]);
 				resetRoom();
 			},
 			error: function(e)
@@ -312,9 +336,7 @@ function changeCondition()
 				{
 					var v = item[k];
 
-					if (k == 'deviceId' && v == -1)
-						$('#cond_' + k).val([]);
-					else if (v == 'true' || v == 'false')
+					if (v == 'true' || v == 'false')
 						$('#cond_' + k).prop('checked', v == 'true');
 					else
 						$('#cond_' + k).val(v);
@@ -428,52 +450,6 @@ function chartAddToSerie(serie, dataTime, dataValue, lastTime)
 		serie.push(dataValue);
 }
 
-function chartSaveData()
-{
-	if (lastSerie == null)
-	{
-		alert('No changed in graph !');
-		return;
-	}
-
-	var serie = lastSerie;
-	var oldValue;
-	var graph;
-	var data = [];
-
-	for (var i = 0; i < serie.data.length; i++)
-	{
-		var point = serie.data[i];
-
-		if (oldValue != point.y)
-		{
-			data.push({time: parseInt(point.category.replace(':', '')), value: point.y});
-			oldValue = point.y;
-		}
-	}
-	graph = {
-			id: serie.options.id,
-			description: $('#graph_description').val(),
-			position: serie.options.position,
-			data: data
-		};
-	console.dir(graph);
-	$.ajax({
-			type: 'POST',
-			url:  '/graph/' + graph.id,
-			data: JSON.stringify(graph),
-			dataType: 'json',
-			success: function(json)
-			{
-				alert('Data saved !');
-			},
-			error: function(e)
-			{
-				alert('Communication error: ' + e.message);
-			}
-		});
-}
-
 function initChart()
 {
 	var category = [];
@@ -545,6 +521,109 @@ function initChart()
 			},
 			tooltip: {
 				yDecimals: 1
+			}
+		});
+}
+
+function chartSaveData()
+{
+	if (lastSerie == null)
+	{
+		alert('No changed in graph !');
+		return;
+	}
+
+	var serie = lastSerie;
+	var oldValue;
+	var graph;
+	var data = [];
+
+	for (var i = 0; i < serie.data.length; i++)
+	{
+		var point = serie.data[i];
+
+		if (oldValue != point.y)
+		{
+			data.push({time: parseInt(point.category.replace(':', '')), value: point.y});
+			oldValue = point.y;
+		}
+	}
+	graph = {
+			id: serie.options.id,
+			description: $('#graph_description').val(),
+			position: serie.options.position,
+			data: data
+		};
+	sendSave('/graph/', graph);
+}
+
+function saveHardware()
+{
+	var obj = {};
+
+	$('[id^="hard_"]').each(function(index) {
+			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
+		});
+	sendSave('/hardware/', obj);
+}
+
+function saveDevice()
+{
+	var obj = {};
+
+	$('[id^="dev_"]').each(function(index) {
+			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
+		});
+	sendSave('/device/', obj);
+}
+
+function saveCondition()
+{
+	var obj = {};
+
+	$('[id^="cond_"]').each(function(index) {
+			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
+		});
+	obj.useCalendar = $('#cond_useCalendar').is(':checked');
+	sendSave('/condition/', obj);
+}
+
+function saveRoom()
+{
+	var obj = {};
+
+	$('[id^="room_"]').each(function(index) {
+			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
+		});
+	sendSave('/room/', obj);
+}
+
+function saveRGC()
+{
+	var obj = {};
+
+	$('[id^="rgc_"]').each(function(index) {
+			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
+		});
+	sendSave('/rgc/', obj);
+}
+
+function sendSave(url, obj)
+{
+	console.dir(obj);
+	$.ajax({
+			type: 'POST',
+			url:  url + obj.id,
+			data: JSON.stringify(obj),
+			dataType: 'json',
+			success: function(json)
+			{
+				alert('Data saved ! (page should be reloaded)');
+				location.reload();
+			},
+			error: function(e)
+			{
+				alert('Communication error: ' + e.message);
 			}
 		});
 }
