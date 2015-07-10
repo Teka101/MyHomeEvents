@@ -344,6 +344,62 @@ std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphConds()
 	return ret;
 }
 
+bool MHEDatabase::updateHardware(DBHarware &hard)
+{
+    sqlite3_stmt *stmt = NULL;
+	const std::string sql = "UPDATE hardware SET name=?,type=?,param1=? WHERE rowid=?";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_text(stmt, 1, hard.name.c_str(), hard.name.length(), NULL);
+		sqlite3_bind_text(stmt, 2, hard.type.c_str(), hard.type.length(), NULL);
+		sqlite3_bind_text(stmt, 3, hard.param1.c_str(), hard.param1.length(), NULL);
+		sqlite3_bind_int(stmt, 4, hard.id);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		if (rc == SQLITE_DONE)
+            return true;
+	}
+	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::updateHardware - SQL error: " << sqlite3_errmsg(_db)));
+	return false;
+}
+
+bool MHEDatabase::updateDevice(DBDevice &dev)
+{
+    sqlite3_stmt *stmt = NULL;
+	const std::string sql = "UPDATE device SET type=?,name=?,cache_lifetime=?,param1=?,param2=?,clone_to_device_id=? WHERE rowid=?";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+        sqlite3_bind_int(stmt, 1, dev.type);
+		sqlite3_bind_text(stmt, 2, dev.name.c_str(), dev.name.length(), NULL);
+		sqlite3_bind_int(stmt, 3, dev.cacheLifetime);
+		if (dev.param1.length() == 0)
+            sqlite3_bind_null(stmt, 4);
+        else
+            sqlite3_bind_text(stmt, 4, dev.param1.c_str(), dev.param1.length(), NULL);
+        if (dev.param2.length() == 0)
+            sqlite3_bind_null(stmt, 5);
+        else
+            sqlite3_bind_text(stmt, 5, dev.param2.c_str(), dev.param2.length(), NULL);
+        if (dev.cloneToDeviceId == -1)
+            sqlite3_bind_null(stmt, 6);
+        else
+            sqlite3_bind_int(stmt, 6, dev.cloneToDeviceId);
+		sqlite3_bind_int(stmt, 7, dev.id);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		if (rc == SQLITE_DONE)
+            return true;
+	}
+	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::updateDevice - SQL error: " << sqlite3_errmsg(_db)));
+	return false;
+}
+
 bool MHEDatabase::updateGraph(DBGraph &graph)
 {
     sqlite3_stmt *stmt = NULL;
@@ -399,4 +455,86 @@ bool MHEDatabase::updateGraphData(DBGraph &graph)
 	if (rc != SQLITE_OK && rc != SQLITE_DONE)
         LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::updateGraphData - SQL error: " << sqlite3_errmsg(_db)));
 	return (rc == SQLITE_OK || rc == SQLITE_DONE);
+}
+
+bool MHEDatabase::updateCondition(DBCondition &cond)
+{
+    sqlite3_stmt *stmt = NULL;
+	const std::string sql = "UPDATE condition SET name=?,device_id=?,temperature_min=?,temperature_max=?,days=?,use_calendar=? WHERE rowid=?";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_text(stmt, 1, cond.name.c_str(), cond.name.length(), NULL);
+		if (cond.deviceId == -1)
+            sqlite3_bind_null(stmt, 2);
+        else
+            sqlite3_bind_int(stmt, 2, cond.deviceId);
+		if (cond.temperatureMin == FLT_MIN)
+            sqlite3_bind_null(stmt, 3);
+        else
+            sqlite3_bind_double(stmt, 3, cond.temperatureMin);
+        if (cond.temperatureMax == FLT_MAX)
+            sqlite3_bind_null(stmt, 4);
+        else
+            sqlite3_bind_double(stmt, 4, cond.temperatureMax);
+        if (cond.days <= 0)
+            sqlite3_bind_null(stmt, 5);
+        else
+            sqlite3_bind_int(stmt, 5, cond.days);
+        sqlite3_bind_int(stmt, 6, cond.useCalendar ? 1 : 0);
+		sqlite3_bind_int(stmt, 7, cond.id);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		if (rc == SQLITE_DONE)
+            return true;
+	}
+	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::updateCondition - SQL error: " << sqlite3_errmsg(_db)));
+	return false;
+}
+
+bool MHEDatabase::updateRoom(DBRoom &room)
+{
+    sqlite3_stmt *stmt = NULL;
+	const std::string sql = "UPDATE room SET name=?,device_temperature_id=?,device_heater_id=?,device_heating_id=? WHERE rowid=?";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_text(stmt, 1, room.name.c_str(), room.name.length(), NULL);
+		sqlite3_bind_int(stmt, 2, room.deviceTemperatureId);
+		sqlite3_bind_int(stmt, 3, room.deviceHeaterId);
+		sqlite3_bind_int(stmt, 4, room.deviceHeatingId);
+		sqlite3_bind_int(stmt, 5, room.id);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		if (rc == SQLITE_DONE)
+            return true;
+	}
+	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::updateRoom - SQL error: " << sqlite3_errmsg(_db)));
+	return false;
+}
+
+bool MHEDatabase::updateRoomGraphCond(DBRoomGraphCond &rgc)
+{
+     sqlite3_stmt *stmt = NULL;
+	const std::string sql = "UPDATE room_graphcond SET room_id=?,graph_id=?,condition_id=? WHERE rowid=?";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_int(stmt, 1, rgc.roomId);
+		sqlite3_bind_int(stmt, 2, rgc.graphId);
+		sqlite3_bind_int(stmt, 3, rgc.conditionId);
+		sqlite3_bind_int(stmt, 4, rgc.id);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		if (rc == SQLITE_DONE)
+            return true;
+	}
+	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::updateRoomGraphCond - SQL error: " << sqlite3_errmsg(_db)));
+	return false;
 }

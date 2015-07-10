@@ -181,8 +181,13 @@ class MHEDatabase
         std::vector<DBRoomGraphCond> getRoomGraphConds();
         std::vector<DBRoomGraphCond> getRoomGraphCondByActiveDaysAndCalendar();
         std::vector<DBRoomGraphCond> getRoomGraphCondByActiveDaysAndCalendar(int dayMask, int dateYYYYMMDD);
+        bool updateHardware(DBHarware &hard);
+        bool updateDevice(DBDevice &dev);
         bool updateGraph(DBGraph &graph);
         bool updateGraphData(DBGraph &graph);
+        bool updateCondition(DBCondition &cond);
+        bool updateRoom(DBRoom &room);
+        bool updateRoomGraphCond(DBRoomGraphCond &rgc);
 };
 
 #endif // MHEDATABASE_H
