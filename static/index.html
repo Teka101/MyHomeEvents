@@ -236,7 +236,7 @@ function reloadWorld()
 {
 	$.ajax({
 			type: 'GET',
-			url:  '/world',
+			url:  'world',
 			dataType: 'json',
 			success: function(json)
 			{
@@ -554,7 +554,7 @@ function chartSaveData()
 			position: serie.options.position,
 			data: data
 		};
-	sendSave('/graph/', graph);
+	sendSave('graph/', graph);
 }
 
 function saveHardware()
@@ -564,7 +564,7 @@ function saveHardware()
 	$('[id^="hard_"]').each(function(index) {
 			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
 		});
-	sendSave('/hardware/', obj);
+	sendSave('hardware/', obj);
 }
 
 function saveDevice()
@@ -574,7 +574,7 @@ function saveDevice()
 	$('[id^="dev_"]').each(function(index) {
 			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
 		});
-	sendSave('/device/', obj);
+	sendSave('device/', obj);
 }
 
 function saveCondition()
@@ -585,7 +585,7 @@ function saveCondition()
 			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
 		});
 	obj.useCalendar = $('#cond_useCalendar').is(':checked');
-	sendSave('/condition/', obj);
+	sendSave('condition/', obj);
 }
 
 function saveRoom()
@@ -595,7 +595,7 @@ function saveRoom()
 	$('[id^="room_"]').each(function(index) {
 			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
 		});
-	sendSave('/room/', obj);
+	sendSave('room/', obj);
 }
 
 function saveRGC()
@@ -605,7 +605,7 @@ function saveRGC()
 	$('[id^="rgc_"]').each(function(index) {
 			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
 		});
-	sendSave('/rgc/', obj);
+	sendSave('rgc/', obj);
 }
 
 function sendSave(url, obj)

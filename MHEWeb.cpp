@@ -26,12 +26,8 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	int httpCode = MHD_HTTP_OK;
 	int ret;
 
-	LOG4CPLUS_DEBUG(ws->log, LOG4CPLUS_TEXT("MHEWeb::sendFile - HTTP-request: url=" << url << " method=" << method << " version=" << version));
-	if (boost::equals(url, "/"))
-		httpCode = ws->sendPermanentRedirectTo(&response, "/static/index.html");
-	else if (boost::starts_with(url, "/static/"))
-		httpCode = ws->sendFile(&response, &url[1]);
-    else if (boost::equals(url, "/world"))
+	LOG4CPLUS_DEBUG(ws->log, LOG4CPLUS_TEXT("MHEWeb::answer_to_connection - HTTP-request: url=" << url << " method=" << method << " version=" << version));
+    if (boost::equals(url, "/world"))
     {
         std::stringstream ss;
 
@@ -188,6 +184,21 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 			httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
 		delete postData;
 	}
+	else
+	{
+        std::stringstream filePath;
+
+        filePath << "static/";
+        if (boost::equals(url, "/"))
+            filePath << "index.html";
+        else
+            filePath << &url[1];
+        httpCode = ws->sendFile(&response, filePath.str().c_str());
+        /*if (boost::equals(url, "/") || boost::equals(url, "/static/"))
+		httpCode = ws->sendPermanentRedirectTo(&response, "/static/index.html");
+	else if (boost::starts_with(url, "/static/"))
+		httpCode = ws->sendFile(&response, &url[1]);*/
+	}
 	/*else if (boost::starts_with(url, "/condition/"))
 	{
 		if (boost::equals(method, "POST") && boost::starts_with(url, "/condition/"))
@@ -294,6 +305,7 @@ int MHEWeb::sendFile(struct MHD_Response **response, const char *url)
 			MHD_add_response_header(*response, "Content-Type", "text/html");
 		return MHD_HTTP_OK;
 	}
+	LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("MHEWeb::sendFile - unable to send file: " << url));
 	return MHD_HTTP_NOT_FOUND;
 }
 
