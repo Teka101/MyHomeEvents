@@ -5,25 +5,30 @@
 
 typedef std::pair<const std::string, boost::property_tree::ptree> ptreePair;
 
-//void readFromPTree(boost::property_tree::ptree &pTree, sCondition &cond)
-//{
-//	cond.id = pTree.get<int>("id");
-//	cond.description = pTree.get<std::string>("description");
-//	cond.domoticzDeviceType = static_cast<eDomoticzDeviceType>(pTree.get<int>("domoticzDeviceType", -1));
-//	cond.temperatureMin = pTree.get<int>("temperatureMin", -1);
-//	cond.temperatureMax = pTree.get<int>("temperatureMax", -1);
-//	cond.day = pTree.get<int>("day", -1);
-//	cond.useCalendar = pTree.get<int>("useCalendar", 0);
-//	if (pTree.count("dates") > 0)
-//	{
-//		BOOST_FOREACH(ptreePair it, pTree.get_child("dates"))
-//		{
-//			int date = it.second.get<int>("");
-//
-//			cond.dates.push_back(date);
-//		}
-//    }
-//}
+void readFromPTree(boost::property_tree::ptree &pTree, DBHarware &hard)
+{
+    hard.id = pTree.get<int>("id");
+    hard.type = pTree.get<std::string>("type");
+	hard.name = pTree.get<std::string>("name");
+	hard.param1 = pTree.get<std::string>("param1");
+}
+
+void readFromPTree(boost::property_tree::ptree &pTree, DBDevice &dev)
+{
+    std::string devType = pTree.get<std::string>("type");
+
+    dev.id = pTree.get<int>("id");
+    dev.name = pTree.get<std::string>("name");
+    if (devType == "devTempHum")
+        dev.type = devTempHum;
+    else
+        dev.type = devInterruptor;
+    dev.hardwareId = pTree.get<int>("hardwareId");
+    dev.cacheLifetime = pTree.get<int>("cacheLifetime");
+	dev.param1 = pTree.get<std::string>("param1");
+	dev.param2 = pTree.get<std::string>("param2");
+	dev.cloneToDeviceId = pTree.get<int>("cloneToDeviceId");
+}
 
 void readFromPTree(boost::property_tree::ptree &pTree, DBGraph &graph)
 {
@@ -41,6 +46,34 @@ void readFromPTree(boost::property_tree::ptree &pTree, DBGraph &graph)
 			graph.data.push_back(data);
 		}
 	}
+}
+
+void readFromPTree(boost::property_tree::ptree &pTree, DBCondition &cond)
+{
+	cond.id = pTree.get<int>("id");
+	cond.name = pTree.get<std::string>("name");
+	cond.deviceId = pTree.get<int>("deviceId", -1);
+	cond.temperatureMin = pTree.get<float>("temperatureMin", FLT_MIN);
+	cond.temperatureMax = pTree.get<float>("temperatureMax", FLT_MAX);
+	cond.days = pTree.get<int>("days", -1);
+	cond.useCalendar = pTree.get<bool>("useCalendar");
+}
+
+void readFromPTree(boost::property_tree::ptree &pTree, DBRoom &room)
+{
+	room.id = pTree.get<int>("id");
+	room.name = pTree.get<std::string>("name");
+	room.deviceTemperatureId = pTree.get<int>("deviceTemperatureId", -1);
+	room.deviceHeatingId = pTree.get<int>("deviceHeatingId", -1);
+	room.deviceHeaterId = pTree.get<int>("deviceHeaterId", -1);
+}
+
+void readFromPTree(boost::property_tree::ptree &pTree, DBRoomGraphCond &rgc)
+{
+    rgc.id = pTree.get<int>("id");
+	rgc.roomId = pTree.get<int>("roomId", -1);
+	rgc.graphId = pTree.get<int>("graphId", -1);
+	rgc.conditionId = pTree.get<int>("conditionId", -1);
 }
 
 void writeToPTree(boost::property_tree::ptree &pTree, DBHarware &hard)
