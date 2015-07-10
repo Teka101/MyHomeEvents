@@ -55,12 +55,16 @@ void MHEHardDevContainer::buildDevices(MHEDatabase &db)
     }
     BOOST_FOREACH(DBDevice &dev, devs)
     {
-        if (dev.cloneToDeviceId != -1)
+        if (dev.cloneToDeviceId != -1 && dev.id != dev.cloneToDeviceId)
         {
             MHEDevice *d = _devById[dev.id];
-            MHEDevice *cloneTo = _devById[dev.id];
+            MHEDevice *cloneTo = _devById[dev.cloneToDeviceId];
 
-            d->setCloneTo(cloneTo);
+            if (d != NULL && cloneTo != NULL)
+            {
+                d->setCloneTo(cloneTo);
+                LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("buildDevices - device: " << (std::string)*d) << " is cloned to: " << (std::string)*cloneTo);
+            }
         }
     }
 }
