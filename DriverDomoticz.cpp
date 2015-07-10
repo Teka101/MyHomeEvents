@@ -55,6 +55,8 @@ bool DeviceDomoticz::setTempHum(float temperature, float humidity)
         _cache.lastUpdate = now;
 		_cache.humidity = humidity;
 		_cache.temperature = temperature;
+		if (_cloneTo != NULL)
+            _cloneTo->setTempHum(temperature, humidity);
 		return true;
 	}
 	return false;
@@ -77,6 +79,8 @@ bool DeviceDomoticz::setStatus(bool activate)
 
         _cache.lastUpdate = now;
         _cache.statusIsOn = activate;
+        if (_cloneTo != NULL)
+            _cloneTo->setStatus(activate);
         return true;
 	}
     return false;
