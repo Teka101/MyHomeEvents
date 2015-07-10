@@ -74,7 +74,7 @@ void MHEDatabase::insertDefaultData()
             "INSERT INTO hardware(type,name,param1) VALUES('domoticz','MyDomoticz','http://127.0.0.1:8080/')",
             "INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,param2) VALUES(0,'TempIn',1,300,'8',NULL),(0,'TempOut',1,300,'5','24havg'),(0,'TempHeating',1,300,'6',NULL),(1,'Heater',1,300,'7',NULL)",
             "INSERT INTO hardware(type,name) VALUES('shell','Scripts shell')",
-            "INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,clone_to_device_id) VALUES(0,'DHT22',2,240,'echo \"Humidity = 50 % Temperature = 19.5 *C\"', 1)",
+            "INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,param2,clone_to_device_id) VALUES(0,'DHT22',2,240,'echo \"Humidity = 50 % Temperature = 19.5 *C\"','offset_temperature=-1.0', 1)",
 
             "INSERT INTO graph(description,position) VALUES('Default week', 0)",
 			"INSERT INTO graph_data(graph_id,time,value) VALUES(1,0000,19),(1,0600,19.5),(1,1900,20),(1,2100,19)",

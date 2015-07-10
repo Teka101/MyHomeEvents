@@ -21,9 +21,15 @@ MHEDevice *HardwareShell::buildObject(DBDevice &dev)
     return new DeviceShell(dev);
 }
 
-DeviceShell::DeviceShell(DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.cacheLifetime), _shellCmd(dev.param1), _lastUpdate(0), _temperature(0.0), _humidity(0.0)
+DeviceShell::DeviceShell(DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.cacheLifetime), _shellCmd(dev.param1), _lastUpdate(0), _temperature(0.0), _humidity(0.0), _offsetTemperature(0.0)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("DeviceShell"));
+
+    boost::regex expression("^offset_temperature=(-?[0-9\\.]+)$", boost::regex::perl);
+    boost::cmatch what;
+
+    if (boost::regex_match(dev.param2.c_str(), what, expression))
+        _offsetTemperature = boost::lexical_cast<float>(what[1]);
 }
 
 DeviceShell::~DeviceShell()
@@ -66,7 +72,7 @@ void DeviceShell::refreshCache()
                 if (boost::regex_match(line, what, expression))
                 {
                     float newHumidity = boost::lexical_cast<float>(what[1]);
-                    float newTemperature = boost::lexical_cast<float>(what[2]);
+                    float newTemperature = boost::lexical_cast<float>(what[2]) + _offsetTemperature;
                     bool isSucess = checkValidity(newHumidity, newTemperature);
 
                     LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("DeviceShell::refreshCache - Update: humidity=" << _humidity << " temperature=" << _temperature << " isSucess=" << (isSucess ? "true" : "false")));

@@ -23,6 +23,7 @@ class DeviceShell : public MHEDevice
         time_t _lastUpdate;
         float _temperature;
         float _humidity;
+        float _offsetTemperature;
         log4cplus::Logger _log;
 
         void refreshCache();
@@ -43,6 +44,7 @@ class DeviceShell : public MHEDevice
                 << "id=" << _id
                 << " type=" << _type
                 << " shellCmd=" << _shellCmd
+                << " offsetTemperature=" << _offsetTemperature
                 << "]";
             return ss.str();
         }
