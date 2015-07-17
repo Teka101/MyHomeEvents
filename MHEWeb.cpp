@@ -7,6 +7,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -192,12 +193,13 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
         if (boost::equals(url, "/"))
             filePath << "index.html";
         else
-            filePath << &url[1];
+        {
+            std::string s = &url[1];
+
+            boost::replace_all(s, "../", "");
+            filePath << s;
+        }
         httpCode = ws->sendFile(&response, filePath.str().c_str());
-        /*if (boost::equals(url, "/") || boost::equals(url, "/static/"))
-		httpCode = ws->sendPermanentRedirectTo(&response, "/static/index.html");
-	else if (boost::starts_with(url, "/static/"))
-		httpCode = ws->sendFile(&response, &url[1]);*/
 	}
 	/*else if (boost::starts_with(url, "/condition/"))
 	{
