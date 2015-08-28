@@ -3,3 +3,6 @@ port=8080
 
 [Brain]
 refresh=300
+
+[Notify]
+gcmAppId=APPKEYGCM
