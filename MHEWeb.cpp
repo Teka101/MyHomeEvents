@@ -12,6 +12,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/regex.hpp>
 #include <iostream>
 #include <sstream>
 #include "MHEWeb.h"
@@ -185,6 +186,37 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 			httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
 		delete postData;
 	}
+	else if (boost::equals(method, "GET") && boost::starts_with(url, "/condition/"))
+	{
+		boost::regex expression("^/condition/(\\d+)/addDate/(\\d+)$", boost::regex::perl);
+		boost::cmatch what;
+
+		if (boost::regex_match(url, what, expression))
+		{
+            int conditionId = boost::lexical_cast<int>(what[1]);
+            int dateYYYYMMDD = boost::lexical_cast<int>(what[2]);
+
+            response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
+            if (!ws->getDataBase()->addConditionDate(conditionId, dateYYYYMMDD))
+                httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
+		}
+	}
+	else if (boost::equals(method, "GET") && boost::starts_with(url, "/mobile/"))
+	{
+		boost::regex expression("^/mobile/(.*)/(.*)/(.*)$", boost::regex::perl);
+		boost::cmatch what;
+
+		if (boost::regex_match(url, what, expression))
+		{
+            std::string type = what[1];
+            std::string user = what[2];
+            std::string token = what[3];
+
+            response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
+            if (!ws->getDataBase()->addMobile(type, user, token))
+                httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
+		}
+	}
 	else
 	{
         std::stringstream filePath;
@@ -201,53 +233,6 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
         }
         httpCode = ws->sendFile(&response, filePath.str().c_str());
 	}
-	/*else if (boost::starts_with(url, "/condition/"))
-	{
-		if (boost::equals(method, "POST") && boost::starts_with(url, "/condition/"))
-		{
-			if (postData == NULL)
-			{
-				postData = new std::stringstream();
-				*con_cls = postData;
-				return MHD_YES;
-			}
-			if (*upload_data_size > 0)
-			{
-				*postData << upload_data;
-				*upload_data_size = 0;
-				return MHD_YES;
-			}
-			boost::property_tree::ptree pTree;
-			std::string description;
-			sCondition cond;
-
-			boost::property_tree::read_json(*postData, pTree);
-			readFromPTree(pTree, cond);
-			response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
-			if (!ws->getDataBase()->updateCondition(cond))
-				httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
-			delete postData;
-		}
-		else
-		{
-			const char *idSTR = &url[11];
-
-			if (*idSTR != '\0')
-			{
-				boost::property_tree::ptree pt;
-				boost::property_tree::ptree ptChildren;
-				std::ostringstream ss;
-				sCondition cond;
-				int id = boost::lexical_cast<int>(idSTR);
-
-				cond = ws->getDataBase()->getCondition(id);
-				writeToPTree(pt, cond);
-				boost::property_tree::write_json(ss, pt, false);
-				response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
-				MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
-			}
-		}
-	}*/
 	if (response == NULL)
 		httpCode = ws->sendNotFound(&response);
 	MHD_add_response_header(response, "Age", "0");
