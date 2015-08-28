@@ -7,7 +7,8 @@
 
 #define TEMP_HYSTERESIS 0.5
 
-Brain::Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer, int refreshInSeconds) : _db(db), _hardDevContainer(hardDevContainer), _refreshInSeconds(refreshInSeconds)
+Brain::Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer, int refreshInSeconds, MHEMobileNotify *notify)
+    : _db(db), _hardDevContainer(hardDevContainer), _notify(notify), _refreshInSeconds(refreshInSeconds)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MHEDatabase"));
     _timer = new boost::asio::deadline_timer(_io);
@@ -93,16 +94,32 @@ void Brain::launch()
         MHEDevice *devIn = _hardDevContainer->getDeviceById(room.deviceTemperatureId);
         MHEDevice *devHeater = _hardDevContainer->getDeviceById(room.deviceHeaterId);
         MHEDevice *devHeating = _hardDevContainer->getDeviceById(room.deviceHeatingId);
-		long currentMS = now.time_of_day().hours() * 100L + now.time_of_day().minutes();
+		long currentHHMM = now.time_of_day().hours() * 100L + now.time_of_day().minutes();
 		float temperatureOrder = NAN;
 
 		BOOST_FOREACH(DBGraphData data, graph.data)
-			if (currentMS >= data.time)
+			if (currentHHMM >= data.time)
 				temperatureOrder = data.value;
+        LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain::launch - room=" << (std::string)room << " condition=" << (std::string)condition));
 		if (isnan(temperatureOrder))
-			LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("Brain::launch - no graph data found !!! currentMS=" << currentMS));
+			LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("Brain::launch - no graph data found !!! currentHHMM=" << currentHHMM));
 		else
 		{
+            if (_notify != NULL)
+            {
+                int lastConditionId = _lastConditionIdByRoomId[room.id];
+
+                if (lastConditionId > 0 && lastConditionId != condition.id)
+                {
+                    std::vector<DBMobile> devices = _db->getMobileActivatedToNotify("condition", lastConditionId);
+
+                    _notify->notifyDevices(devices, conditionLeave, conditionById[lastConditionId]);
+
+                    devices = _db->getMobileActivatedToNotify("condition", condition.id);
+                    _notify->notifyDevices(devices, conditionEnter, condition);
+                }
+            }
+            _lastConditionIdByRoomId[room.id] = condition.id;
             if (devHeating != NULL)
             {
                 LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain::launch - set heating temperature to: " << temperatureOrder));
