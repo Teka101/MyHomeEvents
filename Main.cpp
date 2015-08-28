@@ -20,6 +20,7 @@ int main(int ac, char **av)
 {
     boost::program_options::options_description desc("ConfigFile");
 	boost::program_options::variables_map vm;
+	std::string gcmAppId;
 	int webPort, brainRefresh;
 
 	log4cplus::PropertyConfigurator::doConfigure("log4cplus.properties");
@@ -27,6 +28,7 @@ int main(int ac, char **av)
 	desc.add_options()
 		("WebServer.port", boost::program_options::value<int>(&webPort)->default_value(8080))
 		("Brain.refresh", boost::program_options::value<int>(&brainRefresh)->default_value(300))
+		("Notify.gcmAppId", boost::program_options::value<std::string>(&gcmAppId))
 	    ;
     std::ifstream settings_file("config.ini", std::ifstream::in);
 	boost::program_options::store(boost::program_options::parse_config_file(settings_file, desc, true), vm);
@@ -35,6 +37,7 @@ int main(int ac, char **av)
 	curlInit();
 	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - WebServer.port=" << webPort));
 	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Brain.refresh=" << brainRefresh));
+	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Notify.gcmAppId=" << gcmAppId));
 
     MHEDatabase *db = new MHEDatabase();
 
@@ -62,9 +65,10 @@ int main(int ac, char **av)
         }
     }
 
+    MHEMobileNotify *notify = (gcmAppId.size() == 0 ? NULL : new MHEMobileNotify(gcmAppId));
     MHEHardDevContainer *hardDev = new MHEHardDevContainer(*db);
     MHEWeb *ws = new MHEWeb(webPort, db, hardDev);
-    Brain b(db, hardDev, brainRefresh);
+    Brain b(db, hardDev, brainRefresh, notify);
     b.start();
 
     delete ws;
