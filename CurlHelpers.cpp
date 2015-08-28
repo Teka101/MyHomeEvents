@@ -37,35 +37,15 @@ static size_t writeMemoryCallback(void *ptr, size_t size, size_t nmemb, void *da
 
 bool curlExecute(const std::string &url, std::stringstream *output)
 {
-	CURL *curl;
-
-	LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("curlExecute - url=" << url));
-	curl = curl_easy_init();
-	if (curl != NULL)
-	{
-		CURLcode res;
-		int httpCode = -1;
-
-		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, output);
-		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
-
-		res = curl_easy_perform(curl);
-		if (res == CURLE_OK)
-		{
-			if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode) == CURLE_OK)
-				LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("curlExecute - HttpCode=" << httpCode));
-		}
-		else
-			LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("curlExecute - curl_easy_perform() failed: " << curl_easy_strerror(res)));
-		curl_easy_cleanup(curl);
-		return (httpCode == 200);
-	}
-	return false;
+    return curlExecute(url, NULL, NULL, output);
 }
 
-bool curlExecute(const std::string &url, const std::string &serverAuth, std::stringstream *output)
+bool curlExecute(const std::string &url, const std::string *postData, std::stringstream *output)
+{
+	return curlExecute(url, NULL, postData, output);
+}
+
+bool curlExecute(const std::string &url, const std::string *serverAuth, const std::string *postData, std::stringstream *output)
 {
 	CURL *curl;
 
@@ -77,14 +57,20 @@ bool curlExecute(const std::string &url, const std::string &serverAuth, std::str
 		int httpCode = -1;
 
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-		if (serverAuth.size() > 0)
+		if (serverAuth != NULL && serverAuth->size() > 0)
 		{
 			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-			curl_easy_setopt(curl, CURLOPT_USERPWD, serverAuth.c_str());
+			curl_easy_setopt(curl, CURLOPT_USERPWD, serverAuth->c_str());
 		}
+		if (postData != NULL)
+		{
+            curl_easy_setopt(curl, CURLOPT_POST, true);
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData->c_str());
+        }
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, output);
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
 		res = curl_easy_perform(curl);
 		if (res == CURLE_OK)
