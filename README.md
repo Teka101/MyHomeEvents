@@ -1,8 +1,6 @@
 # MyHomeEvents
 work with Domoticz
 
-Note: should work (at least for me)
-
 
 Before
 ------
@@ -31,8 +29,16 @@ Do:
 
 Configuration
 -------------
-Copy 'config.ini.sample' to 'config.ini'.
+You have to customize your 'config.ini' (a sample is available in 'config.ini.sample').
+Some features are not visible in web pages, so you have to edit the SQLITE database (file 'params.db').
 
 Run
 ---
 	./MyHomeEvents
+
+Features
+--------
+* [Web configuration](http://localhost:8080/)
+* "virtual" devices (can connect to Domoticz or execute shell script)
+* create room to link devices (heat control => ambiant temperature => heater)
+* Android notification with GCM (only works on "conditions")
