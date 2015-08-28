@@ -37,17 +37,20 @@ void MHEDatabase::createTables()
 {
 	const char sqls[][512] =
 	{
-            "CREATE TABLE IF NOT EXISTS hardware(type TEXT INTEGER NOT NULL, name TEXT NOT NULL, param1 TEXT)",
-            "CREATE TABLE IF NOT EXISTS device(type INTEGER NOT NULL, name TEXT NOT NULL, hardware_id INTEGER NOT NULL REFERENCES hardware(rowid), cache_lifetime INTEGER NOT NULL, param1 TEXT, param2 TEXT, clone_to_device_id INTEGER REFERENCES device(rowid))",
+			"CREATE TABLE IF NOT EXISTS hardware(type TEXT INTEGER NOT NULL, name TEXT NOT NULL, param1 TEXT)",
+			"CREATE TABLE IF NOT EXISTS device(type INTEGER NOT NULL, name TEXT NOT NULL, hardware_id INTEGER NOT NULL REFERENCES hardware(rowid), cache_lifetime INTEGER NOT NULL, param1 TEXT, param2 TEXT, clone_to_device_id INTEGER REFERENCES device(rowid))",
 
 			"CREATE TABLE IF NOT EXISTS graph(description TEXT, position INTEGER DEFAULT 99)",
 			"CREATE TABLE IF NOT EXISTS graph_data(graph_id INTEGER REFERENCES graph(rowid), time INTEGER NOT NULL, value REAL)",
 
 			"CREATE TABLE IF NOT EXISTS condition(name TEXT, device_id INTEGER REFERENCES device(rowid), temperature_min REAL, temperature_max REAL, days INTEGER, use_calendar INTEGER NOT NULL DEFAULT 0)",
-			"CREATE TABLE IF NOT EXISTS condition_calendar(condition_id INTEGER REFERENCES condition(rowid), date INTEGER)",
+			"CREATE TABLE IF NOT EXISTS condition_calendar(condition_id INTEGER REFERENCES condition(rowid), datetime_begin INTEGER, datetime_end INTEGER)",
 
-            "CREATE TABLE IF NOT EXISTS room(name TEXT NOT NULL, device_temperature_id INTEGER NOT NULL REFERENCES device(rowid), device_heater_id INTEGER REFERENCES device(rowid), device_heating_id INTEGER REFERENCES device(rowid))",
+			"CREATE TABLE IF NOT EXISTS room(name TEXT NOT NULL, device_temperature_id INTEGER NOT NULL REFERENCES device(rowid), device_heater_id INTEGER REFERENCES device(rowid), device_heating_id INTEGER REFERENCES device(rowid))",
 			"CREATE TABLE IF NOT EXISTS room_graphcond(room_id INTEGER NOT NULL REFERENCES room(rowid), graph_id INTEGER NOT NULL REFERENCES graph(rowid), condition_id INTEGER NOT NULL REFERENCES condition(rowid))",
+
+			"CREATE TABLE IF NOT EXISTS mobile(type TEXT NOT NULL, user TEXT NOT NULL, token TEXT NOT NULL, is_enabled INTEGER NOT NULL, datetime_last_success INTEGER, UNIQUE(type,user) ON CONFLICT REPLACE)",
+			"CREATE TABLE IF NOT EXISTS mobile_event(mobile_id INTEGER REFERENCES mobile(rowid), name TEXT NOT NULL, object_id INTEGER NOT NULL)",
 	};
 	int nbElements = (sizeof(sqls) / sizeof(*sqls));
 
@@ -71,12 +74,12 @@ void MHEDatabase::insertDefaultData()
 {
 	const char sqls[][256] =
 	{
-            "INSERT INTO hardware(type,name,param1) VALUES('domoticz','MyDomoticz','http://127.0.0.1:8080/')",
-            "INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,param2) VALUES(0,'TempIn',1,300,'8',NULL),(0,'TempOut',1,300,'5','24havg'),(0,'TempHeating',1,300,'6',NULL),(1,'Heater',1,300,'7',NULL)",
-            "INSERT INTO hardware(type,name) VALUES('shell','Scripts shell')",
-            "INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,param2,clone_to_device_id) VALUES(0,'DHT22',2,240,'echo \"Humidity = 50 % Temperature = 19.5 *C\"','offset_temperature=-1.0', 1)",
+			"INSERT INTO hardware(type,name,param1) VALUES('domoticz','MyDomoticz','http://127.0.0.1:8080/')",
+			"INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,param2) VALUES(0,'TempIn',1,300,'8',NULL),(0,'TempOut',1,300,'5','24havg'),(0,'TempHeating',1,300,'6',NULL),(1,'Heater',1,300,'7',NULL)",
+			"INSERT INTO hardware(type,name) VALUES('shell','Scripts shell')",
+			"INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,param2,clone_to_device_id) VALUES(0,'DHT22',2,240,'echo \"Humidity = 50 % Temperature = 19.5 *C\"','offset_temperature=-1.0', 1)",
 
-            "INSERT INTO graph(description,position) VALUES('Default week', 0)",
+			"INSERT INTO graph(description,position) VALUES('Default week', 0)",
 			"INSERT INTO graph_data(graph_id,time,value) VALUES(1,0000,19),(1,0600,19.5),(1,1900,20),(1,2100,19)",
 			"INSERT INTO graph(description,position) VALUES('Default week-end',1)",
 			"INSERT INTO graph_data(graph_id,time,value) VALUES(2,0000,19),(2,1000,19.5),(2,1900,20),(2,2100,19)",
@@ -92,10 +95,13 @@ void MHEDatabase::insertDefaultData()
 			"INSERT INTO condition(name,days) VALUES('Monday to friday',124),('Saturday to sunday',3)",
 			"INSERT INTO condition(name,device_id,temperature_min,days) VALUES('Monday to friday - hot',2,14,124),('Saturday to sunday - hot',2,14,3)",
 			"INSERT INTO condition(name,use_calendar) VALUES('Absence less than 1 week',1),('Absence more than 1 week',1)",
-			"INSERT INTO condition_calendar(condition_id,date) VALUES(6, 20150605),(6, 20150606),(6, 20150623)",
+			"INSERT INTO condition_calendar(condition_id,datetime_begin,datetime_end) VALUES(6, 201506050000, 201506232359)",
 
-            "INSERT INTO room(name,device_temperature_id,device_heater_id,device_heating_id) VALUES('Home',5,4,3)",
+			"INSERT INTO room(name,device_temperature_id,device_heater_id,device_heating_id) VALUES('Home',5,4,3)",
 			"INSERT INTO room_graphcond(room_id,graph_id,condition_id) VALUES(1,1,1),(1,2,2),(1,3,3),(1,4,4),(1,5,5),(1,6,6)",
+
+			"INSERT INTO mobile(type,user,token,is_enabled) VALUES('gcm','Test','GCMTOKEN',0)",
+			"INSERT INTO mobile_event(mobile_id,name,object_id) VALUES(1,'condition',1)",
 	};
 	int nbElements = (sizeof(sqls) / sizeof(*sqls));
 
@@ -319,13 +325,14 @@ static int selectRoomGraphCond(void *param, int ac, char **av, char **column)
 	return 0;
 }
 
-std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphCondByActiveDaysAndCalendar(int dayMask, int dateYYYYMMDD)
+std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphCondByActiveDaysAndCalendar(int dayMask, int dateYYYYMMDDHHMM)
 {
     std::vector<DBRoomGraphCond> ret;
     std::stringstream ss;
     int rc;
 
-    ss << "SELECT rgc.rowid,rgc.room_id,rgc.graph_id,rgc.condition_id FROM room_graphcond rgc,condition c,condition_calendar cc WHERE rgc.condition_id=c.rowid AND (c.days IS NULL OR (c.days&" << dayMask << ")=" << dayMask << ") AND c.use_calendar=1 AND c.rowid=cc.condition_id AND cc.date=" << dateYYYYMMDD;
+    ss << "SELECT rgc.rowid,rgc.room_id,rgc.graph_id,rgc.condition_id FROM room_graphcond rgc,condition c,condition_calendar cc WHERE rgc.condition_id=c.rowid AND (c.days IS NULL OR (c.days&" << dayMask << ")=" << dayMask
+        << ") AND c.use_calendar=1 AND c.rowid=cc.condition_id AND " << dateYYYYMMDDHHMM << " BETWEEN cc.datetime_begin AND cc.datetime_end";
     ss << " UNION SELECT rgc.rowid,rgc.room_id,rgc.graph_id,rgc.condition_id FROM room_graphcond rgc,condition c WHERE rgc.condition_id=c.rowid AND (c.days IS NULL OR (c.days&" << dayMask << ")=" << dayMask << ") AND c.use_calendar=0";
     rc = sqlite3_exec(_db, ss.str().c_str(), selectRoomGraphCond, &ret, NULL);
     if (rc != SQLITE_OK)
@@ -340,7 +347,61 @@ std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphConds()
 
 	rc = sqlite3_exec(_db, "SELECT rowid,room_id,graph_id,condition_id FROM room_graphcond ORDER BY rowid", selectRoomGraphCond, &ret, NULL);
 	if (rc != SQLITE_OK)
-		LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::getRooms - SQL error: " << sqlite3_errmsg(_db)));
+		LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::getRoomGraphConds - SQL error: " << sqlite3_errmsg(_db)));
+	return ret;
+}
+
+static int selectMobile(void *param, int ac, char **av, char **column)
+{
+	std::vector<DBMobile> *r = static_cast<std::vector<DBMobile>*>(param);
+
+	if (ac == 6)
+	{
+		DBMobile m;
+
+        m.id = boost::lexical_cast<int>(av[0]);
+        m.type = av[1];
+        m.user= av[2];
+        m.token= av[3];
+        m.isActivated = (boost::lexical_cast<int>(av[4]) == 1);
+        m.lastSuccessYYYYMMDDHHSS = boost::lexical_cast<u_int64_t>(av[5]);
+		r->push_back(m);
+	}
+	return 0;
+}
+
+std::vector<DBMobile> MHEDatabase::getMobileActivatedToNotify(const std::string &event, int objectId)
+{
+    std::vector<DBMobile> ret;
+    sqlite3_stmt *stmt = NULL;
+    const std::string sql = "SELECT m.rowid,m.type,m.user,m.token,m.is_enabled,m.datetime_last_success FROM mobile m,mobile_event me"
+                            " WHERE m.is_enabled=1 AND m.rowid=me.mobile_id AND me.name=? AND me.object_id=?"
+                            " ORDER BY m.rowid";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+        sqlite3_bind_text(stmt, 1, event.c_str(), event.size(), NULL);
+		sqlite3_bind_int(stmt, 2, objectId);
+		rc = sqlite3_step(stmt);
+		while (rc == SQLITE_ROW)
+		{
+            DBMobile m;
+
+            m.id = sqlite3_column_int(stmt, 0);
+            m.type = (char *)sqlite3_column_text(stmt, 1);
+            m.user= (char *)sqlite3_column_text(stmt, 2);
+            m.token= (char *)sqlite3_column_text(stmt, 3);
+            m.isActivated = (sqlite3_column_int(stmt, 4) == 1);
+            m.lastSuccessYYYYMMDDHHSS = sqlite3_column_int64(stmt, 5);
+            ret.push_back(m);
+            rc = sqlite3_step(stmt);
+		}
+		sqlite3_finalize(stmt);
+	}
+	else
+        LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::getMobileActivatedToNotify - SQL error: " << sqlite3_errmsg(_db)));
 	return ret;
 }
 
@@ -519,7 +580,7 @@ bool MHEDatabase::updateRoom(DBRoom &room)
 
 bool MHEDatabase::updateRoomGraphCond(DBRoomGraphCond &rgc)
 {
-     sqlite3_stmt *stmt = NULL;
+    sqlite3_stmt *stmt = NULL;
 	const std::string sql = "UPDATE room_graphcond SET room_id=?,graph_id=?,condition_id=? WHERE rowid=?";
 	int rc;
 
@@ -536,5 +597,57 @@ bool MHEDatabase::updateRoomGraphCond(DBRoomGraphCond &rgc)
             return true;
 	}
 	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::updateRoomGraphCond - SQL error: " << sqlite3_errmsg(_db)));
+	return false;
+}
+
+bool MHEDatabase::addConditionDate(int condId, int dateYYYYMMDD)
+{
+    u_int64_t dateBeginYYYYMMDDHHMM = dateYYYYMMDD;
+    u_int64_t dateEndYYYYMMDDHHMM = dateYYYYMMDD;
+
+    dateBeginYYYYMMDDHHMM *= (u_int64_t)10000;
+    dateEndYYYYMMDDHHMM = dateBeginYYYYMMDDHHMM + (u_int64_t )2359;
+    return addConditionDate(condId, dateBeginYYYYMMDDHHMM, dateEndYYYYMMDDHHMM);
+}
+
+bool MHEDatabase::addConditionDate(int condId, u_int64_t dateBeginYYYYMMDDHHMM, u_int64_t dateEndYYYYMMDDHHMM)
+{
+    sqlite3_stmt *stmt = NULL;
+	const std::string sql = "INSERT INTO condition_calendar(condition_id,datetime_begin,datetime_end) VALUES(?,?,?)";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_int(stmt, 1, condId);
+		sqlite3_bind_int64(stmt, 2, dateBeginYYYYMMDDHHMM);
+		sqlite3_bind_int64(stmt, 3, dateEndYYYYMMDDHHMM);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		if (rc == SQLITE_DONE)
+            return true;
+	}
+	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::addConditionDate - SQL error: " << sqlite3_errmsg(_db)));
+	return false;
+}
+
+bool MHEDatabase::addMobile(std::string &type, std::string &user, std::string &token)
+{
+    sqlite3_stmt *stmt = NULL;
+	const std::string sql = "INSERT INTO mobile(type,user,token,is_enabled,datetime_last_success) VALUES(?,?,?,0,0)";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_text(stmt, 1, type.c_str(), token.length(), NULL);
+		sqlite3_bind_text(stmt, 2, user.c_str(), user.length(), NULL);
+		sqlite3_bind_text(stmt, 3, token.c_str(), token.length(), NULL);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		if (rc == SQLITE_DONE)
+            return true;
+	}
+	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::addMobile - SQL error: " << sqlite3_errmsg(_db)));
 	return false;
 }

@@ -160,6 +160,31 @@ struct DBRoomGraphCond
     }
 };
 
+struct DBMobile
+{
+    int id;
+    std::string type;
+    std::string user;
+    std::string token;
+    bool isActivated;
+    u_int64_t lastSuccessYYYYMMDDHHSS;
+
+    operator std::string() const
+    {
+        std::stringstream ss;
+
+        ss << "DBMobile["
+            << "id=" << id
+            << " type=" << type
+            << " user=" << user
+            << " token=" << token
+            << " isActivated=" << isActivated
+            << " lastSuccessYYYYMMDDHHSS=" << lastSuccessYYYYMMDDHHSS
+            << "]";
+        return ss.str();
+    }
+};
+
 class MHEDatabase
 {
     private:
@@ -180,7 +205,11 @@ class MHEDatabase
         std::vector<DBRoom> getRooms();
         std::vector<DBRoomGraphCond> getRoomGraphConds();
         std::vector<DBRoomGraphCond> getRoomGraphCondByActiveDaysAndCalendar();
-        std::vector<DBRoomGraphCond> getRoomGraphCondByActiveDaysAndCalendar(int dayMask, int dateYYYYMMDD);
+        std::vector<DBRoomGraphCond> getRoomGraphCondByActiveDaysAndCalendar(int dayMask, int dateYYYYMMDDHHMM);
+        std::vector<DBMobile> getMobileActivatedToNotify(const std::string &event, int objectId);
+        bool addConditionDate(int condId, int dateYYYYMMDD);
+        bool addConditionDate(int condId, u_int64_t dateBeginYYYYMMDDHHMM, u_int64_t dateEndYYYYMMDDHHMM);
+        bool addMobile(std::string &type, std::string &user, std::string &token);
         bool updateHardware(DBHarware &hard);
         bool updateDevice(DBDevice &dev);
         bool updateGraph(DBGraph &graph);
