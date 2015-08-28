@@ -104,13 +104,24 @@
     </div>
     <div class="form-group">
      <label class="col-sm-2 control-label">Condition.days</label>
-     <div class="col-sm-10"><input id="cond_days" type="text" class="form-control"></div>
+     <div class="col-sm-10">
+      <div class="checkbox">
+        <label><input type="checkbox" name="cond_daysMon">Monday</label>
+        <label><input type="checkbox" name="cond_daysTue">Tuesday</label>
+        <label><input type="checkbox" name="cond_daysWed">Wednesday</label>
+        <label><input type="checkbox" name="cond_daysThu">Thurday</label>
+        <label><input type="checkbox" name="cond_daysFri">Friday</label>
+        <label><input type="checkbox" name="cond_daysSat">Saturday</label>
+        <label><input type="checkbox" name="cond_daysSun">Sunday</label>
+      </div>
+     </div>
     </div>
     <div class="form-group">
      <label class="col-sm-2 control-label">Condition.useCalendar</label>
      <div class="col-sm-10"><input id="cond_useCalendar" type="checkbox" class="form-control"></div>
     </div>
     <div class="form-group text-center">
+     <button id="btnAddConditionDate" type="button" class="btn btn-default" onClick="addConditionDate()">Add date</button>
      <button type="button" class="btn btn-primary" onClick="saveCondition()">Save</button>
     </div>
    </form>
@@ -265,6 +276,8 @@ function reloadWorld()
 					});
 				$('#selectConds').val([]);
 				$('[id^="cond_"]').val([]);
+				$('[name^="cond_days"]').val([]);
+				$('#btnAddConditionDate').prop('disabled', true);
 				$.each(json.rooms, function(i, item) {
 						$('#selectRooms').append($('<option>', { value: item.id, text: item.name }));
 					});
@@ -332,6 +345,7 @@ function changeCondition()
 
 	$.each(world.conditions, function(i, item) {
 			if (item.id == conditionId)
+			{
 				for (var k in item)
 				{
 					var v = item[k];
@@ -341,6 +355,15 @@ function changeCondition()
 					else
 						$('#cond_' + k).val(v);
 				}
+				$('#btnAddConditionDate').prop('disabled', item.useCalendar == 'false');
+				$('input[name="cond_daysMon"]').prop('checked', (parseInt(item.days) & 64) == 64);
+				$('input[name="cond_daysTue"]').prop('checked', (parseInt(item.days) & 32) == 32);
+				$('input[name="cond_daysWed"]').prop('checked', (parseInt(item.days) & 16) == 16);
+				$('input[name="cond_daysThu"]').prop('checked', (parseInt(item.days) & 8) == 8);
+				$('input[name="cond_daysFri"]').prop('checked', (parseInt(item.days) & 4) == 4);
+				$('input[name="cond_daysSat"]').prop('checked', (parseInt(item.days) & 2) == 2);
+				$('input[name="cond_daysSun"]').prop('checked', (parseInt(item.days) & 1) == 1);
+			}
 		});
 }
 
@@ -557,6 +580,15 @@ function chartSaveData()
 	sendSave('graph/', graph);
 }
 
+function addConditionDate()
+{
+	var dateStr = prompt('Please enter a date (format: YYYYMMDD)', '');
+	var date = parseInt(dateStr);
+
+	if (!isNaN(date))
+		sendSave('condition/' + $('#cond_id').val() + '/addDate/' + date, null);
+}
+
 function saveHardware()
 {
 	var obj = {};
@@ -585,6 +617,15 @@ function saveCondition()
 			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
 		});
 	obj.useCalendar = $('#cond_useCalendar').is(':checked');
+	obj.days =
+		($('input[name="cond_daysMon"]').prop('checked') ? 64 : 0)
+		| ($('input[name="cond_daysTue"]').prop('checked') ? 32 : 0)
+		| ($('input[name="cond_daysWed"]').prop('checked') ? 16 : 0)
+		| ($('input[name="cond_daysThu"]').prop('checked') ? 8 : 0)
+		| ($('input[name="cond_daysFri"]').prop('checked') ? 4 : 0)
+		| ($('input[name="cond_daysSat"]').prop('checked') ? 2 : 0)
+		| ($('input[name="cond_daysSun"]').prop('checked') ? 1 : 0)
+		;
 	sendSave('condition/', obj);
 }
 
@@ -610,16 +651,25 @@ function saveRGC()
 
 function sendSave(url, obj)
 {
+	var method = (obj == null ? 'GET' : 'POST');
+	var fullUrl = (obj == null ? url : url + obj.id);
+	var serializedData = (obj == null ? null : JSON.stringify(obj));
+
 	console.dir(obj);
 	$.ajax({
-			type: 'POST',
-			url:  url + obj.id,
-			data: JSON.stringify(obj),
+			type: method,
+			url:  fullUrl,
+			data: serializedData,
 			dataType: 'json',
 			success: function(json)
 			{
-				alert('Data saved ! (page should be reloaded)');
-				location.reload();
+				if (obj != null)
+				{
+					alert('Data saved ! (page should be reloaded)');
+					location.reload();
+				}
+				else
+					alert('Data saved !');
 			},
 			error: function(e)
 			{
