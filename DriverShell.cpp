@@ -67,7 +67,7 @@ void DeviceShell::refreshCache()
             char line[1024];
             int execReturn;
 
-            LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("DeviceShell::refreshCache - popen() for command: " << _shellCmd));
+            LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("DeviceShell::refreshCache - popen() for command: " << _shellCmd));
             while (fgets(line, sizeof(line), fh) != NULL)
                 if (boost::regex_match(line, what, expression))
                 {
