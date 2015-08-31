@@ -22,7 +22,7 @@ MHEDevice *HardwareDomoticz::buildObject(DBDevice &dev)
     return new DeviceDomoticz(_hw.param1, (dev.param2 == "24havg"), dev);
 }
 
-DeviceDomoticz::DeviceDomoticz(std::string &urlDomoticz, bool isDayAverage, DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.cacheLifetime), _urlDomoticz(urlDomoticz), _deviceIdx(dev.param1), _isDayAverage(isDayAverage)
+DeviceDomoticz::DeviceDomoticz(std::string &urlDomoticz, bool isDayAverage, DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, dev.cacheLifetime), _urlDomoticz(urlDomoticz), _deviceIdx(dev.param1), _isDayAverage(isDayAverage)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("DeviceDomoticz"));
 }
@@ -52,7 +52,7 @@ bool DeviceDomoticz::setTempHum(float temperature, float humidity)
     {
         time_t now = time(NULL);
 
-        _cache.lastUpdate = now;
+        _lastUpdate = now;
         _cache.humidity = humidity;
         _cache.temperature = temperature;
         if (_cloneTo != NULL)
@@ -77,7 +77,7 @@ bool DeviceDomoticz::setStatus(bool activate)
 	{
         time_t now = time(NULL);
 
-        _cache.lastUpdate = now;
+        _lastUpdate = now;
         _cache.statusIsOn = activate;
         if (_cloneTo != NULL)
             _cloneTo->setStatus(activate);
@@ -91,7 +91,7 @@ void DeviceDomoticz::refreshCache()
 {
     time_t now = time(NULL) - _cacheLifetime;
 
-    if (_cache.lastUpdate < now)
+    if (_lastUpdate < now)
     {
         bool isSuccess = false;
 
@@ -137,7 +137,7 @@ bool DeviceDomoticz::refreshNormal()
                         tm.tm_zone = *tzname;
                         tm.tm_isdst = daylight;
                         if (strptime(date.c_str(), "%Y-%m-%d %H:%M:%S", &tm) != NULL)
-                            _cache.lastUpdate = mktime(&tm);
+                            _lastUpdate = mktime(&tm);
                     }
                     else if (itChild.first == "Status")
                     {

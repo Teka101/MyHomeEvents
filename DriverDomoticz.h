@@ -20,12 +20,11 @@ class HardwareDomoticz : public MHEHardware
 struct CacheDeviceDomoticz
 {
 	std::string name;
-	time_t lastUpdate;
 	bool statusIsOn;
 	float temperature;
 	float humidity;
 
-	CacheDeviceDomoticz() : lastUpdate(0), statusIsOn(false), temperature(0), humidity(0)
+	CacheDeviceDomoticz() : statusIsOn(false), temperature(0), humidity(0)
 	{
 	}
 
@@ -35,7 +34,6 @@ struct CacheDeviceDomoticz
 
             ss << "CacheDeviceDomoticz["
                 << "name=" << name
-                << " lastUpdate=" << lastUpdate
                 << " statusIsOn=" << statusIsOn
                 << " temperature=" << temperature
                 << " humidity=" << humidity
