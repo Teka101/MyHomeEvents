@@ -30,7 +30,9 @@ struct DBHarware
 enum DBDeviceType
 {
     devTempHum = 0,
-    devInterruptor = 1
+    devInterruptor = 1,
+    devDimmer = 2,
+    devTV = 3
 };
 
 struct DBDevice

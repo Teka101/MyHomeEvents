@@ -8,12 +8,19 @@ class MHEDevice
     protected:
         int _id;
         DBDeviceType _type;
+        std::string _name;
         int _cacheLifetime;
         MHEDevice *_cloneTo;
+        time_t _lastUpdate;
 
     public:
-        MHEDevice(int id, DBDeviceType type, int cacheLifetime);
+        MHEDevice(int id, DBDeviceType type, std::string &name, int cacheLifetime);
         virtual ~MHEDevice();
+
+        int getId();
+        DBDeviceType getType();
+        std::string getName();
+        time_t getLastUpdate();
 
         virtual void setCloneTo(MHEDevice *cloneTo);
         virtual float getTemperature();

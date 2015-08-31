@@ -1,12 +1,32 @@
 #include <cfloat>
 #include "MHEDevice.h"
 
-MHEDevice::MHEDevice(int id, DBDeviceType type, int cacheLifetime) : _id(id), _type(type), _cacheLifetime(cacheLifetime), _cloneTo(NULL)
+MHEDevice::MHEDevice(int id, DBDeviceType type, std::string &name, int cacheLifetime) : _id(id), _type(type), _name(name), _cacheLifetime(cacheLifetime), _cloneTo(NULL), _lastUpdate(0)
 {
 }
 
 MHEDevice::~MHEDevice()
 {
+}
+
+int MHEDevice::getId()
+{
+    return _id;
+}
+
+DBDeviceType MHEDevice::getType()
+{
+    return _type;
+}
+
+std::string MHEDevice::getName()
+{
+    return _name;
+}
+
+time_t MHEDevice::getLastUpdate()
+{
+    return _lastUpdate;
 }
 
 void MHEDevice::setCloneTo(MHEDevice *cloneTo)
