@@ -3,7 +3,7 @@
 #include "CurlHelpers.h"
 #include "MHEMobileNotify.h"
 
-MHEMobileNotify::MHEMobileNotify(std::string gcmAppId) : _gcmAppId(gcmAppId)
+MHEMobileNotify::MHEMobileNotify(std::string gcmAppId, MHEDatabase *db) : _gcmAppId(gcmAppId), _db(db)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MHEMobileNotify"));
 }
@@ -12,20 +12,52 @@ MHEMobileNotify::~MHEMobileNotify()
 {
 }
 
-void MHEMobileNotify::notifyDevices(std::vector<DBMobile> &devices, MHEMobileNotifyType type, DBCondition &condition)
+void MHEMobileNotify::notifyDevices(const std::string &event, const std::string &type, const std::string &msg)
 {
-    if (devices.size() == 0)
-        return;
-    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("notifyDevices - devices[]=" << devices.size()));
-    BOOST_FOREACH(DBMobile &device, devices)
+    std::vector<DBMobile> devices = _db->getMobileActivatedToNotify(event, -1);
+
+    if (devices.size() > 0)
+        notifyDevices(devices, type, msg);
+}
+
+void MHEMobileNotify::notifyDevices(MHEMobileNotifyType type, DBCondition &condition)
+{
+    std::vector<DBMobile> devices = _db->getMobileActivatedToNotify("condition", condition.id);
+
+    if (devices.size() > 0)
     {
-        notityDevice(device, type, condition);
+        std::string typeStr = (type == conditionEnter ? "conditionEnter" : "conditionLeave");
+        std::string msg = typeStr;
+
+        notifyDevices(devices, typeStr, msg);
     }
 }
 
-void MHEMobileNotify::notityDevice(DBMobile &device, MHEMobileNotifyType type, DBCondition &condition)
+void MHEMobileNotify::notifyDevices(MHEMobileNotifyType type, MHEDevice &device)
 {
-    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("notityDevice - device=" << (std::string)device << " type=" << type << " condition=" << (std::string)condition));
+    std::vector<DBMobile> devices = _db->getMobileActivatedToNotify("device", device.getId());
+
+    if (devices.size() > 0)
+    {
+        std::string typeStr = (type == conditionEnter ? "deviceActivated" : "deviceDesactivated");
+        std::string msg = typeStr;
+
+        notifyDevices(devices, typeStr, msg);
+    }
+}
+
+void MHEMobileNotify::notifyDevices(std::vector<DBMobile> &devices, const std::string &type, const std::string &msg)
+{
+    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("notifyDevices - devices[]=" << devices.size() << " type=" << type << " msg=" << msg));
+    BOOST_FOREACH(DBMobile &device, devices)
+    {
+        notifyDevice(device, type, msg);
+    }
+}
+
+void MHEMobileNotify::notifyDevice(DBMobile &device, const std::string &type, const std::string &msg)
+{
+    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("notityDevice - device=" << (std::string)device << " type=" << type << " msg=" << msg));
     if (device.type == "gcm")
     {
         std::stringstream ss, ssOut;
@@ -33,11 +65,11 @@ void MHEMobileNotify::notityDevice(DBMobile &device, MHEMobileNotifyType type, D
         std::string url = "https://android.googleapis.com/gcm/send";
 
         ss << "{"
-            << "to: \"" << device.token << "\","
-            << "data: {"
-            << "conditionType: \"" << (type == conditionEnter ? "conditionEnter" : "conditionLeave") << "\","
-            << "conditionName: \"" << condition.name << "\""
-            << "}"
+                << "to: \"" << device.token << "\","
+                << "data: {"
+                    << "type: \"" << type << "\","
+                    << "msg: \"" << msg << "\""
+                << "}"
             << "}";
         postData = ss.str();
         if (curlExecute(url, &postData, &ssOut))
@@ -53,4 +85,6 @@ void MHEMobileNotify::notityDevice(DBMobile &device, MHEMobileNotifyType type, D
         else
             LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("notityDevice - failed post=" << ss.str()));
     }
+    else
+        LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("notityDevice - unkown type of device - " << (std::string)device));
 }
