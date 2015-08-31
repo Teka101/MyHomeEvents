@@ -56,6 +56,9 @@ bool curlExecute(const std::string &url, const std::string *serverAuth, const st
 		CURLcode res;
 		int httpCode = -1;
 
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 500L);
+        curl_easy_setopt(curl, CURLOPT_ACCEPTTIMEOUT_MS, 3000L);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 500L);
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		if (serverAuth != NULL && serverAuth->size() > 0)
 		{
