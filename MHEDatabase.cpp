@@ -78,6 +78,8 @@ void MHEDatabase::insertDefaultData()
 			"INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,param2) VALUES(0,'TempIn',1,300,'8',NULL),(0,'TempOut',1,300,'5','24havg'),(0,'TempHeating',1,300,'6',NULL),(1,'Heater',1,300,'7',NULL)",
 			"INSERT INTO hardware(type,name) VALUES('shell','Scripts shell')",
 			"INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,param2,clone_to_device_id) VALUES(0,'DHT22',2,240,'echo \"Humidity = 50 % Temperature = 19.5 *C\"','offset_temperature=-1.0', 1)",
+			"INSERT INTO hardware(type,name) VALUES('philipsTV','Philips')",
+			"INSERT INTO device(type,name,hardware_id,cache_lifetime,param1) VALUES(3,'TV',3,300,'192.168.0.5')",
 
 			"INSERT INTO graph(description,position) VALUES('Default week', 0)",
 			"INSERT INTO graph_data(graph_id,time,value) VALUES(1,0000,19),(1,0600,19.5),(1,1900,20),(1,2100,19)",
@@ -102,6 +104,7 @@ void MHEDatabase::insertDefaultData()
 
 			"INSERT INTO mobile(type,user,token,is_enabled) VALUES('gcm','Test','GCMTOKEN',0)",
 			"INSERT INTO mobile_event(mobile_id,name,object_id) VALUES(1,'condition',1)",
+			"INSERT INTO mobile_event(mobile_id,name,object_id) VALUES(1,'transmission',-1)",
 	};
 	int nbElements = (sizeof(sqls) / sizeof(*sqls));
 
