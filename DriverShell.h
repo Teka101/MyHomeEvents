@@ -20,7 +20,6 @@ class DeviceShell : public MHEDevice
 {
     private:
         std::string _shellCmd;
-        time_t _lastUpdate;
         float _temperature;
         float _humidity;
         float _offsetTemperature;
