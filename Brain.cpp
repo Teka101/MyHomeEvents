@@ -8,23 +8,34 @@
 #define TEMP_HYSTERESIS 0.5
 
 Brain::Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer, int refreshInSeconds, MHEMobileNotify *notify)
-    : _db(db), _hardDevContainer(hardDevContainer), _notify(notify), _refreshInSeconds(refreshInSeconds)
+    : _db(db), _hardDevContainer(hardDevContainer), _notify(notify), _refreshInSeconds(refreshInSeconds), _timer(_io), _signals(_io)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MHEDatabase"));
-    _timer = new boost::asio::deadline_timer(_io);
+    _signals.add(SIGINT);
+    _signals.add(SIGTERM);
+#if defined(SIGQUIT)
+    _signals.add(SIGQUIT);
+#endif //SIGQUIT
+    _signals.async_wait(boost::bind(&Brain::stop, this));
 }
 
 Brain::~Brain()
 {
-    _timer->cancel();
+    _timer.cancel();
 	_io.stop();
-	delete _timer;
 }
 
 void Brain::start()
 {
+    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain start..."));
     computeNextLaunch();
     _io.run();
+}
+
+void Brain::stop()
+{
+    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain stop..."));
+    _io.stop();
 }
 
 void Brain::computeNextLaunch()
@@ -35,8 +46,8 @@ void Brain::computeNextLaunch()
 	LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain::computeNextLaunch - currentTime=" << to_simple_string(now.time_of_day())));
 	currentMS = _refreshInSeconds - (currentMS % _refreshInSeconds);
 	LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain::computeNextLaunch - waiting=" << currentMS));
-	_timer->expires_from_now(boost::posix_time::seconds(currentMS));
-	_timer->async_wait(boost::bind(&Brain::launch, this));
+	_timer.expires_from_now(boost::posix_time::seconds(currentMS));
+	_timer.async_wait(boost::bind(&Brain::launch, this));
 }
 
 void Brain::launch()
@@ -111,12 +122,8 @@ void Brain::launch()
 
                 if (lastConditionId > 0 && lastConditionId != condition.id)
                 {
-                    std::vector<DBMobile> devices = _db->getMobileActivatedToNotify("condition", lastConditionId);
-
-                    _notify->notifyDevices(devices, conditionLeave, conditionById[lastConditionId]);
-
-                    devices = _db->getMobileActivatedToNotify("condition", condition.id);
-                    _notify->notifyDevices(devices, conditionEnter, condition);
+                    _notify->notifyDevices(conditionLeave, conditionById[lastConditionId]);
+                    _notify->notifyDevices(conditionEnter, condition);
                 }
             }
             _lastConditionIdByRoomId[room.id] = condition.id;
@@ -130,9 +137,17 @@ void Brain::launch()
                 float temperatureMeasured = devIn->getTemperature();
 
                 if (temperatureMeasured <= (temperatureOrder - TEMP_HYSTERESIS))
+                {
+                    if (_notify != NULL && !devHeater->isActivated())
+                        _notify->notifyDevices(conditionEnter, *devHeater);
                     devHeater->setStatus(true);
+                }
                 else if (temperatureMeasured >= (temperatureOrder + TEMP_HYSTERESIS))
+                {
+                    if (_notify != NULL && devHeater->isActivated())
+                        _notify->notifyDevices(conditionLeave, *devHeater);
                     devHeater->setStatus(false);
+                }
             }
             else
                 LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain::launch - no heater to control"));

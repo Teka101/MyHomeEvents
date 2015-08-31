@@ -17,7 +17,8 @@ private:
 	MHEMobileNotify *_notify;
 	int _refreshInSeconds;
 	boost::asio::io_service _io;
-	boost::asio::deadline_timer *_timer;
+	boost::asio::deadline_timer _timer;
+	boost::asio::signal_set _signals;
 	std::map<int,int> _lastConditionIdByRoomId;
 
 	void computeNextLaunch();
@@ -28,6 +29,7 @@ public:
 	~Brain();
 
 	void start();
+	void stop();
 };
 
 #endif /* BRAIN_H_ */
