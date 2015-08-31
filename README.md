@@ -38,7 +38,8 @@ Run
 
 Features
 --------
-* [Web configuration](http://localhost:8080/)
+* Web configuration - [http://localhost:8080/](http://localhost:8080/)
 * "virtual" devices (can connect to Domoticz or execute shell script)
 * create room to link devices (heat control => ambiant temperature => heater)
-* Android notification with GCM (only works on "conditions")
+* Android notification with GCM (check table "mobile_event" to register to events)
+* Send external notification to mobile (ex: when download is finished) - [http://localhost:8080/notify/myevent/mytype/mymessage](http://localhost:8080/notify/myevent/mytype/mymessage)
