@@ -35,6 +35,7 @@ int main(int ac, char **av)
 	settings_file.close();
 	boost::program_options::notify(vm);
 	curlInit();
+	LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Application starting..."));
 	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - WebServer.port=" << webPort));
 	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Brain.refresh=" << brainRefresh));
 	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Notify.gcmAppId=" << gcmAppId));
@@ -65,13 +66,16 @@ int main(int ac, char **av)
         }
     }
 
-    MHEMobileNotify *notify = (gcmAppId.size() == 0 ? NULL : new MHEMobileNotify(gcmAppId));
+    MHEMobileNotify *notify = (gcmAppId.size() == 0 ? NULL : new MHEMobileNotify(gcmAppId, db));
     MHEHardDevContainer *hardDev = new MHEHardDevContainer(*db);
-    MHEWeb *ws = new MHEWeb(webPort, db, hardDev);
+    MHEWeb *ws = new MHEWeb(webPort, db, hardDev, notify);
     Brain b(db, hardDev, brainRefresh, notify);
     b.start();
 
+    LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Application stopping..."));
     delete ws;
+    if (notify != NULL)
+        delete notify;
     delete hardDev;
     delete db;
     curlDestroy();
