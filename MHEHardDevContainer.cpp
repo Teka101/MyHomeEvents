@@ -1,6 +1,7 @@
 #include <boost/foreach.hpp>
 #include "MHEHardDevContainer.h"
 #include "DriverDomoticz.h"
+#include "DriverPhilipsTV.h"
 #include "DriverShell.h"
 
 MHEHardDevContainer::MHEHardDevContainer(MHEDatabase &db)
@@ -12,6 +13,17 @@ MHEHardDevContainer::MHEHardDevContainer(MHEDatabase &db)
 
 MHEHardDevContainer::~MHEHardDevContainer()
 {
+    std::pair<int, MHEDevice*> kvDev;
+    std::pair<int, MHEHardware*> kvHard;
+
+    BOOST_FOREACH(kvDev, _devById)
+    {
+        delete kvDev.second;
+    }
+    BOOST_FOREACH(kvHard, _hwById)
+    {
+        delete kvHard.second;
+    }
 }
 
 void MHEHardDevContainer::buildHardwares(MHEDatabase &db)
@@ -23,6 +35,8 @@ void MHEHardDevContainer::buildHardwares(MHEDatabase &db)
         LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("buildHardwares - try to build: " << (std::string)hw));
         if (hw.type == "domoticz")
             _hwById[hw.id] = new HardwareDomoticz(hw);
+        else if (hw.type == "philipsTV")
+            _hwById[hw.id] = new HardwarePhilipsTV(hw);
         else if (hw.type == "shell")
             _hwById[hw.id] = new HardwareShell(hw);
         else
@@ -67,6 +81,18 @@ void MHEHardDevContainer::buildDevices(MHEDatabase &db)
             }
         }
     }
+}
+
+std::vector<MHEDevice*> MHEHardDevContainer::getDevices()
+{
+    std::pair<int, MHEDevice*> kv;
+    std::vector<MHEDevice*> ret;
+
+    BOOST_FOREACH(kv, _devById)
+    {
+        ret.push_back(kv.second);
+    }
+    return ret;
 }
 
 MHEDevice *MHEHardDevContainer::getDeviceById(int id)
