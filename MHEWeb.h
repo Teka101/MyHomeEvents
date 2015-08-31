@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "MHEHardDevContainer.h"
+#include "MHEMobileNotify.h"
 
 class MHEWeb
 {
@@ -14,11 +15,12 @@ class MHEWeb
         struct MHD_Daemon *_daemon;
         MHEDatabase *_db;
         MHEHardDevContainer *_hardDev;
+        MHEMobileNotify *_notify;
 
     public:
         log4cplus::Logger log;
 
-        MHEWeb(int port, MHEDatabase *db, MHEHardDevContainer *hardDev);
+        MHEWeb(int port, MHEDatabase *db, MHEHardDevContainer *hardDev, MHEMobileNotify *notify);
         ~MHEWeb();
 
         int sendNotFound(struct MHD_Response **response);
@@ -27,6 +29,8 @@ class MHEWeb
 
         void buildJsonWorld(std::stringstream &ss);
         MHEDatabase *getDataBase();
+        MHEHardDevContainer *getHardDevContainer();
+        MHEMobileNotify *getMobileNotify();
 };
 
 #endif // MHEWEB_H

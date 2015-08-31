@@ -37,6 +37,29 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
         response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
 		MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
     }
+    else if (boost::equals(url, "/runningDevices"))
+    {
+        boost::property_tree::ptree pt;
+        std::vector<MHEDevice*> devices = ws->getHardDevContainer()->getDevices();
+        std::stringstream ss;
+
+        if (devices.size() > 0)
+        {
+            boost::property_tree::ptree ptChildren;
+
+            BOOST_FOREACH(MHEDevice *dev, devices)
+            {
+                boost::property_tree::ptree ptChild;
+
+                writeToPTree(ptChild, *dev);
+                ptChildren.push_back(std::make_pair("", ptChild));
+            }
+            pt.add_child("devices", ptChildren);
+        }
+        boost::property_tree::write_json(ss, pt, false);
+        response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
+		MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
+    }
     else if (boost::equals(method, "POST") && boost::starts_with(url, "/hardware/"))
 	{
 		if (postData == NULL)
@@ -188,16 +211,27 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	}
 	else if (boost::equals(method, "GET") && boost::starts_with(url, "/condition/"))
 	{
-		boost::regex expression("^/condition/(\\d+)/addDate/(\\d+)$", boost::regex::perl);
+		boost::regex expression1d("^/condition/(\\d+)/addDate/(\\d{8})$", boost::regex::perl);
+		boost::regex expression2d("^/condition/(\\d+)/addDate/(\\d{12})/(\\d{12})$", boost::regex::perl);
 		boost::cmatch what;
 
-		if (boost::regex_match(url, what, expression))
+		if (boost::regex_match(url, what, expression1d))
 		{
             int conditionId = boost::lexical_cast<int>(what[1]);
             int dateYYYYMMDD = boost::lexical_cast<int>(what[2]);
 
             response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
             if (!ws->getDataBase()->addConditionDate(conditionId, dateYYYYMMDD))
+                httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
+		}
+		else if (boost::regex_match(url, what, expression2d))
+		{
+            int conditionId = boost::lexical_cast<int>(what[1]);
+            u_int64_t dateStartYYYYMMDDHHMM = boost::lexical_cast<u_int64_t>(what[2]);
+            u_int64_t dateEndYYYYMMDDHHMM = boost::lexical_cast<u_int64_t>(what[3]);
+
+            response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
+            if (!ws->getDataBase()->addConditionDate(conditionId, dateStartYYYYMMDDHHMM, dateEndYYYYMMDDHHMM))
                 httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
 		}
 	}
@@ -215,6 +249,24 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
             response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
             if (!ws->getDataBase()->addMobile(type, user, token))
                 httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
+		}
+	}
+	else if (boost::equals(method, "GET") && boost::starts_with(url, "/notify/"))
+	{
+		boost::regex expression("^/notify/(.*)/(.*)/(.*)$", boost::regex::perl);
+		boost::cmatch what;
+
+		if (boost::regex_match(url, what, expression))
+		{
+            std::string event = what[1];
+            std::string type = what[2];
+            std::string message = what[3];
+
+            response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
+            if (ws->getMobileNotify() == NULL)
+                httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
+            else
+                ws->getMobileNotify()->notifyDevices(event, type, message);
 		}
 	}
 	else
@@ -242,7 +294,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	return ret;
 }
 
-MHEWeb::MHEWeb(int port, MHEDatabase *db, MHEHardDevContainer *hardDev) : _db(db), _hardDev(hardDev)
+MHEWeb::MHEWeb(int port, MHEDatabase *db, MHEHardDevContainer *hardDev, MHEMobileNotify *notify) : _db(db), _hardDev(hardDev), _notify(notify)
 {
     this->log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MHEWeb"));
 	LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("MHEWeb::MHEWeb - start web server on port " << port));
@@ -390,4 +442,14 @@ void MHEWeb::buildJsonWorld(std::stringstream &ss)
 MHEDatabase *MHEWeb::getDataBase()
 {
     return _db;
+}
+
+MHEHardDevContainer *MHEWeb::getHardDevContainer()
+{
+    return _hardDev;
+}
+
+MHEMobileNotify *MHEWeb::getMobileNotify()
+{
+    return _notify;
 }
