@@ -19,10 +19,10 @@ void readFromPTree(boost::property_tree::ptree &pTree, DBDevice &dev)
 
     dev.id = pTree.get<int>("id");
     dev.name = pTree.get<std::string>("name");
-    if (devType == "devTempHum")
-        dev.type = devTempHum;
-    else
-        dev.type = devInterruptor;
+    if (devType == "devTempHum") dev.type = devTempHum;
+    else if (devType == "devInterruptor") dev.type = devInterruptor;
+    else if (devType == "devDimmer") dev.type = devDimmer;
+    else if (devType == "devTV") dev.type = devTV;
     dev.hardwareId = pTree.get<int>("hardwareId");
     dev.cacheLifetime = pTree.get<int>("cacheLifetime");
 	dev.param1 = pTree.get<std::string>("param1");
@@ -92,6 +92,8 @@ void writeToPTree(boost::property_tree::ptree &pTree, DBDevice &dev)
     {
     case devTempHum: pTree.put("type", "devTempHum"); break;
     case devInterruptor: pTree.put("type", "devInterruptor"); break;
+    case devDimmer: pTree.put("type", "devDimmer"); break;
+    case devTV: pTree.put("type", "devTV"); break;
     default: pTree.put("type", "---unkown-type---"); break;
     }
 	pTree.put("hardwareId", dev.hardwareId);
@@ -157,4 +159,26 @@ void writeToPTree(boost::property_tree::ptree &pTree, DBRoomGraphCond &rgc)
 	pTree.put("roomId", rgc.roomId);
 	pTree.put("graphId", rgc.graphId);
 	pTree.put("conditionId", rgc.conditionId);
+}
+
+void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev)
+{
+    pTree.put("id", dev.getId());
+    switch (dev.getType())
+    {
+    case devTempHum: pTree.put("type", "devTempHum"); break;
+    case devInterruptor: pTree.put("type", "devInterruptor"); break;
+    case devDimmer: pTree.put("type", "devDimmer"); break;
+    case devTV: pTree.put("type", "devTV"); break;
+    default: pTree.put("type", "---unkown-type---"); break;
+    }
+    pTree.put("name", dev.getName());
+    if (dev.getType() == devTempHum)
+    {
+        pTree.put("humidity", dev.getHumidity());
+        pTree.put("temperature", dev.getTemperature());
+    }
+    else
+        pTree.put("status", dev.isActivated() ? "on" : "off");
+    pTree.put("lastUpdate", dev.getLastUpdate());
 }
