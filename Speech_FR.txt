@@ -1,0 +1,31 @@
+[Words]
+1=un,une
+2=deux
+3=trois
+4=quatre
+5=cinq
+6=six
+7=sept
+8=huit
+9=neuf
+TO_DO=faire,regle
+TO_LEAVE=partir,pars,reviens
+TO_WATCH=regarde,regarder,voir,mater,matter,mate,matte
+TO_TURN_ON=allumer,allume
+DURATION_DAY=jour,jours,journee
+DURATION_WEEK=semaine,semaines
+DURATION_MONTH=mois
+MOVIE=film,films
+    COLD=froid
+    HEAT=chaud
+    HEATING=chauffage
+    HOUSE=appart,appartement,baraque,maison
+HOW=combien
+NIGHT=soir,soiree,nuit
+WHAT=quoi
+GOOD=bon,bonne
+
+[Responses]
+OK=Bien reçu.
+OK=A vos ordres.
+OK=Okay.
