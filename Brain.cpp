@@ -10,7 +10,7 @@
 Brain::Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer, int refreshInSeconds, MHEMobileNotify *notify)
     : _db(db), _hardDevContainer(hardDevContainer), _notify(notify), _refreshInSeconds(refreshInSeconds), _timer(_io), _signals(_io)
 {
-    _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MHEDatabase"));
+    _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("Brain"));
     _signals.add(SIGINT);
     _signals.add(SIGTERM);
 #if defined(SIGQUIT)
