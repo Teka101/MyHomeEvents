@@ -42,6 +42,8 @@
 		<Unit filename="DataBaseHelpers.h" />
 		<Unit filename="DriverDomoticz.cpp" />
 		<Unit filename="DriverDomoticz.h" />
+		<Unit filename="DriverPhilipsTV.cpp" />
+		<Unit filename="DriverPhilipsTV.h" />
 		<Unit filename="DriverShell.cpp" />
 		<Unit filename="DriverShell.h" />
 		<Unit filename="MHEDatabase.cpp" />

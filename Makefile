@@ -1,5 +1,8 @@
 NAME=MyHomeEvents
-SRC=Brain.cpp CurlHelpers.cpp DataBaseHelpers.cpp DriverDomoticz.cpp DriverPhilipsTV.cpp DriverShell.cpp Main.cpp MHEDatabase.cpp MHEDevice.cpp MHEHardDevContainer.cpp MHEHardware.cpp MHEMobileNotify.cpp MHEWeb.cpp
+SRC=Main.cpp \
+	Brain.cpp CurlHelpers.cpp DataBaseHelpers.cpp SpeechRecognize.cpp \
+	DriverDomoticz.cpp DriverPhilipsTV.cpp DriverShell.cpp \
+	MHEDatabase.cpp MHEDevice.cpp MHEHardDevContainer.cpp MHEHardware.cpp MHEMobileNotify.cpp MHEWeb.cpp
 OBJ=$(SRC:.cpp=.o)
 
 DEPS_PATH=$(HOME)/deps
