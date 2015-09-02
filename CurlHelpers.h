@@ -3,7 +3,7 @@
 
 #include <sstream>
 
-void curlInit();
+void curlInit(long timeOut);
 void curlDestroy();
 bool curlExecute(const std::string &url, std::stringstream *output);
 bool curlExecute(const std::string &url, const std::string *postData = NULL, std::stringstream *output = NULL);

@@ -20,6 +20,7 @@ int main(int ac, char **av)
 	boost::program_options::variables_map vm;
 	log4cplus::Logger logger;
 	std::string gcmAppId;
+	long curlTimeout;
 	int webPort, brainRefresh;
 
 	log4cplus::PropertyConfigurator::doConfigure("log4cplus.properties");
@@ -28,16 +29,18 @@ int main(int ac, char **av)
 		("WebServer.port", boost::program_options::value<int>(&webPort)->default_value(8080))
 		("Brain.refresh", boost::program_options::value<int>(&brainRefresh)->default_value(300))
 		("Notify.gcmAppId", boost::program_options::value<std::string>(&gcmAppId))
+		("General.curlTimeout", boost::program_options::value<long>(&curlTimeout)->default_value(1000L))
 	    ;
     std::ifstream settings_file("config.ini", std::ifstream::in);
 	boost::program_options::store(boost::program_options::parse_config_file(settings_file, desc, true), vm);
 	settings_file.close();
 	boost::program_options::notify(vm);
-	curlInit();
 	LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Application starting..."));
+	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - General.curlTimeout=" << curlTimeout));
 	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - WebServer.port=" << webPort));
 	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Brain.refresh=" << brainRefresh));
 	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Notify.gcmAppId=" << gcmAppId));
+	curlInit(curlTimeout);
 
     MHEDatabase *db = new MHEDatabase();
 

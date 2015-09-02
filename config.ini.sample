@@ -1,3 +1,6 @@
+[General]
+curlTimeout=1000
+
 [WebServer]
 port=8080
 
