@@ -17,17 +17,20 @@ class MHEWeb
         MHEHardDevContainer *_hardDev;
         MHEMobileNotify *_notify;
 
+        void buildJsonWorld(std::stringstream &ss);
+
     public:
         log4cplus::Logger log;
 
         MHEWeb(int port, MHEDatabase *db, MHEHardDevContainer *hardDev, MHEMobileNotify *notify);
         ~MHEWeb();
 
+        struct MHD_Response *doAdmin(const char *method, const char *url, std::stringstream *postData, int &httpCode);
+
         int sendNotFound(struct MHD_Response **response);
         int sendPermanentRedirectTo(struct MHD_Response **response, const char *location);
         int sendFile(struct MHD_Response **response, const char *url);
 
-        void buildJsonWorld(std::stringstream &ss);
         MHEDatabase *getDataBase();
         MHEHardDevContainer *getHardDevContainer();
         MHEMobileNotify *getMobileNotify();
