@@ -14,12 +14,11 @@
 #include "MHEHardware.h"
 #include "MHEWeb.h"
 
-static log4cplus::Logger logger;
-
 int main(int ac, char **av)
 {
     boost::program_options::options_description desc("ConfigFile");
 	boost::program_options::variables_map vm;
+	log4cplus::Logger logger;
 	std::string gcmAppId;
 	int webPort, brainRefresh;
 
@@ -79,4 +78,5 @@ int main(int ac, char **av)
     delete hardDev;
     delete db;
     curlDestroy();
+    return 0;
 }
