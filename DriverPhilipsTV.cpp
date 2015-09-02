@@ -15,7 +15,7 @@ MHEDevice *HardwarePhilipsTV::buildObject(DBDevice &dev)
     return new DevicePhilipsTV(dev);
 }
 
-DevicePhilipsTV::DevicePhilipsTV(DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, dev.cacheLifetime), _ip(dev.param1)
+DevicePhilipsTV::DevicePhilipsTV(DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, dev.cacheLifetime), _ip(dev.param1), _lastStatus(false)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("DevicePhilipsTV"));
 }
@@ -26,14 +26,21 @@ DevicePhilipsTV::~DevicePhilipsTV()
 
 bool DevicePhilipsTV::isActivated()
 {
-    std::stringstream ssUrl;
-    bool status = false;
+    time_t now = time(NULL) - _cacheLifetime;
 
-    ssUrl << "http://" << _ip << ":1925/1/channels/current";
-    if (curlExecute(ssUrl.str()))
-        status = true;
-    _lastUpdate = time(NULL);
-    return status;
+    if (_lastUpdate < now)
+    {
+        std::stringstream ssUrl;
+        bool status = false;
+
+        ssUrl << "http://" << _ip << ":1925/1/channels/current";
+        if (curlExecute(ssUrl.str()))
+            status = true;
+        _lastUpdate = time(NULL);
+        _lastStatus = status;
+        return status;
+    }
+    return _lastStatus;
 }
 
 bool DevicePhilipsTV::setStatus(bool activate)

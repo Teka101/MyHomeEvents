@@ -19,6 +19,7 @@ class DevicePhilipsTV : public MHEDevice
 {
     private:
         std::string _ip;
+        bool _lastStatus;
         log4cplus::Logger _log;
 
         bool sendKey(const std::string &key);
