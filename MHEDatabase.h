@@ -219,6 +219,7 @@ class MHEDatabase
         bool updateCondition(DBCondition &cond);
         bool updateRoom(DBRoom &room);
         bool updateRoomGraphCond(DBRoomGraphCond &rgc);
+        bool updateMobileLastSuccess(DBMobile &mob);
 };
 
 #endif // MHEDATABASE_H

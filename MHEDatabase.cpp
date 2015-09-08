@@ -50,7 +50,7 @@ void MHEDatabase::createTables()
 			"CREATE TABLE IF NOT EXISTS room_graphcond(room_id INTEGER NOT NULL REFERENCES room(rowid), graph_id INTEGER NOT NULL REFERENCES graph(rowid), condition_id INTEGER NOT NULL REFERENCES condition(rowid))",
 
 			"CREATE TABLE IF NOT EXISTS mobile(type TEXT NOT NULL, user TEXT NOT NULL, token TEXT NOT NULL, is_enabled INTEGER NOT NULL, datetime_last_success INTEGER, UNIQUE(type,user) ON CONFLICT REPLACE)",
-			"CREATE TABLE IF NOT EXISTS mobile_event(mobile_id INTEGER REFERENCES mobile(rowid), name TEXT NOT NULL, object_id INTEGER NOT NULL)",
+			"CREATE TABLE IF NOT EXISTS mobile_event(mobile_user INTEGER REFERENCES mobile(user), name TEXT NOT NULL, object_id INTEGER NOT NULL)",
 	};
 	int nbElements = (sizeof(sqls) / sizeof(*sqls));
 
@@ -103,8 +103,8 @@ void MHEDatabase::insertDefaultData()
 			"INSERT INTO room_graphcond(room_id,graph_id,condition_id) VALUES(1,1,1),(1,2,2),(1,3,3),(1,4,4),(1,5,5),(1,6,6)",
 
 			"INSERT INTO mobile(type,user,token,is_enabled) VALUES('gcm','Test','GCMTOKEN',0)",
-			"INSERT INTO mobile_event(mobile_id,name,object_id) VALUES(1,'condition',1)",
-			"INSERT INTO mobile_event(mobile_id,name,object_id) VALUES(1,'transmission',-1)",
+			"INSERT INTO mobile_event(mobile_user,name,object_id) VALUES('Test','condition',1)",
+			"INSERT INTO mobile_event(mobile_user,name,object_id) VALUES('Test','transmission',-1)",
 	};
 	int nbElements = (sizeof(sqls) / sizeof(*sqls));
 
@@ -354,31 +354,12 @@ std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphConds()
 	return ret;
 }
 
-static int selectMobile(void *param, int ac, char **av, char **column)
-{
-	std::vector<DBMobile> *r = static_cast<std::vector<DBMobile>*>(param);
-
-	if (ac == 6)
-	{
-		DBMobile m;
-
-        m.id = boost::lexical_cast<int>(av[0]);
-        m.type = av[1];
-        m.user= av[2];
-        m.token= av[3];
-        m.isActivated = (boost::lexical_cast<int>(av[4]) == 1);
-        m.lastSuccessYYYYMMDDHHSS = boost::lexical_cast<u_int64_t>(av[5]);
-		r->push_back(m);
-	}
-	return 0;
-}
-
 std::vector<DBMobile> MHEDatabase::getMobileActivatedToNotify(const std::string &event, int objectId)
 {
     std::vector<DBMobile> ret;
     sqlite3_stmt *stmt = NULL;
-    const std::string sql = "SELECT m.rowid,m.type,m.user,m.token,m.is_enabled,m.datetime_last_success FROM mobile m,mobile_event me"
-                            " WHERE m.is_enabled=1 AND m.rowid=me.mobile_id AND me.name=? AND me.object_id=?"
+    const std::string sql = "SELECT DISTINCT m.rowid,m.type,m.user,m.token,m.is_enabled,m.datetime_last_success FROM mobile m,mobile_event me"
+                            " WHERE m.is_enabled=1 AND m.user=me.mobile_user AND me.name=? AND me.object_id=?"
                             " ORDER BY m.rowid";
 	int rc;
 
@@ -603,6 +584,26 @@ bool MHEDatabase::updateRoomGraphCond(DBRoomGraphCond &rgc)
 	return false;
 }
 
+bool MHEDatabase::updateMobileLastSuccess(DBMobile &mob)
+{
+    sqlite3_stmt *stmt = NULL;
+	const std::string sql = "UPDATE mobile SET datetime_last_success=? WHERE rowid=?";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_int64(stmt, 1, mob.lastSuccessYYYYMMDDHHSS);
+		sqlite3_bind_int(stmt, 2, mob.id);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		if (rc == SQLITE_DONE)
+            return true;
+	}
+	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::updateMobileLastSuccess - SQL error: " << sqlite3_errmsg(_db)));
+    return false;
+}
+
 bool MHEDatabase::addConditionDate(int condId, int dateYYYYMMDD)
 {
     u_int64_t dateBeginYYYYMMDDHHMM = dateYYYYMMDD;
@@ -643,7 +644,7 @@ bool MHEDatabase::addMobile(std::string &type, std::string &user, std::string &t
 	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
 	if (rc == SQLITE_OK)
 	{
-		sqlite3_bind_text(stmt, 1, type.c_str(), token.length(), NULL);
+		sqlite3_bind_text(stmt, 1, type.c_str(), type.length(), NULL);
 		sqlite3_bind_text(stmt, 2, user.c_str(), user.length(), NULL);
 		sqlite3_bind_text(stmt, 3, token.c_str(), token.length(), NULL);
 		rc = sqlite3_step(stmt);
