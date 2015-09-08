@@ -58,7 +58,7 @@ bool DevicePhilipsTV::sendKey(const std::string &key)
     ssUrl << "http://" << _ip << ":1925/1/input/key";
     ssPost << "{\"key\": \""<< key << "\"}";
     postData = ssPost.str();
-    if (curlExecute(ssUrl.str(), &postData))
+    if (curlExecute(ssUrl.str(), NULL, &postData))
     {
         time_t now = time(NULL);
 
