@@ -1,9 +1,9 @@
-#include <iostream>
-#include <sstream>
-
+#include <boost/foreach.hpp>
 #include <curl/curl.h>
+#include <iostream>
 #include <log4cplus/logger.h>
 #include <log4cplus/loggingmacros.h>
+#include <sstream>
 #include "CurlHelpers.h"
 
 static log4cplus::Logger log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("CurlHelpers"));
@@ -42,12 +42,12 @@ bool curlExecute(const std::string &url, std::stringstream *output)
     return curlExecute(url, NULL, NULL, output);
 }
 
-bool curlExecute(const std::string &url, const std::string *postData, std::stringstream *output)
+bool curlExecute(const std::string &url, std::vector<std::string> *headers, const std::string *postData, std::stringstream *output)
 {
-	return curlExecute(url, NULL, postData, output);
+	return curlExecute(url, headers, NULL, postData, output);
 }
 
-bool curlExecute(const std::string &url, const std::string *serverAuth, const std::string *postData, std::stringstream *output)
+bool curlExecute(const std::string &url, std::vector<std::string> *headers, const std::string *serverAuth, const std::string *postData, std::stringstream *output)
 {
 	CURL *curl;
 
@@ -55,6 +55,7 @@ bool curlExecute(const std::string &url, const std::string *serverAuth, const st
 	curl = curl_easy_init();
 	if (curl != NULL)
 	{
+        struct curl_slist *chunk = NULL;
 		CURLcode res;
 		int httpCode = -1;
 
@@ -62,6 +63,15 @@ bool curlExecute(const std::string &url, const std::string *serverAuth, const st
         curl_easy_setopt(curl, CURLOPT_ACCEPTTIMEOUT_MS, _timeOut);
         curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, _timeOut);
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		if (headers != NULL)
+		{
+            BOOST_FOREACH(std::string &h, *headers)
+            {
+                LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("curlExecute - AddHeader=" << h));
+                chunk = curl_slist_append(chunk, h.c_str());
+            }
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+		}
 		if (serverAuth != NULL && serverAuth->size() > 0)
 		{
 			curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
@@ -75,6 +85,13 @@ bool curlExecute(const std::string &url, const std::string *serverAuth, const st
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeMemoryCallback);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, output);
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+#ifdef CURLOPT_PIPEWAIT
+		curl_easy_setopt(curl, CURLOPT_PIPEWAIT, 0L);
+#endif //CURLOPT_PIPEWAIT
+#ifdef CURLOPT_FORBIT_REUSE
+		curl_easy_setopt(curl, CURLOPT_FORBIT_REUSE, 1L);
+#endif //CURLOPT_FORBIT_REUSE
+		curl_easy_setopt(curl, CURLOPT_FRESH_CONNECT, 1L);
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
 		res = curl_easy_perform(curl);
@@ -86,6 +103,8 @@ bool curlExecute(const std::string &url, const std::string *serverAuth, const st
 		else
 			LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("curlExecute - curl_easy_perform() failed: " << curl_easy_strerror(res)));
 		curl_easy_cleanup(curl);
+		if (chunk != NULL)
+            curl_slist_free_all(chunk);
 		return (httpCode == 200);
 	}
 	return false;
