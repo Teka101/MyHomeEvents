@@ -23,6 +23,7 @@ class DevicePhilipsTV : public MHEDevice
         log4cplus::Logger _log;
 
         bool sendKey(const std::string &key);
+        bool sendNewChannel(const std::string &channelId);
 
     public:
         DevicePhilipsTV(DBDevice &dev);
@@ -30,6 +31,7 @@ class DevicePhilipsTV : public MHEDevice
 
         bool isActivated();
         bool setStatus(bool activate);
+        bool sendCommand(const std::string &command, const std::string &value);
 
         operator std::string() const
         {

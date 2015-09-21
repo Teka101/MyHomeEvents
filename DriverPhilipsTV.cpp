@@ -50,6 +50,13 @@ bool DevicePhilipsTV::setStatus(bool activate)
     return false;
 }
 
+bool DevicePhilipsTV::sendCommand(const std::string &command, const std::string &value)
+{
+    if (command == "channel")
+        return sendNewChannel(value);
+    return false;
+}
+
 bool DevicePhilipsTV::sendKey(const std::string &key)
 {
     std::stringstream ssUrl, ssPost;
@@ -57,6 +64,24 @@ bool DevicePhilipsTV::sendKey(const std::string &key)
 
     ssUrl << "http://" << _ip << ":1925/1/input/key";
     ssPost << "{\"key\": \""<< key << "\"}";
+    postData = ssPost.str();
+    if (curlExecute(ssUrl.str(), NULL, &postData))
+    {
+        time_t now = time(NULL);
+
+        _lastUpdate = now;
+        return true;
+    }
+    return false;
+}
+
+bool DevicePhilipsTV::sendNewChannel(const std::string &channelId)
+{
+    std::stringstream ssUrl, ssPost;
+    std::string postData;
+
+    ssUrl << "http://" << _ip << ":1925/1/channels/current";
+    ssPost << "{\"id\": \""<< channelId << "\"}";
     postData = ssPost.str();
     if (curlExecute(ssUrl.str(), NULL, &postData))
     {
