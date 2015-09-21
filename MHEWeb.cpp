@@ -82,14 +82,12 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
             std::string user = what[2];
             std::string token = what[3];
 
-            response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
-            if (!ws->getDataBase()->addMobile(type, user, token))
-                httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
-		}
+            response = ws->buildStatusResponse(ws->getDataBase()->addMobile(type, user, token), httpCode);
+        }
 	}
 	else if (boost::equals(method, "GET") && boost::starts_with(url, "/notify/"))
 	{
-		boost::regex expression("^/notify/(.*)/(.*)/(.*)$", boost::regex::perl);
+		boost::regex expression("^/notify/(.+)/(.+)/(.+)$", boost::regex::perl);
 		boost::cmatch what;
 
 		if (boost::regex_match(url, what, expression))
@@ -98,11 +96,41 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
             std::string type = what[2];
             std::string message = what[3];
 
-            response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
-            if (ws->getMobileNotify() == NULL)
-                httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
-            else
+            if (ws->getMobileNotify() != NULL)
+            {
                 ws->getMobileNotify()->notifyDevices(event, type, message);
+                response = ws->buildStatusResponse(true, httpCode);
+            }
+            else
+                response = ws->buildStatusResponse(false, httpCode);
+		}
+	}
+	else if (boost::equals(method, "GET") && boost::starts_with(url, "/setChannel/"))
+	{
+		boost::regex expression("^/setChannel/([0-9]+)/(.+)$", boost::regex::perl);
+		boost::cmatch what;
+
+		if (boost::regex_match(url, what, expression))
+		{
+            int deviceId = boost::lexical_cast<int>(what[1]);
+            std::string channelId = what[2];
+            MHEDevice *dev = ws->getHardDevContainer()->getDeviceById(deviceId);
+
+            response = ws->buildStatusResponse(dev != NULL && dev->sendCommand("channel", channelId), httpCode);
+		}
+	}
+	else if (boost::equals(method, "GET") && boost::starts_with(url, "/setStatus/"))
+	{
+		boost::regex expression("^/setStatus/([0-9]+)/(false|true)$", boost::regex::perl);
+		boost::cmatch what;
+
+		if (boost::regex_match(url, what, expression))
+		{
+            int deviceId = boost::lexical_cast<int>(what[1]);
+            std::string activate = what[2];
+            MHEDevice *dev = ws->getHardDevContainer()->getDeviceById(deviceId);
+
+            response = ws->buildStatusResponse(dev != NULL && dev->setStatus(activate == "true"), httpCode);
 		}
 	}
 	else
@@ -290,6 +318,17 @@ MHEHardDevContainer *MHEWeb::getHardDevContainer()
 MHEMobileNotify *MHEWeb::getMobileNotify()
 {
     return _notify;
+}
+
+struct MHD_Response *MHEWeb::buildStatusResponse(bool status, int &httpCode)
+{
+    struct MHD_Response *response;
+    std::stringstream ss;
+
+    ss << "{\"success\": "<< (status ? "true" : "false") << "}";
+    response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
+    MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
+    return response;
 }
 
 struct MHD_Response *MHEWeb::doAdmin(const char *method, const char *url, std::stringstream *postData, int &httpCode)

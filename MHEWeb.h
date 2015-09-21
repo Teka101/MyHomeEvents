@@ -25,6 +25,7 @@ class MHEWeb
         MHEWeb(int port, MHEDatabase *db, MHEHardDevContainer *hardDev, MHEMobileNotify *notify);
         ~MHEWeb();
 
+        struct MHD_Response *buildStatusResponse(bool status, int &httpCode);
         struct MHD_Response *doAdmin(const char *method, const char *url, std::stringstream *postData, int &httpCode);
 
         int sendNotFound(struct MHD_Response **response);
