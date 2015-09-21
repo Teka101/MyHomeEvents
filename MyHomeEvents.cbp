@@ -60,6 +60,9 @@
 		<Unit filename="MHEWeb.h" />
 		<Unit filename="Main.cpp" />
 		<Unit filename="README.md" />
+		<Unit filename="SpeechRecognize.cpp" />
+		<Unit filename="SpeechRecognize.h" />
+		<Unit filename="Speech_FR.txt" />
 		<Extensions>
 			<code_completion />
 			<debugger />
