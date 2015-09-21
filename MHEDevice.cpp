@@ -58,3 +58,8 @@ bool MHEDevice::setStatus(bool activate)
 {
     return false;
 }
+
+bool MHEDevice::sendCommand(const std::string &command, const std::string &value)
+{
+    return false;
+}

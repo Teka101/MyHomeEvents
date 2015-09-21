@@ -28,6 +28,7 @@ class MHEDevice
         virtual bool setTempHum(float temperature, float humidity);
         virtual bool isActivated();
         virtual bool setStatus(bool activate);
+        virtual bool sendCommand(const std::string &command, const std::string &value);
         virtual operator std::string() const
         {
             std::stringstream ss;
