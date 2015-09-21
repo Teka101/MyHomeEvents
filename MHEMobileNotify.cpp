@@ -70,12 +70,12 @@ void MHEMobileNotify::notifyDevice(DBMobile &device, const std::string &type, co
         headers.push_back("Content-Type: application/json");
         ss.str(std::string());
         ss << "{"
-                << " \"to\": \"" << device.token << "\", "
-                << " \"data\": {"
-                    << " \"type\": \"" << type << "\", "
-                    << " \"msg\": \"" << msg << "\""
-                << " }"
-            << " }";
+                << "to: \"" << device.token << "\","
+                << "data: {"
+                    << "type: \"" << type << "\","
+                    << "msg: \"" << msg << "\""
+                << "}"
+            << "}";
         postData = ss.str();
         if (curlExecute(url, &headers, &postData, &ssOut))
         {
@@ -84,12 +84,12 @@ void MHEMobileNotify::notifyDevice(DBMobile &device, const std::string &type, co
             long dateYYYYMMDD = (long)currentDate.year() * 10000L + (long)currentDate.month() * 100L + (long)currentDate.day();
             long currentHHMMM = now.time_of_day().hours() * 100L + now.time_of_day().minutes();
 
-            LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("notityDevice - success post=" << ss.str() << " return: " << ssOut.str()));
+            LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("notityDevice - success post=" << ss.str() << " return: " << ssOut));
             device.lastSuccessYYYYMMDDHHSS = dateYYYYMMDD * 10000L + currentHHMMM;
             _db->updateMobileLastSuccess(device);
         }
         else
-            LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("notityDevice - failed post=" << ss.str() << " return: " << ssOut.str()));
+            LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("notityDevice - failed post=" << ss.str()));
     }
     else
         LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("notityDevice - unkown type of device - " << (std::string)device));
