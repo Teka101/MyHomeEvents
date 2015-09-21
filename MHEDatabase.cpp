@@ -306,8 +306,9 @@ std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphCondByActiveDaysAndCalenda
 	boost::gregorian::date currentDate = now.date();
 	int dateYYYYMMDD = (int)currentDate.year() * 10000 + (int)currentDate.month() * 100 + (int)currentDate.day();
 	int weekDayStartMonday = ((int)currentDate.day_of_week() - 1 + 7) % 7;
-	int dayMask = pow(2, weekDayStartMonday);
+	int dayMask = pow(2, 6 - weekDayStartMonday);
 
+    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("MHEDatabase::getRoomGraphCondByActiveDaysAndCalendar - dateYYYYMMDD=" << dateYYYYMMDD << " weekDayStartMonday=" << weekDayStartMonday << " dayMask=" << dayMask));
 	return getRoomGraphCondByActiveDaysAndCalendar(dayMask, dateYYYYMMDD);
 }
 
