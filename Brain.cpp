@@ -2,7 +2,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
 #include <cfloat>
-#include <map>
 #include "Brain.h"
 
 #define TEMP_HYSTERESIS 0.5
