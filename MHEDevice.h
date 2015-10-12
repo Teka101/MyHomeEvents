@@ -3,6 +3,17 @@
 
 #include "MHEDatabase.h"
 
+struct sMHEDeviceValue
+{
+    time_t date;
+    float temperature;
+    float humdity;
+    std::string status;
+};
+
+typedef std::vector<sMHEDeviceValue> tMHEDeviceValues;
+
+
 class MHEDevice
 {
     protected:
@@ -28,7 +39,7 @@ class MHEDevice
         virtual bool setTempHum(float temperature, float humidity);
         virtual bool isActivated();
         virtual bool setStatus(bool activate);
-        virtual bool sendCommand(const std::string &command, const std::string &value);
+        virtual bool sendCommand(const std::string &command, const std::string &value, void *output);
         virtual operator std::string() const
         {
             std::stringstream ss;
