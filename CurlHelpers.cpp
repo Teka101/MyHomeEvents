@@ -3,7 +3,6 @@
 #include <iostream>
 #include <log4cplus/logger.h>
 #include <log4cplus/loggingmacros.h>
-#include <sstream>
 #include "CurlHelpers.h"
 
 static log4cplus::Logger log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("CurlHelpers"));
@@ -79,6 +78,7 @@ bool curlExecute(const std::string &url, std::vector<std::string> *headers, cons
 		}
 		if (postData != NULL)
 		{
+            LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("curlExecute - postData=" << *postData));
             curl_easy_setopt(curl, CURLOPT_POST, true);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData->c_str());
         }
