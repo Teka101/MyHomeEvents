@@ -182,3 +182,14 @@ void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev)
         pTree.put("status", dev.isActivated() ? "on" : "off");
     pTree.put("lastUpdate", dev.getLastUpdate());
 }
+
+void writeToPTree(boost::property_tree::ptree &pTree, sMHEDeviceValue &value)
+{
+    pTree.put("date", value.date);
+    if (value.humdity > FLT_MIN)
+        pTree.put("hum", value.humdity);
+    if (value.temperature > FLT_MIN)
+        pTree.put("tem", value.temperature);
+    if (value.status.size() > 0)
+        pTree.put("status", value.status);
+}

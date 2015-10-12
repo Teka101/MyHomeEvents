@@ -1,7 +1,6 @@
 #ifndef DATABASEHELPERS_H_
 #define DATABASEHELPERS_H_
 
-#include "MHEDatabase.h"
 #include "MHEDevice.h"
 
 void readFromPTree(boost::property_tree::ptree &pTree, DBHarware &hard);
@@ -18,5 +17,6 @@ void writeToPTree(boost::property_tree::ptree &pTree, DBCondition &cond);
 void writeToPTree(boost::property_tree::ptree &pTree, DBRoom &room);
 void writeToPTree(boost::property_tree::ptree &pTree, DBRoomGraphCond &rgc);
 void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev);
+void writeToPTree(boost::property_tree::ptree &pTree, sMHEDeviceValue &value);
 
 #endif /* DATABASEHELPERS_H_ */
