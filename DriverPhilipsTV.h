@@ -31,7 +31,7 @@ class DevicePhilipsTV : public MHEDevice
 
         bool isActivated();
         bool setStatus(bool activate);
-        bool sendCommand(const std::string &command, const std::string &value);
+        bool sendCommand(const std::string &command, const std::string &value, void *output);
 
         operator std::string() const
         {

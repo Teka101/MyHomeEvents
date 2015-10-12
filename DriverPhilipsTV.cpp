@@ -50,7 +50,7 @@ bool DevicePhilipsTV::setStatus(bool activate)
     return false;
 }
 
-bool DevicePhilipsTV::sendCommand(const std::string &command, const std::string &value)
+bool DevicePhilipsTV::sendCommand(const std::string &command, const std::string &value, void *output)
 {
     if (command == "channel")
         return sendNewChannel(value);
