@@ -2,9 +2,6 @@
 #define MHEHARDDEVCONTAINER_H
 
 #include <map>
-#include <vector>
-#include <log4cplus/logger.h>
-#include "MHEDatabase.h"
 #include "MHEHardware.h"
 
 class MHEHardDevContainer

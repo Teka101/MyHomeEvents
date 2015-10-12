@@ -1,7 +1,6 @@
 #ifndef MHEHARDWARE_H
 #define MHEHARDWARE_H
 
-#include "MHEDatabase.h"
 #include "MHEDevice.h"
 
 class MHEHardware
