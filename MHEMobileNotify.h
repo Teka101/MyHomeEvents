@@ -1,9 +1,8 @@
 #ifndef MHEMOBILENOTIFY_H
 #define MHEMOBILENOTIFY_H
 
-#include <log4cplus/logger.h>
-#include "MHEDatabase.h"
 #include "MHEDevice.h"
+#include "SpeechRecognize.h"
 
 enum MHEMobileNotifyType
 {
@@ -17,9 +16,10 @@ private:
     log4cplus::Logger _log;
     std::string _gcmAppId;
     MHEDatabase *_db;
+    SpeechRecognize *_sr;
 
 public:
-    MHEMobileNotify(std::string gcmAppId, MHEDatabase *db);
+    MHEMobileNotify(std::string gcmAppId, MHEDatabase *db, SpeechRecognize *sr);
     ~MHEMobileNotify();
 
     void notifyDevices(const std::string &event, const std::string &type, const std::string &msg);

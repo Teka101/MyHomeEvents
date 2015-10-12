@@ -3,7 +3,7 @@
 #include "CurlHelpers.h"
 #include "MHEMobileNotify.h"
 
-MHEMobileNotify::MHEMobileNotify(std::string gcmAppId, MHEDatabase *db) : _gcmAppId(gcmAppId), _db(db)
+MHEMobileNotify::MHEMobileNotify(std::string gcmAppId, MHEDatabase *db, SpeechRecognize *sr) : _gcmAppId(gcmAppId), _db(db), _sr(sr)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MHEMobileNotify"));
 }
@@ -27,8 +27,18 @@ void MHEMobileNotify::notifyDevices(MHEMobileNotifyType type, DBCondition &condi
     if (devices.size() > 0)
     {
         std::string typeStr = (type == conditionEnter ? "conditionEnter" : "conditionLeave");
-        std::string msg = typeStr;
+        std::string msg;
 
+        if (_sr != NULL)
+        {
+            std::stringstream ssMsg1, ssMsg2;
+
+            ssMsg1 << "condition_" << typeStr << "_" << condition.id;
+            ssMsg2 << "condition_" << typeStr;
+            msg = _sr->getResponse(ssMsg1.str(), ssMsg2.str());
+        }
+        else
+            msg = typeStr;
         notifyDevices(devices, typeStr, msg);
     }
 }
@@ -40,8 +50,18 @@ void MHEMobileNotify::notifyDevices(MHEMobileNotifyType type, MHEDevice &device)
     if (devices.size() > 0)
     {
         std::string typeStr = (type == conditionEnter ? "deviceActivated" : "deviceDesactivated");
-        std::string msg = typeStr;
+        std::string msg;
 
+        if (_sr != NULL)
+        {
+            std::stringstream ssMsg1, ssMsg2;
+
+            ssMsg1 << "device_" << typeStr << "_" << device.getId();
+            ssMsg2 << "device_" << typeStr;
+            msg = _sr->getResponse(ssMsg1.str(), ssMsg2.str());
+        }
+        else
+            msg = typeStr;
         notifyDevices(devices, typeStr, msg);
     }
 }
