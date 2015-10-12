@@ -1,11 +1,9 @@
 #ifndef MHEWEB_H
 #define MHEWEB_H
 
-#include <log4cplus/logger.h>
 #include <microhttpd.h>
 #include <sstream>
 #include <string>
-#include <vector>
 #include "MHEHardDevContainer.h"
 #include "MHEMobileNotify.h"
 
