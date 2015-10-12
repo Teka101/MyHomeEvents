@@ -360,7 +360,7 @@ std::vector<DBMobile> MHEDatabase::getMobileActivatedToNotify(const std::string 
     std::vector<DBMobile> ret;
     sqlite3_stmt *stmt = NULL;
     const std::string sql = "SELECT DISTINCT m.rowid,m.type,m.user,m.token,m.is_enabled,m.datetime_last_success FROM mobile m,mobile_event me"
-                            " WHERE m.is_enabled=1 AND m.user=me.mobile_user AND me.name=? AND me.object_id=?"
+                            " WHERE m.is_enabled=1 AND m.user=me.mobile_user AND me.name=? AND (me.object_id=? OR me.object_id=-1)"
                             " ORDER BY m.rowid";
 	int rc;
 
