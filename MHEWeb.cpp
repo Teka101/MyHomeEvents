@@ -14,7 +14,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
 #include <iostream>
-#include <sstream>
 #include "MHEWeb.h"
 #include "DataBaseHelpers.h"
 
@@ -116,7 +115,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
             std::string channelId = what[2];
             MHEDevice *dev = ws->getHardDevContainer()->getDeviceById(deviceId);
 
-            response = ws->buildStatusResponse(dev != NULL && dev->sendCommand("channel", channelId), httpCode);
+            response = ws->buildStatusResponse(dev != NULL && dev->sendCommand("channel", channelId, NULL), httpCode);
 		}
 	}
 	else if (boost::equals(method, "GET") && boost::starts_with(url, "/setStatus/"))
@@ -131,6 +130,42 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
             MHEDevice *dev = ws->getHardDevContainer()->getDeviceById(deviceId);
 
             response = ws->buildStatusResponse(dev != NULL && dev->setStatus(activate == "true"), httpCode);
+		}
+	}
+	else if (boost::equals(method, "GET") && boost::starts_with(url, "/getSpecial/"))
+	{
+		boost::regex expression("^/getSpecial/([0-9]+)/(last24h|lastMonth|lastYear)$", boost::regex::perl);
+		boost::cmatch what;
+
+		if (boost::regex_match(url, what, expression))
+		{
+            int deviceId = boost::lexical_cast<int>(what[1]);
+            std::string type = what[2];
+            tMHEDeviceValues values;
+            MHEDevice *dev = ws->getHardDevContainer()->getDeviceById(deviceId);
+
+            if (dev != NULL && dev->sendCommand("values", type, &values))
+            {
+                boost::property_tree::ptree pt;
+                std::stringstream ss;
+
+                if (values.size() > 0)
+                {
+                    boost::property_tree::ptree ptChildren;
+
+                    BOOST_FOREACH(sMHEDeviceValue &value, values)
+                    {
+                        boost::property_tree::ptree ptChild;
+
+                        writeToPTree(ptChild, value);
+                        ptChildren.push_back(std::make_pair("", ptChild));
+                    }
+                    pt.add_child("values", ptChildren);
+                }
+                boost::property_tree::write_json(ss, pt, false);
+                response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
+                MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
+            }
 		}
 	}
 	else
