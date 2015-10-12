@@ -19,7 +19,7 @@ int main(int ac, char **av)
     boost::program_options::options_description desc("ConfigFile");
 	boost::program_options::variables_map vm;
 	log4cplus::Logger logger;
-	std::string gcmAppId;
+	std::string gcmAppId, speechFile;
 	long curlTimeout;
 	int webPort, brainRefresh;
 
@@ -30,6 +30,7 @@ int main(int ac, char **av)
 		("Brain.refresh", boost::program_options::value<int>(&brainRefresh)->default_value(300))
 		("Notify.gcmAppId", boost::program_options::value<std::string>(&gcmAppId))
 		("General.curlTimeout", boost::program_options::value<long>(&curlTimeout)->default_value(1000L))
+		("General.speechFile", boost::program_options::value<std::string>(&speechFile))
 	    ;
     std::ifstream settings_file("config.ini", std::ifstream::in);
 	boost::program_options::store(boost::program_options::parse_config_file(settings_file, desc, true), vm);
@@ -68,7 +69,8 @@ int main(int ac, char **av)
         }
     }
 
-    MHEMobileNotify *notify = (gcmAppId.size() == 0 ? NULL : new MHEMobileNotify(gcmAppId, db));
+    SpeechRecognize *sr = (speechFile.size() == 0 ? NULL : new SpeechRecognize(speechFile));
+    MHEMobileNotify *notify = (gcmAppId.size() == 0 ? NULL : new MHEMobileNotify(gcmAppId, db, sr));
     MHEHardDevContainer *hardDev = new MHEHardDevContainer(*db);
     MHEWeb *ws = new MHEWeb(webPort, db, hardDev, notify);
     Brain b(db, hardDev, brainRefresh, notify);
