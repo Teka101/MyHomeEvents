@@ -1,8 +1,6 @@
 #ifndef DRIVERDOMOTICZ_H
 #define DRIVERDOMOTICZ_H
 
-#include <log4cplus/logger.h>
-#include "MHEDatabase.h"
 #include "MHEHardware.h"
 
 class HardwareDomoticz : public MHEHardware
@@ -51,6 +49,7 @@ class DeviceDomoticz : public MHEDevice
         CacheDeviceDomoticz _cache;
         log4cplus::Logger _log;
 
+        bool parseGraphData(const std::string &url, tMHEDeviceValues *values, const std::string &fieldDate, const std::string &dateFormat);
         void refreshCache();
         bool refreshNormal();
         bool refreshDayAverage();
@@ -64,6 +63,7 @@ class DeviceDomoticz : public MHEDevice
         bool setTempHum(float temperature, float humidity);
         bool isActivated();
         bool setStatus(bool activate);
+        bool sendCommand(const std::string &command, const std::string &value, void *output);
 
         operator std::string() const
         {
