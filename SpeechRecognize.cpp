@@ -10,7 +10,7 @@
 #include <string.h>
 #include "SpeechRecognize.h"
 
-SpeechRecognize::SpeechRecognize(const std::string &lang) : _gen(std::time(NULL))
+SpeechRecognize::SpeechRecognize(const std::string &fileName) : _gen(std::time(NULL))
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("SpeechRecognize"));
     setlocale(LC_ALL, ""); //en_US.UTF-8
@@ -18,12 +18,7 @@ SpeechRecognize::SpeechRecognize(const std::string &lang) : _gen(std::time(NULL)
     if (_ic == reinterpret_cast<iconv_t>(-1))
         LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("SpeechRecognize::SpeechRecognize - iconv_open error: " << strerror(errno)));
     else
-    {
-        std::stringstream fileName;
-
-        fileName << "Speech_" << lang << ".txt";
-        loadLanguage(fileName.str());
-    }
+        loadLanguage(fileName);
 }
 
 SpeechRecognize::~SpeechRecognize()
@@ -155,4 +150,13 @@ std::string SpeechRecognize::getResponse(const std::string responseCode)
     else
         LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("getResponse - no response for code=" << responseCode));
     return responseCode;
+}
+
+std::string SpeechRecognize::getResponse(const std::string responseCode1, const std::string responseCode2)
+{
+    std::string ret = getResponse(responseCode1);
+
+    if (ret == responseCode1)
+        ret = getResponse(responseCode2);
+    return ret;
 }

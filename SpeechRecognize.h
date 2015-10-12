@@ -21,11 +21,12 @@ private:
     std::string parseWord(const std::string &word);
 
 public:
-    SpeechRecognize(const std::string &lang);
+    SpeechRecognize(const std::string &fileName);
     ~SpeechRecognize();
 
     std::vector<std::string> parse(const std::string &sentence);
     std::string getResponse(const std::string responseCode);
+    std::string getResponse(const std::string responseCode1, const std::string responseCode2);
 };
 
 #endif // SPEECHRECOGNIZE_H
