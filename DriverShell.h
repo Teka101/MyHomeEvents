@@ -1,7 +1,6 @@
 #ifndef DRIVERSHELL_H
 #define DRIVERSHELL_H
 
-#include "MHEDatabase.h"
 #include "MHEHardware.h"
 
 class HardwareShell : public MHEHardware
