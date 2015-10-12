@@ -43,3 +43,12 @@ Features
 * create room to link devices (heat control => ambiant temperature => heater)
 * Android notification with GCM (check table "mobile_event" to register to events)
 * Send external notification to mobile (ex: when download is finished) - [http://localhost:8080/notify/myevent/mytype/mymessage](http://localhost:8080/notify/myevent/mytype/mymessage)
+
+
+Service REST/JSON:
+* /runningDevices : list declared device
+* /setStatus/{device.id}/(false|true) : turn on/off a device
+* /getSpecial/{device.id}/(last24h|lastMonth|lastYear) : get graph data of a device (only supported for Domoticz)
+* /setChannel/{device.id}/{channel.id} : change channel of your TV
+* /mobile/{type}/{user}/{token} : declare new mobile to notify (only GCM - should activated device in table "mobile")
+* /notify/{event}/{type}/{message} : notify an event to registered mobile
