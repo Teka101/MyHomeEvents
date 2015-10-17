@@ -1,3 +1,4 @@
+#include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
 #include "CurlHelpers.h"
@@ -36,6 +37,7 @@ void MHEMobileNotify::notifyDevices(MHEMobileNotifyType type, DBCondition &condi
             ssMsg1 << "condition_" << typeStr << "_" << condition.id;
             ssMsg2 << "condition_" << typeStr;
             msg = _sr->getResponse(ssMsg1.str(), ssMsg2.str());
+            boost::replace_all(msg, "%name%", condition.name);
         }
         else
             msg = typeStr;
@@ -59,6 +61,7 @@ void MHEMobileNotify::notifyDevices(MHEMobileNotifyType type, MHEDevice &device)
             ssMsg1 << "device_" << typeStr << "_" << device.getId();
             ssMsg2 << "device_" << typeStr;
             msg = _sr->getResponse(ssMsg1.str(), ssMsg2.str());
+            boost::replace_all(msg, "%name%", device.getName());
         }
         else
             msg = typeStr;
