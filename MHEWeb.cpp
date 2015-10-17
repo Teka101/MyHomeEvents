@@ -170,7 +170,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	}
 	else if (boost::equals(method, "GET") && boost::starts_with(url, "/setSpecial/"))
 	{
-		boost::regex expression("^/setSpecial/([0-9]+)/volumne/([0-9]+)$", boost::regex::perl);
+		boost::regex expression("^/setSpecial/([0-9]+)/volume/([0-9]+)$", boost::regex::perl);
 		boost::cmatch what;
 
 		if (boost::regex_match(url, what, expression))
