@@ -15,7 +15,7 @@ MHEDevice *HardwarePhilipsTV::buildObject(DBDevice &dev)
     return new DevicePhilipsTV(dev);
 }
 
-DevicePhilipsTV::DevicePhilipsTV(DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, dev.cacheLifetime), _ip(dev.param1), _lastStatus(false)
+DevicePhilipsTV::DevicePhilipsTV(DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, dev.cacheLifetime, dev.hidden), _ip(dev.param1), _lastStatus(false)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("DevicePhilipsTV"));
 }
@@ -54,6 +54,8 @@ bool DevicePhilipsTV::sendCommand(const std::string &command, const std::string 
 {
     if (command == "channel")
         return sendNewChannel(value);
+    else if (command == "volume")
+        return setVolume(value);
     return false;
 }
 
@@ -70,6 +72,7 @@ bool DevicePhilipsTV::sendKey(const std::string &key)
         time_t now = time(NULL);
 
         _lastUpdate = now;
+        _lastStatus = true;
         return true;
     }
     return false;
@@ -88,6 +91,26 @@ bool DevicePhilipsTV::sendNewChannel(const std::string &channelId)
         time_t now = time(NULL);
 
         _lastUpdate = now;
+        _lastStatus = true;
+        return true;
+    }
+    return false;
+}
+
+bool DevicePhilipsTV::setVolume(const std::string &volume)
+{
+    std::stringstream ssUrl, ssPost;
+    std::string postData;
+
+    ssUrl << "http://" << _ip << ":1925/1/channels/current";
+    ssPost << "{\"muted\": false, \"current\":"<< volume << "}";
+    postData = ssPost.str();
+    if (curlExecute(ssUrl.str(), NULL, &postData))
+    {
+        time_t now = time(NULL);
+
+        _lastUpdate = now;
+        _lastStatus = true;
         return true;
     }
     return false;

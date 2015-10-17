@@ -45,6 +45,7 @@ struct DBDevice
     std::string param1;
     std::string param2;
     int cloneToDeviceId;
+    bool hidden;
 
     operator std::string() const
     {
@@ -59,6 +60,7 @@ struct DBDevice
             << " param1=" << param1
             << " param2=" << param2
             << " cloneToDeviceId=" << cloneToDeviceId
+            << " hidden=" << hidden
             << "]";
         return ss.str();
     }

@@ -21,17 +21,19 @@ class MHEDevice
         DBDeviceType _type;
         std::string _name;
         int _cacheLifetime;
+        bool _hidden;
         MHEDevice *_cloneTo;
         time_t _lastUpdate;
 
     public:
-        MHEDevice(int id, DBDeviceType type, std::string &name, int cacheLifetime);
+        MHEDevice(int id, DBDeviceType type, std::string &name, int cacheLifetime, bool hidden);
         virtual ~MHEDevice();
 
         int getId();
         DBDeviceType getType();
         std::string getName();
         time_t getLastUpdate();
+        bool isHidden();
 
         virtual void setCloneTo(MHEDevice *cloneTo);
         virtual float getTemperature();

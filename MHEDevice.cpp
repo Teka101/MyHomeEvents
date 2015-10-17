@@ -1,7 +1,7 @@
 #include <cfloat>
 #include "MHEDevice.h"
 
-MHEDevice::MHEDevice(int id, DBDeviceType type, std::string &name, int cacheLifetime) : _id(id), _type(type), _name(name), _cacheLifetime(cacheLifetime), _cloneTo(NULL), _lastUpdate(0)
+MHEDevice::MHEDevice(int id, DBDeviceType type, std::string &name, int cacheLifetime, bool hidden) : _id(id), _type(type), _name(name), _cacheLifetime(cacheLifetime), _hidden(hidden), _cloneTo(NULL), _lastUpdate(0)
 {
 }
 
@@ -27,6 +27,11 @@ std::string MHEDevice::getName()
 time_t MHEDevice::getLastUpdate()
 {
     return _lastUpdate;
+}
+
+bool MHEDevice::isHidden()
+{
+    return _hidden;
 }
 
 void MHEDevice::setCloneTo(MHEDevice *cloneTo)

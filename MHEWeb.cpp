@@ -134,7 +134,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	}
 	else if (boost::equals(method, "GET") && boost::starts_with(url, "/getSpecial/"))
 	{
-		boost::regex expression("^/getSpecial/([0-9]+)/(last24h|lastMonth|lastYear)$", boost::regex::perl);
+		boost::regex expression("^/getSpecial/([0-9]+)/graph/(last24h|lastMonth|lastYear)$", boost::regex::perl);
 		boost::cmatch what;
 
 		if (boost::regex_match(url, what, expression))
@@ -166,6 +166,21 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
                 response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
                 MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
             }
+		}
+	}
+	else if (boost::equals(method, "GET") && boost::starts_with(url, "/setSpecial/"))
+	{
+		boost::regex expression("^/setSpecial/([0-9]+)/volumne/([0-9]+)$", boost::regex::perl);
+		boost::cmatch what;
+
+		if (boost::regex_match(url, what, expression))
+		{
+            int deviceId = boost::lexical_cast<int>(what[1]);
+            std::string volume = what[2];
+            tMHEDeviceValues values;
+            MHEDevice *dev = ws->getHardDevContainer()->getDeviceById(deviceId);
+
+            response = ws->buildStatusResponse(dev != NULL && dev->sendCommand("volume", volume, NULL), httpCode);
 		}
 	}
 	else

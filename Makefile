@@ -6,7 +6,8 @@ SRC=Main.cpp \
 OBJ=$(SRC:.cpp=.o)
 
 DEPS_PATH=$(HOME)/deps
-CPPFLAGS=-g3 -Wall -Wunused -Wpointer-arith -Wno-uninitialized `curl-config --cflags` -I$(DEPS_PATH)/include
+EXTFLAGS=-march=armv6zk -mcpu=arm1176jzf-s -mfloat-abi=hard -mfpu=vfp
+CPPFLAGS=-g3 -Wall -Wunused -Wpointer-arith -Wno-uninitialized `curl-config --cflags` -I$(DEPS_PATH)/include $(EXTFLAGS)
 LDFLAGS=`curl-config --libs` -lmicrohttpd -lpthread -lsqlite3 -lboost_program_options -lboost_filesystem -lboost_system -lboost_thread -lboost_date_time -lboost_regex -llog4cplus -L$(DEPS_PATH)/lib
 CPP=g++
 RM=rm -f

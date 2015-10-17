@@ -24,6 +24,7 @@ class DevicePhilipsTV : public MHEDevice
 
         bool sendKey(const std::string &key);
         bool sendNewChannel(const std::string &channelId);
+        bool setVolume(const std::string &volume);
 
     public:
         DevicePhilipsTV(DBDevice &dev);

@@ -28,6 +28,7 @@ void readFromPTree(boost::property_tree::ptree &pTree, DBDevice &dev)
 	dev.param1 = pTree.get<std::string>("param1");
 	dev.param2 = pTree.get<std::string>("param2");
 	dev.cloneToDeviceId = pTree.get<int>("cloneToDeviceId");
+	dev.hidden = pTree.get<bool>("hidden");
 }
 
 void readFromPTree(boost::property_tree::ptree &pTree, DBGraph &graph)
@@ -101,6 +102,7 @@ void writeToPTree(boost::property_tree::ptree &pTree, DBDevice &dev)
 	pTree.put("param1", dev.param1);
     pTree.put("param2", dev.param2);
 	pTree.put("cloneToDeviceId", dev.cloneToDeviceId);
+	pTree.put("hidden", dev.hidden ? "true" : "false");
 }
 
 void writeToPTree(boost::property_tree::ptree &pTree, DBGraph &graph)
@@ -181,6 +183,7 @@ void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev)
     else
         pTree.put("status", dev.isActivated() ? "on" : "off");
     pTree.put("lastUpdate", dev.getLastUpdate());
+    pTree.put("hidden", dev.isHidden() ? "true" : "false");
 }
 
 void writeToPTree(boost::property_tree::ptree &pTree, sMHEDeviceValue &value)
