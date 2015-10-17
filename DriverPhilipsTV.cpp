@@ -102,7 +102,7 @@ bool DevicePhilipsTV::setVolume(const std::string &volume)
     std::stringstream ssUrl, ssPost;
     std::string postData;
 
-    ssUrl << "http://" << _ip << ":1925/1/channels/current";
+    ssUrl << "http://" << _ip << ":1925/1/audio/volume";
     ssPost << "{\"muted\": false, \"current\":"<< volume << "}";
     postData = ssPost.str();
     if (curlExecute(ssUrl.str(), NULL, &postData))
