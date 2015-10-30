@@ -196,3 +196,10 @@ void writeToPTree(boost::property_tree::ptree &pTree, sMHEDeviceValue &value)
     if (value.status.size() > 0)
         pTree.put("status", value.status);
 }
+
+void writeToPTree(boost::property_tree::ptree &pTree, sMHEDeviceVolume &value)
+{
+    pTree.put("currentVol", value.currentVol);
+    pTree.put("minVol", value.minVol);
+    pTree.put("maxVol", value.maxVol);
+}

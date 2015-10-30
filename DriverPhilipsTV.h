@@ -24,6 +24,7 @@ class DevicePhilipsTV : public MHEDevice
 
         bool sendKey(const std::string &key);
         bool sendNewChannel(const std::string &channelId);
+        bool getVolume(int &volume, int &minVol, int &maxVol);
         bool setVolume(const std::string &volume);
 
     public:

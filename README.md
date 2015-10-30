@@ -49,6 +49,7 @@ Service REST/JSON:
 * /runningDevices : list declared device
 * /setStatus/{device.id}/(false|true) : turn on/off a device
 * /getSpecial/{device.id}/graph/(last24h|lastMonth|lastYear) : get graph data of a device (only supported for Domoticz)
+* /getSpecial/{device.id}/volume) : get volume of your device (only supported for TV)
 * /setSpecial/{device.id}/volume/{volume 0-100} : set volume of your device (only supported for TV)
 * /setChannel/{device.id}/{channel.id} : change channel of your TV
 * /mobile/{type}/{user}/{token} : declare new mobile to notify (only GCM - should activated device in table "mobile")

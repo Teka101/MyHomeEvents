@@ -10,8 +10,14 @@ struct sMHEDeviceValue
     float humdity;
     std::string status;
 };
-
 typedef std::vector<sMHEDeviceValue> tMHEDeviceValues;
+
+struct sMHEDeviceVolume
+{
+    int currentVol;
+    int minVol;
+    int maxVol;
+};
 
 
 class MHEDevice

@@ -18,5 +18,6 @@ void writeToPTree(boost::property_tree::ptree &pTree, DBRoom &room);
 void writeToPTree(boost::property_tree::ptree &pTree, DBRoomGraphCond &rgc);
 void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev);
 void writeToPTree(boost::property_tree::ptree &pTree, sMHEDeviceValue &value);
+void writeToPTree(boost::property_tree::ptree &pTree, sMHEDeviceVolume &value);
 
 #endif /* DATABASEHELPERS_H_ */

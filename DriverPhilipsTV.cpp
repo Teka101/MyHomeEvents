@@ -1,3 +1,5 @@
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <time.h>
 #include "CurlHelpers.h"
 #include "DriverPhilipsTV.h"
@@ -54,8 +56,14 @@ bool DevicePhilipsTV::sendCommand(const std::string &command, const std::string 
 {
     if (command == "channel")
         return sendNewChannel(value);
-    else if (command == "volume")
+    else if (command == "volume" && output == NULL)
         return setVolume(value);
+    else if (command == "volume" && output != NULL)
+    {
+        sMHEDeviceVolume *data = static_cast<sMHEDeviceVolume*>(output);
+
+        return getVolume(data->currentVol, data->minVol, data->maxVol);
+    }
     return false;
 }
 
@@ -109,6 +117,27 @@ bool DevicePhilipsTV::setVolume(const std::string &volume)
     {
         time_t now = time(NULL);
 
+        _lastUpdate = now;
+        _lastStatus = true;
+        return true;
+    }
+    return false;
+}
+
+bool DevicePhilipsTV::getVolume(int &volume, int &minVol, int &maxVol)
+{
+    std::stringstream ssUrl, ssOut;
+
+    ssUrl << "http://" << _ip << ":1925/1/audio/volume";
+    if (curlExecute(ssUrl.str(), &ssOut))
+    {
+        boost::property_tree::ptree pTree;
+        time_t now = time(NULL);
+
+        boost::property_tree::read_json(ssOut, pTree);
+        volume = pTree.get<int>("current", 0);
+        minVol = pTree.get<int>("min", 0);
+        maxVol = pTree.get<int>("max", 0);
         _lastUpdate = now;
         _lastStatus = true;
         return true;

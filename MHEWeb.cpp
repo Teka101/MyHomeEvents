@@ -134,10 +134,11 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	}
 	else if (boost::equals(method, "GET") && boost::starts_with(url, "/getSpecial/"))
 	{
-		boost::regex expression("^/getSpecial/([0-9]+)/graph/(last24h|lastMonth|lastYear)$", boost::regex::perl);
+		boost::regex expressionGraph("^/getSpecial/([0-9]+)/graph/(last24h|lastMonth|lastYear)$", boost::regex::perl);
+		boost::regex expressionVol("^/getSpecial/([0-9]+)/volume$", boost::regex::perl);
 		boost::cmatch what;
 
-		if (boost::regex_match(url, what, expression))
+		if (boost::regex_match(url, what, expressionGraph))
 		{
             int deviceId = boost::lexical_cast<int>(what[1]);
             std::string type = what[2];
@@ -162,6 +163,23 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
                     }
                     pt.add_child("values", ptChildren);
                 }
+                boost::property_tree::write_json(ss, pt, false);
+                response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
+                MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
+            }
+		}
+		else if (boost::regex_match(url, what, expressionVol))
+		{
+            int deviceId = boost::lexical_cast<int>(what[1]);
+            sMHEDeviceVolume value;
+            MHEDevice *dev = ws->getHardDevContainer()->getDeviceById(deviceId);
+
+            if (dev != NULL && dev->sendCommand("volume", "", &value))
+            {
+                boost::property_tree::ptree pt;
+                std::stringstream ss;
+
+                writeToPTree(pt, value);
                 boost::property_tree::write_json(ss, pt, false);
                 response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
                 MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
@@ -221,6 +239,11 @@ MHEWeb::~MHEWeb()
 {
     if (_daemon != NULL)
 		MHD_stop_daemon(_daemon);
+}
+
+bool MHEWeb::isStarted()
+{
+    return (_daemon != NULL);
 }
 
 int MHEWeb::sendNotFound(struct MHD_Response **response)
