@@ -73,9 +73,15 @@ int main(int ac, char **av)
     MHEMobileNotify *notify = (gcmAppId.size() == 0 ? NULL : new MHEMobileNotify(gcmAppId, db, sr));
     MHEHardDevContainer *hardDev = new MHEHardDevContainer(*db);
     MHEWeb *ws = new MHEWeb(webPort, db, hardDev, notify);
-    Brain b(db, hardDev, brainRefresh, notify);
-    b.start();
 
+    if (!ws->isStarted())
+        LOG4CPLUS_ERROR(logger, LOG4CPLUS_TEXT("Unable to start web server !"));
+    else
+    {
+        Brain b(db, hardDev, brainRefresh, notify);
+
+        b.start();
+    }
     LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Application stopping..."));
     delete ws;
     if (notify != NULL)

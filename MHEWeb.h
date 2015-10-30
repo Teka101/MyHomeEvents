@@ -33,6 +33,7 @@ class MHEWeb
         MHEDatabase *getDataBase();
         MHEHardDevContainer *getHardDevContainer();
         MHEMobileNotify *getMobileNotify();
+        bool isStarted();
 };
 
 #endif // MHEWEB_H
