@@ -29,3 +29,7 @@ GOOD=bon,bonne
 OK=Bien reçu.
 OK=A vos ordres.
 OK=Okay.
+condition_conditionEnter=Activation de la condition %name%
+condition_conditionLeave=Fin de la condition %name%
+device_deviceActivated=Allumage de %name%
+device_deviceDesactivated=Exctinction de %name%
