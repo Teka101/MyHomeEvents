@@ -201,6 +201,22 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
             response = ws->buildStatusResponse(dev != NULL && dev->sendCommand("volume", volume, NULL), httpCode);
 		}
 	}
+	else if (boost::equals(method, "GET") && boost::starts_with(url, "/order/"))
+	{
+		boost::regex expression("^/order/(.*)$", boost::regex::perl);
+		boost::cmatch what;
+
+		if (boost::regex_match(url, what, expression))
+		{
+            std::string order = what[1];
+            sSpeechOrder value = ws->getSpeechService()->parseAndExecute(ws, order);
+            std::stringstream ss;
+
+            ss << "{ \"debug\": \"" << value.debug << "\", \"isSuccess\": " << (value.isSuccess ? "true" : "false") << ", \"result\": \"" << value.result << "\" }";
+            response = MHD_create_response_from_buffer(ss.tellp(), (void *)ss.str().c_str(), MHD_RESPMEM_MUST_COPY);
+            MHD_add_response_header(response, "Content-Type", "text/json; charset=UTF-8");
+		}
+	}
 	else
 	{
         std::stringstream filePath;
@@ -228,7 +244,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 	return ret;
 }
 
-MHEWeb::MHEWeb(int port, MHEDatabase *db, MHEHardDevContainer *hardDev, MHEMobileNotify *notify) : _db(db), _hardDev(hardDev), _notify(notify)
+MHEWeb::MHEWeb(int port, MHEDatabase *db, MHEHardDevContainer *hardDev, MHEMobileNotify *notify, MHESpeechService *ss) : _db(db), _hardDev(hardDev), _notify(notify), _ss(ss)
 {
     this->log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MHEWeb"));
 	LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("MHEWeb::MHEWeb - start web server on port " << port));
@@ -241,7 +257,7 @@ MHEWeb::~MHEWeb()
 		MHD_stop_daemon(_daemon);
 }
 
-bool MHEWeb::isStarted()
+bool MHEWeb::isStarted() const
 {
     return (_daemon != NULL);
 }
@@ -378,19 +394,24 @@ void MHEWeb::buildJsonWorld(std::stringstream &ss)
 	boost::property_tree::write_json(ss, pt, false);
 }
 
-MHEDatabase *MHEWeb::getDataBase()
+MHEDatabase *MHEWeb::getDataBase() const
 {
     return _db;
 }
 
-MHEHardDevContainer *MHEWeb::getHardDevContainer()
+MHEHardDevContainer *MHEWeb::getHardDevContainer() const
 {
     return _hardDev;
 }
 
-MHEMobileNotify *MHEWeb::getMobileNotify()
+MHEMobileNotify *MHEWeb::getMobileNotify() const
 {
     return _notify;
+}
+
+MHESpeechService *MHEWeb::getSpeechService() const
+{
+    return _ss;
 }
 
 struct MHD_Response *MHEWeb::buildStatusResponse(bool status, int &httpCode)

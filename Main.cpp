@@ -19,7 +19,7 @@ int main(int ac, char **av)
     boost::program_options::options_description desc("ConfigFile");
 	boost::program_options::variables_map vm;
 	log4cplus::Logger logger;
-	std::string gcmAppId, speechFile;
+	std::string gcmAppId, speechFile, speechLang;
 	long curlTimeout;
 	int webPort, brainRefresh;
 
@@ -31,6 +31,7 @@ int main(int ac, char **av)
 		("Notify.gcmAppId", boost::program_options::value<std::string>(&gcmAppId))
 		("General.curlTimeout", boost::program_options::value<long>(&curlTimeout)->default_value(1000L))
 		("General.speechFile", boost::program_options::value<std::string>(&speechFile))
+		("General.speechLang", boost::program_options::value<std::string>(&speechLang))
 	    ;
     std::ifstream settings_file("config.ini", std::ifstream::in);
 	boost::program_options::store(boost::program_options::parse_config_file(settings_file, desc, true), vm);
@@ -72,7 +73,8 @@ int main(int ac, char **av)
     SpeechRecognize *sr = (speechFile.size() == 0 ? NULL : new SpeechRecognize(speechFile));
     MHEMobileNotify *notify = (gcmAppId.size() == 0 ? NULL : new MHEMobileNotify(gcmAppId, db, sr));
     MHEHardDevContainer *hardDev = new MHEHardDevContainer(*db);
-    MHEWeb *ws = new MHEWeb(webPort, db, hardDev, notify);
+    MHESpeechService *ss = new MHESpeechService(sr, speechLang);
+    MHEWeb *ws = new MHEWeb(webPort, db, hardDev, notify, ss);
 
     if (!ws->isStarted())
         LOG4CPLUS_ERROR(logger, LOG4CPLUS_TEXT("Unable to start web server !"));
@@ -86,6 +88,9 @@ int main(int ac, char **av)
     delete ws;
     if (notify != NULL)
         delete notify;
+    if (sr != NULL)
+        delete sr;
+    delete ss;
     delete hardDev;
     delete db;
     curlDestroy();

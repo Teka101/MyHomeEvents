@@ -9,27 +9,27 @@ MHEDevice::~MHEDevice()
 {
 }
 
-int MHEDevice::getId()
+int MHEDevice::getId() const
 {
     return _id;
 }
 
-DBDeviceType MHEDevice::getType()
+DBDeviceType MHEDevice::getType() const
 {
     return _type;
 }
 
-std::string MHEDevice::getName()
+std::string MHEDevice::getName() const
 {
     return _name;
 }
 
-time_t MHEDevice::getLastUpdate()
+time_t MHEDevice::getLastUpdate() const
 {
     return _lastUpdate;
 }
 
-bool MHEDevice::isHidden()
+bool MHEDevice::isHidden() const
 {
     return _hidden;
 }

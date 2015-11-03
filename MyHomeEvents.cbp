@@ -56,6 +56,8 @@
 		<Unit filename="MHEHardware.h" />
 		<Unit filename="MHEMobileNotify.cpp" />
 		<Unit filename="MHEMobileNotify.h" />
+		<Unit filename="MHESpeechService.cpp" />
+		<Unit filename="MHESpeechService.h" />
 		<Unit filename="MHEWeb.cpp" />
 		<Unit filename="MHEWeb.h" />
 		<Unit filename="Main.cpp" />

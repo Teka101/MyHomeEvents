@@ -1,6 +1,7 @@
 [General]
 curlTimeout=1000
 speechFile=Speech_FR.txt
+speechLang=fr_FR.UTF-8
 
 [WebServer]
 port=8080

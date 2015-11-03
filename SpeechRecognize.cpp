@@ -102,15 +102,16 @@ void SpeechRecognize::loadLanguage(const std::string &fileName)
     }
 }
 
-std::vector<std::string> SpeechRecognize::parse(const std::string &sentence)
+std::string SpeechRecognize::parse(const std::string &sentence)
 {
-    std::vector<std::string> ret;
+    std::stringstream result;
     std::vector<std::string> words;
     char *tmpIn, *tmpOut;
     char *wordOut;
     char *wordIn = strdup(sentence.c_str());
     size_t sizeIn = sentence.size();
     size_t sizeOut = sizeIn * 2;
+    bool isFirstWord = true;
 
     wordOut = static_cast<char*>(calloc(sizeof(char), sizeOut + 1));
     tmpIn = wordIn;
@@ -120,7 +121,7 @@ std::vector<std::string> SpeechRecognize::parse(const std::string &sentence)
         free(wordIn);
         free(wordOut);
         LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("parse - iconv error: sentence=" << sentence << " error=" << strerror(errno)));
-        return ret;
+        return result.str();
     }
     LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("parse - iconv: sentence='" << sentence << "' after='" << wordOut << "'"));
     boost::split(words, wordOut, boost::is_any_of(" ,.'?"));
@@ -129,11 +130,16 @@ std::vector<std::string> SpeechRecognize::parse(const std::string &sentence)
         std::string w = _words[word];
 
         if (w.size() > 0)
-            ret.push_back(w);
+        {
+            if (!isFirstWord)
+                result << ' ';
+            result << w;
+            isFirstWord = false;
+        }
     }
     free(wordIn);
     free(wordOut);
-    return ret;
+    return result.str();
 }
 
 std::string SpeechRecognize::getResponse(const std::string responseCode)

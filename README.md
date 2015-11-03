@@ -54,6 +54,7 @@ Service REST/JSON:
 * /setChannel/{device.id}/{channel.id} : change channel of your TV
 * /mobile/{type}/{user}/{token} : declare new mobile to notify (only GCM - should activated device in table "mobile")
 * /notify/{event}/{type}/{message} : notify an event to registered mobile
+* /order/{message} : send an order to your server
 
 
 Migration from previous version:
