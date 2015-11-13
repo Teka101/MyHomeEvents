@@ -51,6 +51,7 @@ void Brain::computeNextLaunch()
 
 void Brain::launch()
 {
+    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain::launch - run..."));
     std::vector<DBRoomGraphCond> roomGraphConds = _db->getRoomGraphCondByActiveDaysAndCalendar();
     std::vector<DBCondition> conditions = _db->getConditions();
     std::vector<DBGraph> graphs = _db->getGraphs();
@@ -61,7 +62,6 @@ void Brain::launch()
     std::map<int,DBRoom> roomById;
     std::pair<int, DBRoomGraphCond> kv;
 
-    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain::launch - run..."));
     BOOST_FOREACH(DBCondition &cond, conditions)
     {
         conditionById[cond.id] = cond;
