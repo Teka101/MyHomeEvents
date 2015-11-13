@@ -1,8 +1,11 @@
+#include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <time.h>
 #include "CurlHelpers.h"
 #include "DriverPhilipsTV.h"
+
+typedef std::pair<const std::string, boost::property_tree::ptree> ptreePair;
 
 HardwarePhilipsTV::HardwarePhilipsTV(DBHarware &hw) : MHEHardware(hw.id), _hw(hw)
 {
@@ -32,12 +35,25 @@ bool DevicePhilipsTV::isActivated()
 
     if (_lastUpdate < now)
     {
-        std::stringstream ssUrl;
+        std::stringstream ssUrl, ssOut;
         bool status = false;
 
-        ssUrl << "http://" << _ip << ":1925/1/channels/current";
-        if (curlExecute(ssUrl.str()))
+        ssUrl << "http://" << _ip << ":1925/1/channels";
+        if (curlExecute(ssUrl.str(), &ssOut))
+        {
+            boost::property_tree::ptree pTree;
+
+            boost::property_tree::read_json(ssOut, pTree);
+            BOOST_FOREACH(ptreePair &it, pTree)
+            {
+                std::string channelId = it.first;
+                std::string channelCode = it.second.get("preset", "");
+
+                _channelCodeToChannelId[channelCode] = channelId;
+                LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("isActivated - channelCode=" << channelCode << " -> channelId=" << channelId));
+            }
             status = true;
+        }
         _lastUpdate = time(NULL);
         _lastStatus = status;
         return status;
@@ -90,18 +106,24 @@ bool DevicePhilipsTV::sendNewChannel(const std::string &channelId)
 {
     std::stringstream ssUrl, ssPost;
     std::string postData;
+    std::string philipsChannelId = _channelCodeToChannelId[channelId];
 
-    ssUrl << "http://" << _ip << ":1925/1/channels/current";
-    ssPost << "{\"id\": \""<< channelId << "\"}";
-    postData = ssPost.str();
-    if (curlExecute(ssUrl.str(), NULL, &postData))
+    if (philipsChannelId.length() > 0)
     {
-        time_t now = time(NULL);
+        ssUrl << "http://" << _ip << ":1925/1/channels/current";
+        ssPost << "{\"id\": \""<< philipsChannelId << "\"}";
+        postData = ssPost.str();
+        if (curlExecute(ssUrl.str(), NULL, &postData))
+        {
+            time_t now = time(NULL);
 
-        _lastUpdate = now;
-        _lastStatus = true;
-        return true;
+            _lastUpdate = now;
+            _lastStatus = true;
+            return true;
+        }
     }
+    else
+        LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("sendNewChannel - unable to find id for channelCode=" << channelId));
     return false;
 }
 

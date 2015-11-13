@@ -1,6 +1,7 @@
 #ifndef DRIVERPHILIPSTV_H
 #define DRIVERPHILIPSTV_H
 
+#include <map>
 #include "MHEHardware.h"
 
 class HardwarePhilipsTV : public MHEHardware
@@ -18,6 +19,7 @@ class HardwarePhilipsTV : public MHEHardware
 class DevicePhilipsTV : public MHEDevice
 {
     private:
+        std::map<std::string,std::string> _channelCodeToChannelId;
         std::string _ip;
         bool _lastStatus;
         log4cplus::Logger _log;
