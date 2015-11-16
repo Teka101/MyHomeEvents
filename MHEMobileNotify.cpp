@@ -89,9 +89,9 @@ void MHEMobileNotify::notifyDevice(DBMobile &device, const std::string &type, co
         std::string url = "https://android.googleapis.com/gcm/send";
         boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
         boost::gregorian::date currentDate = now.date();
-        long dateYYYYMMDD = (long)currentDate.year() * 10000L + (long)currentDate.month() * 100L + (long)currentDate.day();
-        long currentHHMMM = now.time_of_day().hours() * 100L + now.time_of_day().minutes();
-        long currentDateTime = dateYYYYMMDD * 10000L + currentHHMMM;
+        u_int64_t dateYYYYMMDD = currentDate.year() * 10000 + currentDate.month() * 100 + currentDate.day();
+        u_int64_t currentHHMMM = now.time_of_day().hours() * 100 + now.time_of_day().minutes();
+	u_int64_t currentYYYYMMDDHHMMM = dateYYYYMMDD * (u_int64_t)10000 + currentHHMMM;
 
         ss << "Authorization: key=" << _gcmAppId;
         headers.push_back(ss.str());
@@ -103,7 +103,7 @@ void MHEMobileNotify::notifyDevice(DBMobile &device, const std::string &type, co
                 << "\"time_to_live\": 86400,"
                 << "\"data\": {"
                     << "\"type\": \"" << type << "\","
-                    << "\"datetime\": \"" << currentDateTime << "\","
+                    << "\"datetime\": \"" << currentYYYYMMDDHHMMM << "\","
                     << "\"msg\": \"" << msg << "\""
                 << "}"
             << "}";
@@ -111,7 +111,7 @@ void MHEMobileNotify::notifyDevice(DBMobile &device, const std::string &type, co
         if (curlExecute(url, &headers, &postData, &ssOut))
         {
             LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("notityDevice - success post=" << ss.str() << " return: " << ssOut.str()));
-            device.lastSuccessYYYYMMDDHHSS = currentDateTime;
+            device.lastSuccessYYYYMMDDHHSS = currentYYYYMMDDHHMMM;
             _db->updateMobileLastSuccess(device);
         }
         else
