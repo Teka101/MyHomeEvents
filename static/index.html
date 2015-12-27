@@ -478,7 +478,7 @@ function chartUpdate(json)
 function chartAddToSerie(serie, dataTime, dataValue, lastTime)
 {
 	var diffTime = (dataTime - lastTime);
-	var diffCount = Math.floor(diffTime / 100) * 2 + (diffTime % 100);
+	var diffCount = Math.floor(diffTime / 100) * 2 + Math.floor(((diffTime % 100) / 100) * 2);
 
 	for (var i = 0; i < diffCount; i++)
 		serie.push(dataValue);
