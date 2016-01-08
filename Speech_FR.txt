@@ -35,13 +35,15 @@ HOW=combien
 NIGHT=soir,soiree,nuit
 WHAT=quoi
 GOOD=bon,bonne
+DIAGNOSTIC=diagnostique,diagnostic
+HELLO=bonjour,salut
 
 [Responses]
 OK=Bien reçu.
 OK=A vos ordres.
 OK=Okay.
 KO=Impossible d'exécuter votre ordre.
-KO=Houston nous avons eu un problème.
+KO=Houston, nous avons eu un problème.
 UNKNOWN_ORDER=Je ne comprends pas.
 UNKNOWN_ORDER=Je ne peux pas faire ça.
 UNKNOWN_ORDER=Ordre inconnu.
@@ -53,3 +55,7 @@ condition_conditionLeave=Fin de la condition %name%
 device_deviceActivated=Allumage de %name%
 device_deviceDesactivated=Extinction de %name%
 howHouse_temperature=La sonde %name% indique %temperature% degrés.
+diagnostic=Processeur %cpu%%, mémoire de libre %mem%%.
+
+[Plugins]
+helloWorld.sh=HELLO

@@ -15,6 +15,7 @@ private:
     iconv_t _ic;
     std::map<std::string,std::string> _words;
     std::map<std::string,std::vector<std::string>*> _responses;
+    std::map<std::string,std::string> _plugins;
 
     void clearCache();
     void loadLanguage(const std::string &fileName);
@@ -27,6 +28,7 @@ public:
     std::string parse(const std::string &sentence);
     std::string getResponse(const std::string responseCode);
     std::string getResponse(const std::string responseCode1, const std::string responseCode2);
+    bool getPlugin(const std::string &order, std::string &pluginFile) const;
 };
 
 #endif // SPEECHRECOGNIZE_H

@@ -31,6 +31,8 @@ class DeviceShell : public MHEDevice
         DeviceShell(DBDevice &dev);
         ~DeviceShell();
 
+        float getCachedTemperature();
+        float getCachedHumidity();
         float getTemperature();
         float getHumidity();
 

@@ -46,6 +46,7 @@ struct DBDevice
     std::string param2;
     int cloneToDeviceId;
     bool hidden;
+    bool cacheRunning;
 
     operator std::string() const
     {

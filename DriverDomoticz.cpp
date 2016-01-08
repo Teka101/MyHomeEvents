@@ -23,13 +23,28 @@ MHEDevice *HardwareDomoticz::buildObject(DBDevice &dev)
     return new DeviceDomoticz(_hw.param1, (dev.param2 == "24havg"), dev);
 }
 
-DeviceDomoticz::DeviceDomoticz(std::string &urlDomoticz, bool isDayAverage, DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, dev.cacheLifetime, dev.hidden), _urlDomoticz(urlDomoticz), _deviceIdx(dev.param1), _isDayAverage(isDayAverage)
+DeviceDomoticz::DeviceDomoticz(std::string &urlDomoticz, bool isDayAverage, DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, dev.cacheLifetime, dev.hidden, dev.cacheRunning), _urlDomoticz(urlDomoticz), _deviceIdx(dev.param1), _isDayAverage(isDayAverage)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("DeviceDomoticz"));
 }
 
 DeviceDomoticz::~DeviceDomoticz()
 {
+}
+
+float DeviceDomoticz::getCachedTemperature()
+{
+    return _cache.temperature;
+}
+
+float DeviceDomoticz::getCachedHumidity()
+{
+    return _cache.humidity;
+}
+
+bool DeviceDomoticz::isCachedActivated()
+{
+    return _cache.statusIsOn;
 }
 
 float DeviceDomoticz::getTemperature()

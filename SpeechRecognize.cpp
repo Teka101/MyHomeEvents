@@ -38,6 +38,7 @@ void SpeechRecognize::clearCache()
         delete kv.second;
     }
     _responses.erase(_responses.begin(), _responses.end());
+    _plugins.erase(_plugins.begin(), _plugins.end());
 }
 
 void SpeechRecognize::loadLanguage(const std::string &fileName)
@@ -45,6 +46,7 @@ void SpeechRecognize::loadLanguage(const std::string &fileName)
     std::ifstream ifs;
     bool isWords = false;
     bool isResponses = false;
+    bool isPlugins = false;
 
     LOG4CPLUS_INFO(_log, LOG4CPLUS_TEXT("loadLanguage - try to load file '" << fileName << "'"));
     ifs.open(fileName.c_str());
@@ -63,15 +65,23 @@ void SpeechRecognize::loadLanguage(const std::string &fileName)
             {
                 isWords = true;
                 isResponses = false;
+                isPlugins = false;
             }
             else if (boost::equals(tmpLine, "[Responses]"))
             {
                 isWords = false;
                 isResponses = true;
+                isPlugins = false;
             }
-            else if (isWords || isResponses)
+            else if (boost::equals(tmpLine, "[Plugins]"))
             {
-                boost::split(words, tmpLine, boost::is_any_of("=,"));
+                isWords = false;
+                isResponses = false;
+                isPlugins = true;
+            }
+            else if (isWords || isResponses || isPlugins)
+            {
+                boost::split(words, tmpLine, isWords ? boost::is_any_of("=,") : boost::is_any_of("="));
 
                 if (words.size() > 1)
                 {
@@ -93,12 +103,14 @@ void SpeechRecognize::loadLanguage(const std::string &fileName)
                             }
                             l->push_back(value);
                         }
+                        else if (isPlugins)
+                            _plugins[value] = key;
                     }
                 }
             }
         }
         ifs.close();
-        LOG4CPLUS_INFO(_log, LOG4CPLUS_TEXT("loadLanguage - loaded file '" << fileName << "' : words[" << _words.size() << "] responses[" << _responses.size() << "]"));
+        LOG4CPLUS_INFO(_log, LOG4CPLUS_TEXT("loadLanguage - loaded file '" << fileName << "' : words[" << _words.size() << "] responses[" << _responses.size() << "] plugins[" << _plugins.size() << "]"));
     }
 }
 
@@ -165,4 +177,16 @@ std::string SpeechRecognize::getResponse(const std::string responseCode1, const 
     if (ret == responseCode1)
         ret = getResponse(responseCode2);
     return ret;
+}
+
+bool SpeechRecognize::getPlugin(const std::string &sentence, std::string &pluginFile) const
+{
+    std::map<std::string,std::string>::const_iterator it = _plugins.find(sentence);
+
+    if (it != _plugins.end())
+    {
+        pluginFile = it->second;
+        return true;
+    }
+    return false;
 }

@@ -33,6 +33,7 @@ class DevicePhilipsTV : public MHEDevice
         DevicePhilipsTV(DBDevice &dev);
         ~DevicePhilipsTV();
 
+        bool isCachedActivated();
         bool isActivated();
         bool setStatus(bool activate);
         bool sendCommand(const std::string &command, const std::string &value, void *output);

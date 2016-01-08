@@ -1,7 +1,7 @@
 #include <cfloat>
 #include "MHEDevice.h"
 
-MHEDevice::MHEDevice(int id, DBDeviceType type, std::string &name, int cacheLifetime, bool hidden) : _id(id), _type(type), _name(name), _cacheLifetime(cacheLifetime), _hidden(hidden), _cloneTo(NULL), _lastUpdate(0)
+MHEDevice::MHEDevice(int id, DBDeviceType type, std::string &name, int cacheLifetime, bool hidden, bool cacheRunning) : _id(id), _type(type), _name(name), _cacheLifetime(cacheLifetime), _hidden(hidden), _cacheRunning(cacheRunning), _cloneTo(NULL), _lastUpdate(0)
 {
 }
 
@@ -34,9 +34,29 @@ bool MHEDevice::isHidden() const
     return _hidden;
 }
 
+bool MHEDevice::isCacheRunning() const
+{
+    return _cacheRunning;
+}
+
 void MHEDevice::setCloneTo(MHEDevice *cloneTo)
 {
     _cloneTo = cloneTo;
+}
+
+float MHEDevice::getCachedTemperature()
+{
+    return FLT_MAX;
+}
+
+float MHEDevice::getCachedHumidity()
+{
+    return FLT_MAX;
+}
+
+bool MHEDevice::isCachedActivated()
+{
+    return false;
 }
 
 float MHEDevice::getTemperature()

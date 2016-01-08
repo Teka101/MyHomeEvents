@@ -29,6 +29,7 @@ void readFromPTree(boost::property_tree::ptree &pTree, DBDevice &dev)
 	dev.param2 = pTree.get<std::string>("param2");
 	dev.cloneToDeviceId = pTree.get<int>("cloneToDeviceId");
 	dev.hidden = pTree.get<bool>("hidden");
+	dev.cacheRunning = pTree.get<bool>("cacheRunning");
 }
 
 void readFromPTree(boost::property_tree::ptree &pTree, DBGraph &graph)
@@ -103,6 +104,7 @@ void writeToPTree(boost::property_tree::ptree &pTree, DBDevice &dev)
     pTree.put("param2", dev.param2);
 	pTree.put("cloneToDeviceId", dev.cloneToDeviceId);
 	pTree.put("hidden", dev.hidden ? "true" : "false");
+	pTree.put("cacheRunning", dev.cacheRunning ? "true" : "false");
 }
 
 void writeToPTree(boost::property_tree::ptree &pTree, DBGraph &graph)
@@ -163,7 +165,7 @@ void writeToPTree(boost::property_tree::ptree &pTree, DBRoomGraphCond &rgc)
 	pTree.put("conditionId", rgc.conditionId);
 }
 
-void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev)
+void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev, bool useCache)
 {
     pTree.put("id", dev.getId());
     switch (dev.getType())
@@ -177,11 +179,11 @@ void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev)
     pTree.put("name", dev.getName());
     if (dev.getType() == devTempHum)
     {
-        pTree.put("humidity", dev.getHumidity());
-        pTree.put("temperature", dev.getTemperature());
+        pTree.put("humidity", useCache ? dev.getCachedHumidity() : dev.getHumidity());
+        pTree.put("temperature", useCache ? dev.getCachedTemperature() : dev.getTemperature());
     }
     else
-        pTree.put("status", dev.isActivated() ? "on" : "off");
+        pTree.put("status", (useCache ? dev.isCachedActivated() : dev.isActivated()) ? "on" : "off");
     pTree.put("lastUpdate", dev.getLastUpdate());
     pTree.put("hidden", dev.isHidden() ? "true" : "false");
 }

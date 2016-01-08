@@ -211,6 +211,10 @@
      <label class="col-sm-2 control-label">Device.hidden</label>
      <div class="col-sm-10"><input id="dev_hidden" type="checkbox" class="form-control"></div>
     </div>
+    <div class="form-group">
+     <label class="col-sm-2 control-label">Device.cacheRunning</label>
+     <div class="col-sm-10"><input id="dev_cacheRunning" type="checkbox" class="form-control"></div>
+    </div>
     <div class="form-group text-center">
      <button type="button" class="btn btn-primary" onClick="saveDevice()">Save</button>
     </div>
@@ -618,7 +622,9 @@ function saveDevice()
 			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
 		});
 	obj.hidden = $('#dev_hidden').is(':checked');
-	sendSave('admin/device/', obj);
+	obj.cacheRunning = $('#dev_cacheRunning').is(':checked');
+	if (obj.id != '')
+		sendSave('admin/device/', obj);
 }
 
 function saveCondition()

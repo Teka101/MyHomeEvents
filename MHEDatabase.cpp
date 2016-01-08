@@ -38,7 +38,7 @@ void MHEDatabase::createTables()
 	const char sqls[][512] =
 	{
 			"CREATE TABLE IF NOT EXISTS hardware(type TEXT INTEGER NOT NULL, name TEXT NOT NULL, param1 TEXT)",
-			"CREATE TABLE IF NOT EXISTS device(type INTEGER NOT NULL, name TEXT NOT NULL, hardware_id INTEGER NOT NULL REFERENCES hardware(rowid), cache_lifetime INTEGER NOT NULL, param1 TEXT, param2 TEXT, clone_to_device_id INTEGER REFERENCES device(rowid), hidden INTEGER NOT NULL DEFAULT 0)",
+			"CREATE TABLE IF NOT EXISTS device(type INTEGER NOT NULL, name TEXT NOT NULL, hardware_id INTEGER NOT NULL REFERENCES hardware(rowid), cache_lifetime INTEGER NOT NULL, param1 TEXT, param2 TEXT, clone_to_device_id INTEGER REFERENCES device(rowid), hidden INTEGER NOT NULL DEFAULT 0, cache_running INTEGER NOT NULL DEFAULT 0)",
 
 			"CREATE TABLE IF NOT EXISTS graph(description TEXT, position INTEGER DEFAULT 99)",
 			"CREATE TABLE IF NOT EXISTS graph_data(graph_id INTEGER REFERENCES graph(rowid), time INTEGER NOT NULL, value REAL)",
@@ -157,7 +157,7 @@ static int selectDevice(void *param, int ac, char **av, char **column)
 {
 	std::vector<DBDevice> *r = static_cast<std::vector<DBDevice>*>(param);
 
-	if (ac == 9)
+	if (ac == 10)
 	{
 		DBDevice dev;
 
@@ -171,6 +171,7 @@ static int selectDevice(void *param, int ac, char **av, char **column)
             dev.param2 = av[6];
 		dev.cloneToDeviceId = (av[7] == NULL ? -1 : boost::lexical_cast<int>(av[7]));
 		dev.hidden = boost::lexical_cast<int>(av[8]) == 1;
+		dev.cacheRunning = boost::lexical_cast<int>(av[9]) == 1;
 		r->push_back(dev);
 	}
 	return 0;
@@ -181,7 +182,7 @@ std::vector<DBDevice> MHEDatabase::getDevices()
     std::vector<DBDevice> ret;
 	int rc;
 
-	rc = sqlite3_exec(_db, "SELECT rowid,type,name,hardware_id,cache_lifetime,param1,param2,clone_to_device_id,hidden FROM device ORDER BY rowid", selectDevice, &ret, NULL);
+	rc = sqlite3_exec(_db, "SELECT rowid,type,name,hardware_id,cache_lifetime,param1,param2,clone_to_device_id,hidden,cache_running FROM device ORDER BY rowid", selectDevice, &ret, NULL);
 	if (rc != SQLITE_OK)
 		LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::getDevices - SQL error: " << sqlite3_errmsg(_db)));
 	return ret;
@@ -416,7 +417,7 @@ bool MHEDatabase::updateHardware(DBHarware &hard)
 bool MHEDatabase::updateDevice(DBDevice &dev)
 {
     sqlite3_stmt *stmt = NULL;
-	const std::string sql = "UPDATE device SET type=?,name=?,cache_lifetime=?,param1=?,param2=?,clone_to_device_id=?,hidden=? WHERE rowid=?";
+	const std::string sql = "UPDATE device SET type=?,name=?,cache_lifetime=?,param1=?,param2=?,clone_to_device_id=?,hidden=?,cache_running=? WHERE rowid=?";
 	int rc;
 
 	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
@@ -438,7 +439,8 @@ bool MHEDatabase::updateDevice(DBDevice &dev)
         else
             sqlite3_bind_int(stmt, 6, dev.cloneToDeviceId);
         sqlite3_bind_int(stmt, 7, dev.hidden ? 1 : 0);
-		sqlite3_bind_int(stmt, 8, dev.id);
+        sqlite3_bind_int(stmt, 8, dev.cacheRunning ? 1 : 0);
+		sqlite3_bind_int(stmt, 9, dev.id);
 		rc = sqlite3_step(stmt);
 		sqlite3_finalize(stmt);
 		if (rc == SQLITE_DONE)

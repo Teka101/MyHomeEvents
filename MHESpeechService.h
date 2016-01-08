@@ -63,6 +63,10 @@ private:
     bool executeHowHouse(const MHEWeb *web, sSpeechOrder *result, boost::cmatch &m);
     bool executeWatchTV(const MHEWeb *web, sSpeechOrder *result, boost::cmatch &m);
     bool executeGoodNight(const MHEWeb *web, sSpeechOrder *result, boost::cmatch &m);
+    bool executeDiagnostic(const MHEWeb *web, sSpeechOrder *result, boost::cmatch &m);
+    bool executeDiagnosticReadCPU(int &totalUsed, int &totalIdle);
+    bool executeDiagnosticReadMemory(int &totalUsed, int &totalFree);
+    bool executePlugin(const std::string &sentence, const std::string &pluginFile, sSpeechOrder *result);
 };
 
 #endif // MHESPEECHSERVICE_H

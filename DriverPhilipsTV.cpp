@@ -20,13 +20,18 @@ MHEDevice *HardwarePhilipsTV::buildObject(DBDevice &dev)
     return new DevicePhilipsTV(dev);
 }
 
-DevicePhilipsTV::DevicePhilipsTV(DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, dev.cacheLifetime, dev.hidden), _ip(dev.param1), _lastStatus(false)
+DevicePhilipsTV::DevicePhilipsTV(DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, dev.cacheLifetime, dev.hidden, dev.cacheRunning), _ip(dev.param1), _lastStatus(false)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("DevicePhilipsTV"));
 }
 
 DevicePhilipsTV::~DevicePhilipsTV()
 {
+}
+
+bool DevicePhilipsTV::isCachedActivated()
+{
+    return _lastStatus;
 }
 
 bool DevicePhilipsTV::isActivated()

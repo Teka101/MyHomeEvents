@@ -22,7 +22,7 @@ struct CacheDeviceDomoticz
 	float temperature;
 	float humidity;
 
-	CacheDeviceDomoticz() : statusIsOn(false), temperature(0), humidity(0)
+	CacheDeviceDomoticz() : name(""), statusIsOn(false), temperature(0), humidity(0)
 	{
 	}
 
@@ -58,6 +58,9 @@ class DeviceDomoticz : public MHEDevice
         DeviceDomoticz(std::string &urlDomoticz, bool isDayAverage, DBDevice &dev);
         ~DeviceDomoticz();
 
+        float getCachedTemperature();
+        float getCachedHumidity();
+        bool isCachedActivated();
         float getTemperature();
         float getHumidity();
         bool setTempHum(float temperature, float humidity);

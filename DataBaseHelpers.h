@@ -16,7 +16,7 @@ void writeToPTree(boost::property_tree::ptree &pTree, DBGraph &graph);
 void writeToPTree(boost::property_tree::ptree &pTree, DBCondition &cond);
 void writeToPTree(boost::property_tree::ptree &pTree, DBRoom &room);
 void writeToPTree(boost::property_tree::ptree &pTree, DBRoomGraphCond &rgc);
-void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev);
+void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev, bool useCache);
 void writeToPTree(boost::property_tree::ptree &pTree, sMHEDeviceValue &value);
 void writeToPTree(boost::property_tree::ptree &pTree, sMHEDeviceVolume &value);
 

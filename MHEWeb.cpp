@@ -61,7 +61,7 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
             {
                 boost::property_tree::ptree ptChild;
 
-                writeToPTree(ptChild, *dev);
+                writeToPTree(ptChild, *dev, dev->isCacheRunning());
                 ptChildren.push_back(std::make_pair("", ptChild));
             }
             pt.add_child("devices", ptChildren);

@@ -21,7 +21,7 @@ MHEDevice *HardwareShell::buildObject(DBDevice &dev)
     return new DeviceShell(dev);
 }
 
-DeviceShell::DeviceShell(DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, dev.cacheLifetime, dev.hidden), _shellCmd(dev.param1), _temperature(0.0), _humidity(0.0), _offsetTemperature(0.0)
+DeviceShell::DeviceShell(DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, dev.cacheLifetime, dev.hidden, dev.cacheRunning), _shellCmd(dev.param1), _temperature(0.0), _humidity(0.0), _offsetTemperature(0.0)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("DeviceShell"));
 
@@ -34,6 +34,16 @@ DeviceShell::DeviceShell(DBDevice &dev) : MHEDevice(dev.id, dev.type, dev.name, 
 
 DeviceShell::~DeviceShell()
 {
+}
+
+float DeviceShell::getCachedTemperature()
+{
+    return _temperature;
+}
+
+float DeviceShell::getCachedHumidity()
+{
+    return _humidity;
 }
 
 float DeviceShell::getTemperature()

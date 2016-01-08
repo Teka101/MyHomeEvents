@@ -59,3 +59,4 @@ Service REST/JSON:
 
 Migration from previous version:
 * ALTER TABLE device ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0
+* ALTER TABLE device ADD COLUMN cache_running INTEGER NOT NULL DEFAULT 0

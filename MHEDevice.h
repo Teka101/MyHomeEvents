@@ -28,11 +28,12 @@ class MHEDevice
         std::string _name;
         int _cacheLifetime;
         bool _hidden;
+        bool _cacheRunning;
         MHEDevice *_cloneTo;
         time_t _lastUpdate;
 
     public:
-        MHEDevice(int id, DBDeviceType type, std::string &name, int cacheLifetime, bool hidden);
+        MHEDevice(int id, DBDeviceType type, std::string &name, int cacheLifetime, bool hidden, bool cacheRunning);
         virtual ~MHEDevice();
 
         int getId() const;
@@ -40,8 +41,12 @@ class MHEDevice
         std::string getName() const;
         time_t getLastUpdate() const;
         bool isHidden() const;
+        bool isCacheRunning() const;
 
         virtual void setCloneTo(MHEDevice *cloneTo);
+        virtual float getCachedTemperature();
+        virtual float getCachedHumidity();
+        virtual bool isCachedActivated();
         virtual float getTemperature();
         virtual float getHumidity();
         virtual bool setTempHum(float temperature, float humidity);
