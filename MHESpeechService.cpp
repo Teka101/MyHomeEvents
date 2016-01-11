@@ -174,11 +174,13 @@ bool MHESpeechService::executeGoodNight(const MHEWeb *web, sSpeechOrder *result,
 bool MHESpeechService::executeDiagnostic(const MHEWeb *web, sSpeechOrder *result, boost::cmatch &m)
 {
     std::string msg = _sr->getResponse("diagnostic");
-    int firstUsed, firstIdle, secondUsed, secondIdle;
+    int firstUsed, firstIdle;
     int memFree, memTotal;
 
     if (executeDiagnosticReadCPU(firstUsed, firstIdle))
     {
+	int secondUsed, secondIdle;
+
         sleep(1);
         if (executeDiagnosticReadCPU(secondUsed, secondIdle))
         {

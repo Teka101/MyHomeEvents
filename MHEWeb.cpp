@@ -451,7 +451,6 @@ struct MHD_Response *MHEWeb::doAdmin(const char *method, const char *url, std::s
     else if (postData != NULL && boost::starts_with(url, "/admin/graph/"))
 	{
 		boost::property_tree::ptree pTree;
-		std::string description;
 		DBGraph graph;
 
 		boost::property_tree::read_json(*postData, pTree);
@@ -463,7 +462,6 @@ struct MHD_Response *MHEWeb::doAdmin(const char *method, const char *url, std::s
 	else if (postData != NULL && boost::starts_with(url, "/admin/device/"))
 	{
 		boost::property_tree::ptree pTree;
-		std::string description;
 		DBDevice dev;
 
 		boost::property_tree::read_json(*postData, pTree);
@@ -475,7 +473,6 @@ struct MHD_Response *MHEWeb::doAdmin(const char *method, const char *url, std::s
 	else if (postData != NULL && boost::starts_with(url, "/admin/condition/"))
 	{
 		boost::property_tree::ptree pTree;
-		std::string description;
 		DBCondition cond;
 
 		boost::property_tree::read_json(*postData, pTree);
@@ -487,7 +484,6 @@ struct MHD_Response *MHEWeb::doAdmin(const char *method, const char *url, std::s
 	else if (postData != NULL && boost::starts_with(url, "/admin/room/"))
 	{
 		boost::property_tree::ptree pTree;
-		std::string description;
 		DBRoom room;
 
 		boost::property_tree::read_json(*postData, pTree);
@@ -499,7 +495,6 @@ struct MHD_Response *MHEWeb::doAdmin(const char *method, const char *url, std::s
 	else if (postData != NULL && boost::starts_with(url, "/admin/rgc/"))
 	{
 		boost::property_tree::ptree pTree;
-		std::string description;
 		DBRoomGraphCond rgc;
 
 		boost::property_tree::read_json(*postData, pTree);
