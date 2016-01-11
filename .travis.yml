@@ -10,7 +10,7 @@ before_install:
 
 script:
   - EXTFLAGS="" make all
-  - cppcheck --enable=all --std=posix .
+  - cppcheck -q --enable=all --std=posix .
 
 branches:
   only:
