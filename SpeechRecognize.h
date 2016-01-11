@@ -11,7 +11,7 @@ class SpeechRecognize
 {
 private:
     log4cplus::Logger _log;
-    boost::random::mt19937 _gen;
+    boost::mt19937 _gen;
     iconv_t _ic;
     std::map<std::string,std::string> _words;
     std::map<std::string,std::vector<std::string>*> _responses;
