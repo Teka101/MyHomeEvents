@@ -154,7 +154,7 @@ std::string SpeechRecognize::parse(const std::string &sentence)
     return result.str();
 }
 
-std::string SpeechRecognize::getResponse(const std::string responseCode)
+std::string SpeechRecognize::getResponse(const std::string &responseCode)
 {
     std::vector<std::string> *responses = _responses[responseCode];
 
@@ -170,7 +170,7 @@ std::string SpeechRecognize::getResponse(const std::string responseCode)
     return responseCode;
 }
 
-std::string SpeechRecognize::getResponse(const std::string responseCode1, const std::string responseCode2)
+std::string SpeechRecognize::getResponse(const std::string &responseCode1, const std::string &responseCode2)
 {
     std::string ret = getResponse(responseCode1);
 

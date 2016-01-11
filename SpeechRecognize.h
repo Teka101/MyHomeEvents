@@ -26,8 +26,8 @@ public:
     ~SpeechRecognize();
 
     std::string parse(const std::string &sentence);
-    std::string getResponse(const std::string responseCode);
-    std::string getResponse(const std::string responseCode1, const std::string responseCode2);
+    std::string getResponse(const std::string &responseCode);
+    std::string getResponse(const std::string &responseCode1, const std::string &responseCode2);
     bool getPlugin(const std::string &order, std::string &pluginFile) const;
 };
 
