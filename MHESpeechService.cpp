@@ -223,7 +223,6 @@ bool MHESpeechService::executeDiagnosticReadCPU(int &totalUsed, int &totalIdle)
         {
             if (boost::regex_match(line.c_str(), what, expression))
             {
-                std::stringstream localizedCPU;
                 int userMode = boost::lexical_cast<int>(what[1]);
                 int userNicedMode = boost::lexical_cast<int>(what[2]);
                 int systemMode = boost::lexical_cast<int>(what[3]);

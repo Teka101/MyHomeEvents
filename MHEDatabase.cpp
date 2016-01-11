@@ -612,7 +612,7 @@ bool MHEDatabase::updateMobileLastSuccess(DBMobile &mob)
 bool MHEDatabase::addConditionDate(int condId, int dateYYYYMMDD)
 {
     u_int64_t dateBeginYYYYMMDDHHMM = dateYYYYMMDD;
-    u_int64_t dateEndYYYYMMDDHHMM = dateYYYYMMDD;
+    u_int64_t dateEndYYYYMMDDHHMM;
 
     dateBeginYYYYMMDDHHMM *= (u_int64_t)10000;
     dateEndYYYYMMDDHHMM = dateBeginYYYYMMDDHHMM + (u_int64_t )2359;

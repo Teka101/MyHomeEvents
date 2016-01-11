@@ -44,15 +44,15 @@ void SpeechRecognize::clearCache()
 void SpeechRecognize::loadLanguage(const std::string &fileName)
 {
     std::ifstream ifs;
-    bool isWords = false;
-    bool isResponses = false;
-    bool isPlugins = false;
 
     LOG4CPLUS_INFO(_log, LOG4CPLUS_TEXT("loadLanguage - try to load file '" << fileName << "'"));
     ifs.open(fileName.c_str());
     if (ifs.is_open())
     {
         std::string tmpLine;
+        bool isWords = false;
+        bool isResponses = false;
+        bool isPlugins = false;
 
         clearCache();
         while (ifs.good())
