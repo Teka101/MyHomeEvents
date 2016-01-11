@@ -1,0 +1,30 @@
+language: cpp
+sudo: true
+
+compiler:
+  - gcc
+
+before_install:
+  - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get update && sudo apt-get install -y cppcheck; fi
+
+script:
+  - make all
+  - cppcheck --enable=all --std=posix --error-exitcode=1 .
+
+branches:
+  only:
+    - master
+    - /^issue\d+/
+    - /^v\d+\./
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+
+env:
+  global:
+    - LANG="en_US.UTF-8"
+
+os:
+  - linux
