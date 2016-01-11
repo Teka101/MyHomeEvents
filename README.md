@@ -1,4 +1,4 @@
-# MyHomeEvents [![Build Status](https://travis-ci.org/mysecureshell/mysecureshell.svg?branch=master)](https://travis-ci.org/mysecureshell/mysecureshell)
+# MyHomeEvents [![Build Status](https://travis-ci.org/Teka101/MyHomeEvents.svg?branch=master)](https://travis-ci.org/Teka101/MyHomeEvents)
 work with Domoticz
 
 
