@@ -5,7 +5,7 @@ compiler:
   - gcc
 
 before_install:
-  - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get update && sudo apt-get install -y cppcheck libboost-date-time-dev libboost-dev libboost-filesystem-dev libboost-program-options-dev libboost-regex-dev libboost-serialization-dev libboost-system-dev libboost-thread-dev libcurl4-gnutls-dev liblog4cplus-dev libmicrohttpd-dev libsqlite3-dev; fi
+  - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get update && sudo apt-get install -y cppcheck ibboost-dev libboost-all-dev libcurl4-gnutls-dev liblog4cplus-dev libmicrohttpd-dev libsqlite3-dev; fi
 
 script:
   - EXTFLAGS="" make all
