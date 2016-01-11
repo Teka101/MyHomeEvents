@@ -118,10 +118,11 @@ std::string SpeechRecognize::parse(const std::string &sentence)
 {
     std::stringstream result;
     std::vector<std::string> words;
+    std::string sentenceLC = boost::algorithm::to_lower_copy(sentence);
     char *tmpIn, *tmpOut;
     char *wordOut;
-    char *wordIn = strdup(sentence.c_str());
-    size_t sizeIn = sentence.size();
+    char *wordIn = strdup(sentenceLC.c_str());
+    size_t sizeIn = sentenceLC.size();
     size_t sizeOut = sizeIn * 2;
     bool isFirstWord = true;
 
@@ -132,10 +133,10 @@ std::string SpeechRecognize::parse(const std::string &sentence)
     {
         free(wordIn);
         free(wordOut);
-        LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("parse - iconv error: sentence=" << sentence << " error=" << strerror(errno)));
+        LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("parse - iconv error: sentenceLC=" << sentenceLC << " error=" << strerror(errno)));
         return result.str();
     }
-    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("parse - iconv: sentence='" << sentence << "' after='" << wordOut << "'"));
+    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("parse - iconv: sentenceLC='" << sentenceLC << "' after='" << wordOut << "'"));
     boost::split(words, wordOut, boost::is_any_of(" ,.'?"));
     BOOST_FOREACH(std::string &word, words)
     {
