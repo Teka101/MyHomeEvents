@@ -37,6 +37,7 @@ WHAT=quoi
 GOOD=bon,bonne
 DIAGNOSTIC=diagnostique,diagnostic
 HELLO=bonjour,salut
+DOWNLOAD=telechargement,telechargements
 
 [Responses]
 OK=Bien reçu.
@@ -59,3 +60,4 @@ diagnostic=Processeur %cpu%%, mémoire de libre %mem%%.
 
 [Plugins]
 helloWorld.sh=HELLO
+downTransmission.sh=DOWNLOAD
