@@ -29,6 +29,11 @@ _EOF
 CSRF_TOKEN=$(echo "$REQUEST_CSRF" | nc $TRANSMISSION_IP $TRANSMISSION_PORT | grep -e '^X-Transmission-Session-Id:' | cut -d ':' -f2  | tr -d '[[:space:]]')
 [ $DEBUG = '1' ] && echo "Token CSRF: $CSRF_TOKEN"
 
+if [ "x$CSRF_TOKEN" = "x" ] ; then
+	echo "Application transmission pas exécutée."
+	exit 1
+fi
+
 REQUEST_DOWN=$(cat << EOF
 POST ${TRANSMISSION_URL}/rpc HTTP/1.1
 Host: ${TRANSMISSION_IP}:${TRANSMISSION_PORT}
@@ -58,6 +63,8 @@ RESPONSE_DOWN=$(echo "$REQUEST_DOWN" | nc $TRANSMISSION_IP $TRANSMISSION_PORT)
 TRANSMISSION_JSON=$(echo "$RESPONSE_DOWN" | tail --lines=+8 | json_pp -f json -t json -json_opt indent | perl -e 'while (<STDIN>){s/("percentDone":)([^,]*)(,)/"$1".($2*100)."$3"/e; print};')
 [ $DEBUG = '1' ] && echo "$TRANSMISSION_JSON"
 
-echo "$TRANSMISSION_JSON" | awk 'BEGIN { RS = "{" ; FS = "\n" ; FPAT=".*:(.*)," } { if ($7!=""){print $2,$5,$7} }' | sed -r -e '/"errorString":"(.+)"/ s/^.*"percentDone":(.*),.*"name":"(.*)".*"errorString":"(.*)".*$/\2 erreur \3./ ; s/^.*"percentDone":(.*),.*"name":"(.*)".*"errorString":"(.*)".*$/\2 à \1%/'
+FILES=$(echo "$TRANSMISSION_JSON" | awk 'BEGIN { RS = "{" ; FS = "\n" ; FPAT=".*:(.*)," } { if ($7!=""){print $2,$5,$7} }' | sed -r -e '/"errorString":"(.+)"/ s/^.*"percentDone":(.*),.*"name":"(.*)".*"errorString":"(.*)".*$/\2 erreur \3./ ; s/^.*"percentDone":(.*),.*"name":"(.*)".*"errorString":"(.*)".*$/\2 à \1%/')
+
+echo "$FILES" | sed -r -e 's/\.(mp4|avi|divx)//' | sed -r -e 's/\[(720p|1080p|DTS|AC3|DTS-HD)\]//g' | sed -r -e 's/(fullhd|FHD)//g' | sed -r -s 's/(\s\s+)/ /g';
 
 exit 0
