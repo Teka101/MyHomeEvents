@@ -3,6 +3,7 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <errno.h>
 #include <fstream>
 #include <stdio.h>
@@ -19,6 +20,7 @@ MHESpeechService::MHESpeechService(SpeechRecognize *sr, const std::string &speec
     _orders.push_back(new sSpeechExprOrder(boost::regex("^TO_WATCH ([0-9]+)$", boost::regex::perl), boost::bind(&MHESpeechService::executeWatchTV, this, _1, _2, _3)));
     _orders.push_back(new sSpeechExprOrder(boost::regex("^GOOD NIGHT$", boost::regex::perl), boost::bind(&MHESpeechService::executeGoodNight, this, _1, _2, _3)));
     _orders.push_back(new sSpeechExprOrder(boost::regex("^DIAGNOSTIC$", boost::regex::perl), boost::bind(&MHESpeechService::executeDiagnostic, this, _1, _2, _3)));
+    _orders.push_back(new sSpeechExprOrder(boost::regex("^(TO_TURN_ON|TO_TURN_OFF) DEVICE_IDX_([0-9]+)$", boost::regex::perl), boost::bind(&MHESpeechService::executeSetDeviceStatus, this, _1, _2, _3)));
 }
 
 MHESpeechService::~MHESpeechService()
@@ -291,4 +293,17 @@ bool MHESpeechService::executePlugin(const std::string &order, const std::string
         return (execReturn == 0);
     }
     return false;
+}
+
+bool MHESpeechService::executeSetDeviceStatus(const MHEWeb *web, sSpeechOrder *result, boost::cmatch &m)
+{
+    std::string order = m[1];
+    bool activate = boost::equals(order, "TO_TURN_ON");
+    int deviceIdx = boost::lexical_cast<int>(m[2]);
+    MHEDevice *dev = web->getHardDevContainer()->getDeviceById(deviceIdx);
+
+    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("executeSetDeviceStatus: activate=" << (activate ? "true" : "false") << " deviceIdx=" << deviceIdx));
+    if (dev != NULL)
+        result->isSuccess = dev->setStatus(activate);
+    return result->isSuccess;
 }

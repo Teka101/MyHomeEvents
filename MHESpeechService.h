@@ -66,6 +66,7 @@ private:
     bool executeDiagnostic(const MHEWeb *web, sSpeechOrder *result, boost::cmatch &m);
     bool executeDiagnosticReadCPU(int &totalUsed, int &totalIdle);
     bool executeDiagnosticReadMemory(int &totalUsed, int &totalFree);
+    bool executeSetDeviceStatus(const MHEWeb *web, sSpeechOrder *result, boost::cmatch &m);
     bool executePlugin(const std::string &sentence, const std::string &pluginFile, sSpeechOrder *result);
 };
 

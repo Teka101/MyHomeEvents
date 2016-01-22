@@ -23,6 +23,7 @@ TO_DO=faire,regle
 TO_LEAVE=partir,pars,reviens
 TO_WATCH=regarde,regarder,voir,mater,matter,mate,matte
 TO_TURN_ON=allumer,allume
+TO_TURN_OFF=eteindre,eteint
 DURATION_DAY=jour,jours,journee
 DURATION_WEEK=semaine,semaines
 DURATION_MONTH=mois
@@ -38,6 +39,9 @@ GOOD=bon,bonne
 DIAGNOSTIC=diagnostique,diagnostic
 HELLO=bonjour,salut
 DOWNLOAD=telechargement,telechargements
+DEVICE_IDX_4=chauffage,chaudiere
+DEVICE_IDX_6=television,tele
+DEVICE_IDX_7=cuisine
 
 [Responses]
 OK=Bien reçu.
