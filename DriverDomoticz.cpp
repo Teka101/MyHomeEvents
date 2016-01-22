@@ -2,7 +2,7 @@
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <cfloat>
+#include <cmath>
 #include <math.h>
 #include <time.h>
 #include "CurlHelpers.h"
@@ -153,8 +153,8 @@ bool DeviceDomoticz::parseGraphData(const std::string &url, tMHEDeviceValues *va
         BOOST_FOREACH(ptreePair it, pTree.get_child("result"))
         {
             std::string dateStr = it.second.get(fieldDate, "");
-            float temperature = it.second.get<float>("te", FLT_MIN);
-            float humidity = it.second.get<float>("hu", FLT_MIN);
+            float temperature = it.second.get<float>("te", NAN);
+            float humidity = it.second.get<float>("hu", NAN);
             std::string status = it.second.get("Status", "");
             struct tm tm;
 
@@ -269,9 +269,9 @@ bool DeviceDomoticz::refreshDayAverage()
             return false;
         BOOST_FOREACH(ptreePair it, pTree.get_child("result"))
         {
-            float currentTemp = it.second.get<float>("te", FLT_MIN);
+            float currentTemp = it.second.get<float>("te", NAN);
 
-            if (currentTemp > FLT_MIN)
+            if (std::isnormal(currentTemp))
             {
                 tempTotal += currentTemp;
                 tempNumber++;

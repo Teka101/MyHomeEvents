@@ -1,7 +1,7 @@
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
-#include <cfloat>
+#include <cmath>
 #include "Brain.h"
 
 #define TEMP_HYSTERESIS 0.5
@@ -78,7 +78,7 @@ void Brain::launch()
     {
         DBCondition condition = conditionById[rgc.conditionId];
 
-        if (condition.deviceId != -1 && (condition.temperatureMin > FLT_MIN || condition.temperatureMax < FLT_MAX))
+        if (condition.deviceId != -1 && (std::isnormal(condition.temperatureMin) || std::isnormal(condition.temperatureMax)))
         {
             MHEDevice *dev = _hardDevContainer->getDeviceById(condition.deviceId);
 

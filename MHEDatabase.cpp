@@ -2,7 +2,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
-#include <cfloat>
+#include <cmath>
 #include <iostream>
 #include <math.h>
 #include "MHEDatabase.h"
@@ -253,8 +253,8 @@ static int selectCondition(void *param, int ac, char **av, char **column)
         c.id = boost::lexical_cast<int>(av[0]);
         c.name = av[1];
         c.deviceId = (av[2] == NULL ? -1 : boost::lexical_cast<int>(av[2]));
-        c.temperatureMin = (av[3] == NULL ? FLT_MIN : boost::lexical_cast<float>(av[3]));
-        c.temperatureMax = (av[4] == NULL ? FLT_MAX : boost::lexical_cast<float>(av[4]));
+        c.temperatureMin = (av[3] == NULL ? NAN : boost::lexical_cast<float>(av[3]));
+        c.temperatureMax = (av[4] == NULL ? NAN : boost::lexical_cast<float>(av[4]));
         c.days = (av[5] == NULL ? -1 : boost::lexical_cast<int>(av[5]));
         c.useCalendar = boost::lexical_cast<int>(av[6]) != 0;
 		r->push_back(c);
@@ -521,11 +521,11 @@ bool MHEDatabase::updateCondition(DBCondition &cond)
             sqlite3_bind_null(stmt, 2);
         else
             sqlite3_bind_int(stmt, 2, cond.deviceId);
-		if (cond.temperatureMin == FLT_MIN)
+		if (!std::isnormal(cond.temperatureMin))
             sqlite3_bind_null(stmt, 3);
         else
             sqlite3_bind_double(stmt, 3, cond.temperatureMin);
-        if (cond.temperatureMax == FLT_MAX)
+        if (!std::isnormal(cond.temperatureMax))
             sqlite3_bind_null(stmt, 4);
         else
             sqlite3_bind_double(stmt, 4, cond.temperatureMax);

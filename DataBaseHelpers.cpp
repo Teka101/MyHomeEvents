@@ -1,6 +1,6 @@
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <cfloat>
+#include <cmath>
 #include "DataBaseHelpers.h"
 
 typedef std::pair<const std::string, boost::property_tree::ptree> ptreePair;
@@ -55,8 +55,8 @@ void readFromPTree(boost::property_tree::ptree &pTree, DBCondition &cond)
 	cond.id = pTree.get<int>("id");
 	cond.name = pTree.get<std::string>("name");
 	cond.deviceId = pTree.get<int>("deviceId", -1);
-	cond.temperatureMin = pTree.get<float>("temperatureMin", FLT_MIN);
-	cond.temperatureMax = pTree.get<float>("temperatureMax", FLT_MAX);
+	cond.temperatureMin = pTree.get<float>("temperatureMin", NAN);
+	cond.temperatureMax = pTree.get<float>("temperatureMax", NAN);
 	cond.days = pTree.get<int>("days", -1);
 	cond.useCalendar = pTree.get<bool>("useCalendar");
 }
@@ -133,11 +133,11 @@ void writeToPTree(boost::property_tree::ptree &pTree, DBCondition &cond)
     pTree.put("id", cond.id);
 	pTree.put("name", cond.name);
 	pTree.put("deviceId", cond.deviceId);
-	if (cond.temperatureMin > FLT_MIN)
+	if (std::isnormal(cond.temperatureMin))
         pTree.put("temperatureMin", cond.temperatureMin);
     else
         pTree.put("temperatureMin", "");
-    if (cond.temperatureMax < FLT_MAX)
+    if (std::isnormal(cond.temperatureMax))
         pTree.put("temperatureMax", cond.temperatureMax);
     else
         pTree.put("temperatureMax", "");
@@ -191,9 +191,9 @@ void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev, bool useCa
 void writeToPTree(boost::property_tree::ptree &pTree, sMHEDeviceValue &value)
 {
     pTree.put("date", value.date);
-    if (value.humdity > FLT_MIN)
+    if (std::isnormal(value.humdity))
         pTree.put("hum", value.humdity);
-    if (value.temperature > FLT_MIN)
+    if (std::isnormal(value.temperature))
         pTree.put("tem", value.temperature);
     if (value.status.size() > 0)
         pTree.put("status", value.status);

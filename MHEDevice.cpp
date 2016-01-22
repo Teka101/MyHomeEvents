@@ -1,4 +1,4 @@
-#include <cfloat>
+#include <cmath>
 #include "MHEDevice.h"
 
 MHEDevice::MHEDevice(int id, DBDeviceType type, std::string &name, int cacheLifetime, bool hidden, bool cacheRunning) : _id(id), _type(type), _name(name), _cacheLifetime(cacheLifetime), _hidden(hidden), _cacheRunning(cacheRunning), _cloneTo(NULL), _lastUpdate(0)
@@ -46,12 +46,12 @@ void MHEDevice::setCloneTo(MHEDevice *cloneTo)
 
 float MHEDevice::getCachedTemperature()
 {
-    return FLT_MAX;
+    return NAN;
 }
 
 float MHEDevice::getCachedHumidity()
 {
-    return FLT_MAX;
+    return NAN;
 }
 
 bool MHEDevice::isCachedActivated()
@@ -61,12 +61,12 @@ bool MHEDevice::isCachedActivated()
 
 float MHEDevice::getTemperature()
 {
-    return FLT_MAX;
+    return NAN;
 }
 
 float MHEDevice::getHumidity()
 {
-    return FLT_MAX;
+    return NAN;
 }
 
 bool MHEDevice::setTempHum(float temperature, float humidity)
