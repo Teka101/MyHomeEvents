@@ -1,5 +1,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
+#include <log4cplus/loggingmacros.h>
 #include <cmath>
 #include <errno.h>
 #include <iostream>

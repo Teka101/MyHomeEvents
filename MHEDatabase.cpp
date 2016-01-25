@@ -2,6 +2,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
+#include <log4cplus/loggingmacros.h>
 #include <cmath>
 #include <iostream>
 #include <math.h>

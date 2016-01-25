@@ -1,4 +1,5 @@
 #include <boost/foreach.hpp>
+#include <log4cplus/loggingmacros.h>
 #include "MHEHardDevContainer.h"
 #include "DriverDomoticz.h"
 #include "DriverPhilipsTV.h"

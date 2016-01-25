@@ -1,6 +1,7 @@
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <log4cplus/loggingmacros.h>
 #include <time.h>
 #include "CurlHelpers.h"
 #include "DriverPhilipsTV.h"

@@ -1,6 +1,7 @@
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
+#include <log4cplus/loggingmacros.h>
 #include <cmath>
 #include "Brain.h"
 

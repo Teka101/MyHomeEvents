@@ -2,6 +2,7 @@
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <log4cplus/loggingmacros.h>
 #include <cmath>
 #include <math.h>
 #include <time.h>
