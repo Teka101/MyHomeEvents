@@ -1,5 +1,3 @@
-#include "MHEWeb.h"
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -13,6 +11,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
+#include <log4cplus/loggingmacros.h>
 #include <iostream>
 #include "MHEWeb.h"
 #include "DataBaseHelpers.h"

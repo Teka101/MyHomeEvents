@@ -19,6 +19,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add directory="../../deps/include" />
 		</Compiler>
 		<Linker>
 			<Add library="microhttpd" />
@@ -30,6 +31,7 @@
 			<Add library="boost_thread" />
 			<Add library="boost_date_time" />
 			<Add library="boost_regex" />
+			<Add library="boost_thread" />
 			<Add library="log4cplus" />
 			<Add library="curl" />
 			<Add directory="../../deps/lib" />

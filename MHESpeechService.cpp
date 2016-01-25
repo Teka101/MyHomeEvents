@@ -4,6 +4,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <log4cplus/loggingmacros.h>
 #include <errno.h>
 #include <fstream>
 #include <stdio.h>
