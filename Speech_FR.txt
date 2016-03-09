@@ -19,6 +19,7 @@
 18=dix-huit
 19=dix-neuf
 20=vingt
+TO_REBOOT=reboot
 TO_DO=faire,regle
 TO_LEAVE=partir,pars,reviens
 TO_WATCH=regarde,regarder,voir,mater,matter,mate,matte
@@ -65,3 +66,4 @@ diagnostic=Processeur %cpu%%, mémoire de libre %mem%%.
 [Plugins]
 helloWorld.sh=HELLO
 downTransmission.sh=DOWNLOAD
+reboot.sh=TO_REBOOT
