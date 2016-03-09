@@ -133,11 +133,11 @@ static int selectHardware(void *param, int ac, char **av, char **column)
 	{
 		DBHarware hw;
 
-        hw.id = boost::lexical_cast<int>(av[0]);
-        hw.name = av[1];
+		hw.id = boost::lexical_cast<int>(av[0]);
+		hw.name = av[1];
 		hw.type = av[2];
 		if (av[3] != NULL)
-            hw.param1 = av[3];
+			hw.param1 = av[3];
 		r->push_back(hw);
 	}
 	return 0;
@@ -145,7 +145,7 @@ static int selectHardware(void *param, int ac, char **av, char **column)
 
 std::vector<DBHarware> MHEDatabase::getHardwares()
 {
-    std::vector<DBHarware> ret;
+	std::vector<DBHarware> ret;
 	int rc;
 
 	rc = sqlite3_exec(_db, "SELECT rowid,name,type,param1 FROM hardware ORDER BY rowid", selectHardware, &ret, NULL);
@@ -162,14 +162,14 @@ static int selectDevice(void *param, int ac, char **av, char **column)
 	{
 		DBDevice dev;
 
-        dev.id = boost::lexical_cast<int>(av[0]);
-        dev.type = static_cast<DBDeviceType>(boost::lexical_cast<int>(av[1]));
-        dev.name = av[2];
-        dev.hardwareId = boost::lexical_cast<int>(av[3]);
-        dev.cacheLifetime = boost::lexical_cast<int>(av[4]);
+        	dev.id = boost::lexical_cast<int>(av[0]);
+	        dev.type = static_cast<DBDeviceType>(boost::lexical_cast<int>(av[1]));
+        	dev.name = av[2];
+	        dev.hardwareId = boost::lexical_cast<int>(av[3]);
+        	dev.cacheLifetime = boost::lexical_cast<int>(av[4]);
 		dev.param1 = av[5];
 		if (av[6] != NULL)
-            dev.param2 = av[6];
+			dev.param2 = av[6];
 		dev.cloneToDeviceId = (av[7] == NULL ? -1 : boost::lexical_cast<int>(av[7]));
 		dev.hidden = boost::lexical_cast<int>(av[8]) == 1;
 		dev.cacheRunning = boost::lexical_cast<int>(av[9]) == 1;
@@ -180,7 +180,7 @@ static int selectDevice(void *param, int ac, char **av, char **column)
 
 std::vector<DBDevice> MHEDatabase::getDevices()
 {
-    std::vector<DBDevice> ret;
+	std::vector<DBDevice> ret;
 	int rc;
 
 	rc = sqlite3_exec(_db, "SELECT rowid,type,name,hardware_id,cache_lifetime,param1,param2,clone_to_device_id,hidden,cache_running FROM device ORDER BY rowid", selectDevice, &ret, NULL);
@@ -197,8 +197,8 @@ static int selectGraph(void *param, int ac, char **av, char **column)
 	{
 		DBGraph g;
 
-        g.id = boost::lexical_cast<int>(av[0]);
-        g.description = av[1];
+		g.id = boost::lexical_cast<int>(av[0]);
+		g.description = av[1];
 		g.position= boost::lexical_cast<int>(av[2]);
 		r->push_back(g);
 	}
@@ -222,8 +222,8 @@ static int selectGraphData(void *param, int ac, char **av, char **column)
 
 std::vector<DBGraph> MHEDatabase::getGraphs()
 {
-    std::vector<DBGraph> ret;
-    int rc;
+	std::vector<DBGraph> ret;
+	int rc;
 
 	rc = sqlite3_exec(_db, "SELECT rowid,description,position FROM graph ORDER BY position,rowid", selectGraph, &ret, NULL);
 	if (rc == SQLITE_OK)
@@ -282,11 +282,11 @@ static int selectRoom(void *param, int ac, char **av, char **column)
 	{
 		DBRoom ro;
 
-        ro.id = boost::lexical_cast<int>(av[0]);
-        ro.name = av[1];
-        ro.deviceTemperatureId = (av[2] == NULL ? -1 : boost::lexical_cast<int>(av[2]));
-        ro.deviceHeaterId = (av[3] == NULL ? -1 : boost::lexical_cast<int>(av[3]));
-        ro.deviceHeatingId = (av[4] == NULL ? -1 : boost::lexical_cast<int>(av[4]));
+		ro.id = boost::lexical_cast<int>(av[0]);
+		ro.name = av[1];
+		ro.deviceTemperatureId = (av[2] == NULL ? -1 : boost::lexical_cast<int>(av[2]));
+		ro.deviceHeaterId = (av[3] == NULL ? -1 : boost::lexical_cast<int>(av[3]));
+		ro.deviceHeatingId = (av[4] == NULL ? -1 : boost::lexical_cast<int>(av[4]));
 		r->push_back(ro);
 	}
 	return 0;
@@ -294,7 +294,7 @@ static int selectRoom(void *param, int ac, char **av, char **column)
 
 std::vector<DBRoom> MHEDatabase::getRooms()
 {
-    std::vector<DBRoom> ret;
+	std::vector<DBRoom> ret;
 	int rc;
 
 	rc = sqlite3_exec(_db, "SELECT rowid,name,device_temperature_id,device_heater_id,device_heating_id FROM room ORDER BY rowid", selectRoom, &ret, NULL);
@@ -305,14 +305,16 @@ std::vector<DBRoom> MHEDatabase::getRooms()
 
 std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphCondByActiveDaysAndCalendar()
 {
-    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+	boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 	boost::gregorian::date currentDate = now.date();
-	int dateYYYYMMDD = (int)currentDate.year() * 10000 + (int)currentDate.month() * 100 + (int)currentDate.day();
+	u_int64_t dateYYYYMMDD = currentDate.year() * 10000 + currentDate.month() * 100 + currentDate.day();
+	u_int64_t dateHHMMM = now.time_of_day().hours() * 100 + now.time_of_day().minutes();
+	u_int64_t dateYYYYMMDDHHMMM = dateYYYYMMDD * (u_int64_t)10000 + dateHHMMM;
 	int weekDayStartMonday = ((int)currentDate.day_of_week() - 1 + 7) % 7;
 	int dayMask = pow(2, 6 - weekDayStartMonday);
 
-    LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("MHEDatabase::getRoomGraphCondByActiveDaysAndCalendar - dateYYYYMMDD=" << dateYYYYMMDD << " weekDayStartMonday=" << weekDayStartMonday << " dayMask=" << dayMask));
-	return getRoomGraphCondByActiveDaysAndCalendar(dayMask, dateYYYYMMDD);
+	LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("MHEDatabase::getRoomGraphCondByActiveDaysAndCalendar - dateYYYYMMDDHHMMM=" << dateYYYYMMDDHHMMM << " weekDayStartMonday=" << weekDayStartMonday << " dayMask=" << dayMask));
+	return getRoomGraphCondByActiveDaysAndCalendar(dayMask, dateYYYYMMDDHHMMM);
 }
 
 static int selectRoomGraphCond(void *param, int ac, char **av, char **column)
@@ -622,22 +624,27 @@ bool MHEDatabase::addConditionDate(int condId, int dateYYYYMMDD)
 
 bool MHEDatabase::addConditionDate(int condId, u_int64_t dateBeginYYYYMMDDHHMM, u_int64_t dateEndYYYYMMDDHHMM)
 {
-    sqlite3_stmt *stmt = NULL;
-	const std::string sql = "INSERT INTO condition_calendar(condition_id,datetime_begin,datetime_end) VALUES(?,?,?)";
-	int rc;
-
-	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
-	if (rc == SQLITE_OK)
+	if (dateBeginYYYYMMDDHHMM < dateEndYYYYMMDDHHMM)
 	{
-		sqlite3_bind_int(stmt, 1, condId);
-		sqlite3_bind_int64(stmt, 2, dateBeginYYYYMMDDHHMM);
-		sqlite3_bind_int64(stmt, 3, dateEndYYYYMMDDHHMM);
-		rc = sqlite3_step(stmt);
-		sqlite3_finalize(stmt);
-		if (rc == SQLITE_DONE)
-            return true;
+		sqlite3_stmt *stmt = NULL;
+		const std::string sql = "INSERT INTO condition_calendar(condition_id,datetime_begin,datetime_end) VALUES(?,?,?)";
+		int rc;
+
+		rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+		if (rc == SQLITE_OK)
+		{
+			sqlite3_bind_int(stmt, 1, condId);
+			sqlite3_bind_int64(stmt, 2, dateBeginYYYYMMDDHHMM);
+			sqlite3_bind_int64(stmt, 3, dateEndYYYYMMDDHHMM);
+			rc = sqlite3_step(stmt);
+			sqlite3_finalize(stmt);
+			if (rc == SQLITE_DONE)
+		            return true;
+		}
+		LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::addConditionDate - SQL error: " << sqlite3_errmsg(_db)));
 	}
-	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::addConditionDate - SQL error: " << sqlite3_errmsg(_db)));
+	else
+		LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::addConditionDate - dateBegin(" << dateBeginYYYYMMDDHHMM << ") is not strictly inferior to dateEnd(" << dateBeginYYYYMMDDHHMM << ")"));
 	return false;
 }
 
