@@ -334,7 +334,7 @@ static int selectRoomGraphCond(void *param, int ac, char **av, char **column)
 	return 0;
 }
 
-std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphCondByActiveDaysAndCalendar(int dayMask, int dateYYYYMMDDHHMM)
+std::vector<DBRoomGraphCond> MHEDatabase::getRoomGraphCondByActiveDaysAndCalendar(int dayMask, u_int64_t dateYYYYMMDDHHMM)
 {
     std::vector<DBRoomGraphCond> ret;
     std::stringstream ss;

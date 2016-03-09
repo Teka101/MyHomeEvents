@@ -210,7 +210,7 @@ class MHEDatabase
         std::vector<DBRoom> getRooms();
         std::vector<DBRoomGraphCond> getRoomGraphConds();
         std::vector<DBRoomGraphCond> getRoomGraphCondByActiveDaysAndCalendar();
-        std::vector<DBRoomGraphCond> getRoomGraphCondByActiveDaysAndCalendar(int dayMask, int dateYYYYMMDDHHMM);
+        std::vector<DBRoomGraphCond> getRoomGraphCondByActiveDaysAndCalendar(int dayMask, u_int64_t dateYYYYMMDDHHMM);
         std::vector<DBMobile> getMobileActivatedToNotify(const std::string &event, int objectId);
         bool addConditionDate(int condId, int dateYYYYMMDD);
         bool addConditionDate(int condId, u_int64_t dateBeginYYYYMMDDHHMM, u_int64_t dateEndYYYYMMDDHHMM);
