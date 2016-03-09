@@ -11,3 +11,7 @@ refresh=300
 
 [Notify]
 gcmAppId=APPKEYGCM
+
+[Heating]
+hysteresisMin=0.5
+hysteresisMax=0.5

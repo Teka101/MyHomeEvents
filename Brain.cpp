@@ -5,7 +5,7 @@
 #include <cmath>
 #include "Brain.h"
 
-#define TEMP_HYSTERESIS 0.5
+#define DEFAULT_TEMP_HYSTERESIS 0.5
 
 Brain::Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer, int refreshInSeconds, MHEMobileNotify *notify)
     : _db(db), _hardDevContainer(hardDevContainer), _notify(notify), _refreshInSeconds(refreshInSeconds), _timer(_io), _signals(_io)
@@ -17,6 +17,7 @@ Brain::Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer, int refresh
     _signals.add(SIGQUIT);
 #endif //SIGQUIT
     _signals.async_wait(boost::bind(&Brain::stop, this));
+    setHysteresis(DEFAULT_TEMP_HYSTERESIS, DEFAULT_TEMP_HYSTERESIS);
 }
 
 Brain::~Brain()
@@ -38,9 +39,16 @@ void Brain::stop()
     _io.stop();
 }
 
+void Brain::setHysteresis(int hysteresisMin, int hysteresisMax)
+{
+	LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain::setHysteresis - hysteresisMin=" << hysteresisMin << " hysteresisMax=" << hysteresisMax));
+	_hysteresisMin = hysteresisMin;
+	_hysteresisMax = hysteresisMax;
+}
+
 void Brain::computeNextLaunch()
 {
-    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+	boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 	long currentMS = now.time_of_day().minutes() * 60L + now.time_of_day().seconds();
 
 	LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain::computeNextLaunch - currentTime=" << to_simple_string(now.time_of_day())));
@@ -136,13 +144,13 @@ void Brain::launch()
             {
                 float temperatureMeasured = devIn->getTemperature();
 
-                if (temperatureMeasured <= (temperatureOrder - TEMP_HYSTERESIS))
+                if (temperatureMeasured <= (temperatureOrder - _hysteresisMin))
                 {
                     if (_notify != NULL && !devHeater->isActivated())
                         _notify->notifyDevices(conditionEnter, *devHeater);
                     devHeater->setStatus(true);
                 }
-                else if (temperatureMeasured >= (temperatureOrder + TEMP_HYSTERESIS))
+                else if (temperatureMeasured >= (temperatureOrder + _hysteresisMax))
                 {
                     if (_notify != NULL && devHeater->isActivated())
                         _notify->notifyDevices(conditionLeave, *devHeater);

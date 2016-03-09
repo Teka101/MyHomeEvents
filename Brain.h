@@ -20,6 +20,7 @@ private:
 	boost::asio::deadline_timer _timer;
 	boost::asio::signal_set _signals;
 	std::map<int,int> _lastConditionIdByRoomId;
+	int _hysteresisMin, _hysteresisMax;
 
 	void computeNextLaunch();
 	void launch();
@@ -30,6 +31,7 @@ public:
 
 	void start();
 	void stop();
+	void setHysteresis(int hysteresisMin, int hysteresisMax);
 };
 
 #endif /* BRAIN_H_ */

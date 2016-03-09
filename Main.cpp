@@ -16,11 +16,12 @@
 
 int main(int ac, char **av)
 {
-    boost::program_options::options_description desc("ConfigFile");
+	boost::program_options::options_description desc("ConfigFile");
 	boost::program_options::variables_map vm;
 	log4cplus::Logger logger;
 	std::string gcmAppId, speechFile, speechLang;
 	long curlTimeout;
+	int hysteresisMin, hysteresisMax;
 	int webPort, brainRefresh;
 
 	log4cplus::PropertyConfigurator::doConfigure("log4cplus.properties");
@@ -32,6 +33,8 @@ int main(int ac, char **av)
 		("General.curlTimeout", boost::program_options::value<long>(&curlTimeout)->default_value(1000L))
 		("General.speechFile", boost::program_options::value<std::string>(&speechFile))
 		("General.speechLang", boost::program_options::value<std::string>(&speechLang))
+		("Heating.hysteresisMin", boost::program_options::value<int>(&hysteresisMin)->default_value(0))
+		("Heating.hysteresisMax", boost::program_options::value<int>(&hysteresisMax)->default_value(0))
 	    ;
     std::ifstream settings_file("config.ini", std::ifstream::in);
 	boost::program_options::store(boost::program_options::parse_config_file(settings_file, desc, true), vm);
@@ -82,6 +85,8 @@ int main(int ac, char **av)
     {
         Brain b(db, hardDev, brainRefresh, notify);
 
+	if (hysteresisMin > 0 && hysteresisMax > 0)
+		b.setHysteresis(hysteresisMin, hysteresisMax);
         b.start();
     }
     LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Application stopping..."));
