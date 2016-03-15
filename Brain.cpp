@@ -39,7 +39,7 @@ void Brain::stop()
     _io.stop();
 }
 
-void Brain::setHysteresis(int hysteresisMin, int hysteresisMax)
+void Brain::setHysteresis(float hysteresisMin, float hysteresisMax)
 {
 	LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain::setHysteresis - hysteresisMin=" << hysteresisMin << " hysteresisMax=" << hysteresisMax));
 	_hysteresisMin = hysteresisMin;

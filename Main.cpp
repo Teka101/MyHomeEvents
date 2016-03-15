@@ -21,7 +21,7 @@ int main(int ac, char **av)
 	log4cplus::Logger logger;
 	std::string gcmAppId, speechFile, speechLang;
 	long curlTimeout;
-	int hysteresisMin, hysteresisMax;
+	float hysteresisMin, hysteresisMax;
 	int webPort, brainRefresh;
 
 	log4cplus::PropertyConfigurator::doConfigure("log4cplus.properties");
@@ -33,8 +33,8 @@ int main(int ac, char **av)
 		("General.curlTimeout", boost::program_options::value<long>(&curlTimeout)->default_value(1000L))
 		("General.speechFile", boost::program_options::value<std::string>(&speechFile))
 		("General.speechLang", boost::program_options::value<std::string>(&speechLang))
-		("Heating.hysteresisMin", boost::program_options::value<int>(&hysteresisMin)->default_value(0))
-		("Heating.hysteresisMax", boost::program_options::value<int>(&hysteresisMax)->default_value(0))
+		("Heating.hysteresisMin", boost::program_options::value<float>(&hysteresisMin)->default_value(0))
+		("Heating.hysteresisMax", boost::program_options::value<float>(&hysteresisMax)->default_value(0))
 	    ;
     std::ifstream settings_file("config.ini", std::ifstream::in);
 	boost::program_options::store(boost::program_options::parse_config_file(settings_file, desc, true), vm);
