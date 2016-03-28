@@ -11,7 +11,7 @@ before_install:
 script:
   - EXTFLAGS="" make all
   - ./analyzeSource.pl 2>report.html
-  - mail -a report.html -s "Report $TRAVIS_JOB_NUMBER" $JOB_MAIL_TO
+  - echo "Report attachment" | mail -a report.html -s "Report $TRAVIS_JOB_NUMBER" $JOB_MAIL_TO
 
 branches:
   only:
