@@ -1,4 +1,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
 #include <boost/locale.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
@@ -275,18 +277,19 @@ bool MHESpeechService::executePlugin(const std::string &order, const std::string
     FILE *fh;
 
     ssPlugins << "plugins/" << pluginFile;
-
     fh = popen(ssPlugins.str().c_str(), "r");
     if (fh == NULL)
         LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("executePlugin - popen(" << ssPlugins.str() << ") failed: " << strerror(errno)));
     else
     {
+        boost::iostreams::file_descriptor_source fdSource(fileno(fh), boost::iostreams::never_close_handle);
+        boost::iostreams::stream<boost::iostreams::file_descriptor_source> stream(fdSource);
         std::stringstream ssRes;
-        char line[1024];
+        std::string line;
         int execReturn;
 
         LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("executePlugin - popen() for command: " << ssPlugins.str()));
-        while (fgets(line, sizeof(line), fh) != NULL)
+        while (std::getline(stream, line))
             ssRes << line;
         execReturn = pclose(fh);
         LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("executePlugin - Exec return: " << execReturn));

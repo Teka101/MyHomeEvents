@@ -79,7 +79,7 @@ void SpeechRecognize::watchModifications()
             {
                 struct inotify_event    *event;
 
-                event = (struct inotify_event *)&buf[i];
+                event = reinterpret_cast<struct inotify_event *>(&buf[i]);
                 LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("event: wd=" << event->wd << " mask=" << event->mask << " cookie=" << event->cookie << " len=" << event->len << " name=" << event->name));
                 if (boost::equals(static_cast<char *>(event->name), _fileName))
                     loadLanguage();

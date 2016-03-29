@@ -44,9 +44,11 @@ class MHEDevice
         bool isCacheRunning() const;
 
         virtual void setCloneTo(MHEDevice *cloneTo);
+        virtual float getCachedRawTemperature();
         virtual float getCachedTemperature();
         virtual float getCachedHumidity();
         virtual bool isCachedActivated();
+        virtual float getRawTemperature();
         virtual float getTemperature();
         virtual float getHumidity();
         virtual bool setTempHum(float temperature, float humidity);

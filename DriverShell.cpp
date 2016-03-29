@@ -1,3 +1,5 @@
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <log4cplus/loggingmacros.h>
@@ -73,14 +75,16 @@ void DeviceShell::refreshCache()
             LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("DeviceShell::refreshCache - popen() failed: " << strerror(errno)));
         else
         {
+            boost::iostreams::file_descriptor_source fdSource(fileno(fh), boost::iostreams::never_close_handle);
+            boost::iostreams::stream<boost::iostreams::file_descriptor_source> stream(fdSource);
             boost::regex expression("^Humidity = (.+) % Temperature = (.+) \\*C.*$", boost::regex::perl);
             boost::cmatch what;
-            char line[1024];
+            std::string line;
             int execReturn;
 
             LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("DeviceShell::refreshCache - popen() for command: " << _shellCmd));
-            while (fgets(line, sizeof(line), fh) != NULL)
-                if (boost::regex_match(line, what, expression))
+            while (std::getline(stream, line))
+                if (boost::regex_match(line.c_str(), what, expression))
                 {
                     float newHumidity = boost::lexical_cast<float>(what[1]);
                     float newTemperature = boost::lexical_cast<float>(what[2]) + _offsetTemperature;

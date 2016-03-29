@@ -44,6 +44,11 @@ void MHEDevice::setCloneTo(MHEDevice *cloneTo)
     _cloneTo = cloneTo;
 }
 
+float MHEDevice::getCachedRawTemperature()
+{
+    return NAN;
+}
+
 float MHEDevice::getCachedTemperature()
 {
     return NAN;
@@ -57,6 +62,11 @@ float MHEDevice::getCachedHumidity()
 bool MHEDevice::isCachedActivated()
 {
     return false;
+}
+
+float MHEDevice::getRawTemperature()
+{
+    return NAN;
 }
 
 float MHEDevice::getTemperature()

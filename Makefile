@@ -8,7 +8,7 @@ OBJ=$(SRC:.cpp=.o)
 DEPS_PATH=$(HOME)/deps
 EXTFLAGS?=-march=armv6zk -mcpu=arm1176jzf-s -mfloat-abi=hard -mfpu=vfp
 CPPFLAGS=-g3 -Wall -Wunused -Wpointer-arith -Wno-uninitialized `curl-config --cflags` -I$(DEPS_PATH)/include $(EXTFLAGS)
-LDFLAGS=`curl-config --libs` -lmicrohttpd -lpthread -lsqlite3 -lboost_program_options -lboost_filesystem -lboost_system -lboost_thread -lboost_date_time -lboost_regex -llog4cplus -L$(DEPS_PATH)/lib
+LDFLAGS=`curl-config --libs` -lmicrohttpd -lpthread -lsqlite3 -lboost_program_options -lboost_filesystem -lboost_system -lboost_thread -lboost_date_time -lboost_iostreams -lboost_regex -llog4cplus -L$(DEPS_PATH)/lib
 CPP=g++
 RM=rm -f
 
@@ -33,7 +33,7 @@ prepare: prepare-boost prepare-log4cplus
 
 prepare-boost:
 	@echo "Prepare boost"
-	@cd $(DEPS_PATH)/boost && ./bootstrap.sh --without-icu --with-libraries=chrono,date_time,filesystem,program_options,regex,serialization,system,thread --prefix=$(DEPS_PATH)
+	@cd $(DEPS_PATH)/boost && ./bootstrap.sh --without-icu --with-libraries=chrono,date_time,filesystem,iostreams,program_options,regex,serialization,system,thread --prefix=$(DEPS_PATH)
 	@echo "Compilation and installation of boost"
 	@cd $(DEPS_PATH)/boost && ./b2 install
 

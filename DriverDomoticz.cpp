@@ -33,6 +33,11 @@ DeviceDomoticz::~DeviceDomoticz()
 {
 }
 
+float DeviceDomoticz::getCachedRawTemperature()
+{
+    return _cache.temperatureRaw;
+}
+
 float DeviceDomoticz::getCachedTemperature()
 {
     return _cache.temperature;
@@ -46,6 +51,12 @@ float DeviceDomoticz::getCachedHumidity()
 bool DeviceDomoticz::isCachedActivated()
 {
     return _cache.statusIsOn;
+}
+
+float DeviceDomoticz::getRawTemperature()
+{
+    refreshCache();
+    return _cache.temperatureRaw;
 }
 
 float DeviceDomoticz::getTemperature()
@@ -72,6 +83,7 @@ bool DeviceDomoticz::setTempHum(float temperature, float humidity)
         _lastUpdate = now;
         _cache.humidity = humidity;
         _cache.temperature = temperature;
+        _cache.temperatureRaw = temperature;
         if (_cloneTo != NULL)
             _cloneTo->setTempHum(temperature, humidity);
         return true;
@@ -244,7 +256,10 @@ bool DeviceDomoticz::refreshNormal()
                         _cache.statusIsOn = boost::starts_with(status, "On");
                     }
                     else if (itChild.first == "Temp")
+                    {
                         _cache.temperature = itChild.second.get_value<float>();
+                        _cache.temperatureRaw = _cache.temperature;
+                    }
                     else if (itChild.first == "Humidity")
                         _cache.humidity = itChild.second.get_value<float>();
                 }
@@ -264,6 +279,7 @@ bool DeviceDomoticz::refreshDayAverage()
     {
         boost::property_tree::ptree pTree;
         double tempTotal = 0.0, tempNumber = 0.0;
+        float lastTemperature = 0.0;
 
         boost::property_tree::read_json(ssOut, pTree);
         if (pTree.count("result") == 0)
@@ -276,12 +292,14 @@ bool DeviceDomoticz::refreshDayAverage()
             {
                 tempTotal += currentTemp;
                 tempNumber++;
+                lastTemperature = currentTemp;
             }
         }
         LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("DeviceDomoticz::refreshDayAverage - tempReturn=" << (tempTotal / tempNumber) << " tempTotal=" << tempTotal << " tempNumber=" << tempNumber << "]"));
         if (tempNumber > 0)
         {
             _cache.temperature = trunc((tempTotal / tempNumber) * 100.0) / 100;
+            _cache.temperatureRaw = lastTemperature;
             return true;
         }
     }

@@ -13,6 +13,7 @@ Install packages for Debian/Raspbian/Ubuntu:
 * libboost-date-time-dev
 * libboost-dev
 * libboost-filesystem-dev
+* libboost-iostreams-dev
 * libboost-program-options-dev
 * libboost-regex-dev
 * libboost-serialization-dev

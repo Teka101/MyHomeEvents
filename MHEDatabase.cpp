@@ -36,7 +36,7 @@ MHEDatabase::~MHEDatabase()
 
 void MHEDatabase::createTables()
 {
-	const char sqls[][512] =
+	const std::string sqls[] =
 	{
 			"CREATE TABLE IF NOT EXISTS hardware(type TEXT INTEGER NOT NULL, name TEXT NOT NULL, param1 TEXT)",
 			"CREATE TABLE IF NOT EXISTS device(type INTEGER NOT NULL, name TEXT NOT NULL, hardware_id INTEGER NOT NULL REFERENCES hardware(rowid), cache_lifetime INTEGER NOT NULL, param1 TEXT, param2 TEXT, clone_to_device_id INTEGER REFERENCES device(rowid), hidden INTEGER NOT NULL DEFAULT 0, cache_running INTEGER NOT NULL DEFAULT 0)",
@@ -60,7 +60,7 @@ void MHEDatabase::createTables()
 		char *zErrMsg = NULL;
 		int rc;
 
-		rc = sqlite3_exec(_db, sqls[i], NULL, NULL, &zErrMsg);
+		rc = sqlite3_exec(_db, sqls[i].c_str(), NULL, NULL, &zErrMsg);
 		if (rc != SQLITE_OK)
 		{
 			LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::createTables - SQL error: " << zErrMsg << " ### " << sqls[i]));
@@ -73,7 +73,7 @@ void MHEDatabase::createTables()
 
 void MHEDatabase::insertDefaultData()
 {
-	const char sqls[][256] =
+	const std::string sqls[] =
 	{
 			"INSERT INTO hardware(type,name,param1) VALUES('domoticz','MyDomoticz','http://127.0.0.1:8080/')",
 			"INSERT INTO device(type,name,hardware_id,cache_lifetime,param1,param2) VALUES(0,'TempIn',1,300,'8',NULL),(0,'TempOut',1,300,'5','24havg'),(0,'TempHeating',1,300,'6',NULL),(1,'Heater',1,300,'7',NULL)",
@@ -114,7 +114,7 @@ void MHEDatabase::insertDefaultData()
 		char *zErrMsg = NULL;
 		int rc;
 
-		rc = sqlite3_exec(_db, sqls[i], NULL, NULL, &zErrMsg);
+		rc = sqlite3_exec(_db, sqls[i].c_str(), NULL, NULL, &zErrMsg);
 		if (rc != SQLITE_OK)
 		{
 			LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::insertDefaultData - SQL error: " << zErrMsg << " ### " << sqls[i]));

@@ -263,18 +263,18 @@ bool MHEWeb::isStarted() const
 
 int MHEWeb::sendNotFound(struct MHD_Response **response)
 {
-	const char *errorPage = "Ressource not found";
+	const std::string errorPage = "Ressource not found";
 
-	*response = MHD_create_response_from_buffer(strlen(errorPage), (void *)errorPage, MHD_RESPMEM_PERSISTENT);
+	*response = MHD_create_response_from_buffer(errorPage.length(), (void *)errorPage.c_str(), MHD_RESPMEM_PERSISTENT);
 	MHD_add_response_header(*response, "Content-Type", "text/html");
 	return MHD_HTTP_NOT_FOUND;
 }
 
 int MHEWeb::sendPermanentRedirectTo(struct MHD_Response **response, const char *location)
 {
-	const char *errorPage = "Redirect to home";
+	const std::string errorPage = "Redirect to home";
 
-	*response = MHD_create_response_from_buffer(strlen(errorPage), (void *)errorPage, MHD_RESPMEM_PERSISTENT);
+	*response = MHD_create_response_from_buffer(errorPage.length(), (void *)errorPage.c_str(), MHD_RESPMEM_PERSISTENT);
 	MHD_add_response_header(*response, "Location", "/static/index.html");
 	return MHD_HTTP_MOVED_PERMANENTLY;
 }

@@ -179,8 +179,13 @@ void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev, bool useCa
     pTree.put("name", dev.getName());
     if (dev.getType() == devTempHum)
     {
+        float temp = useCache ? dev.getCachedTemperature() : dev.getTemperature();
+        float tempRaw = useCache ? dev.getCachedRawTemperature() : dev.getRawTemperature();
+
         pTree.put("humidity", useCache ? dev.getCachedHumidity() : dev.getHumidity());
-        pTree.put("temperature", useCache ? dev.getCachedTemperature() : dev.getTemperature());
+        pTree.put("temperature", temp);
+        if (std::isnormal(tempRaw) && temp != tempRaw)
+            pTree.put("temperatureRaw", tempRaw);
     }
     else
         pTree.put("status", (useCache ? dev.isCachedActivated() : dev.isActivated()) ? "on" : "off");
