@@ -6,12 +6,13 @@ compiler:
   - gcc
 
 before_install:
-  - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get update && sudo apt-get install -y cppcheck libboost-dev libboost-all-dev libcurl4-gnutls-dev liblog4cplus-dev libmicrohttpd-dev libsqlite3-dev heirloom-mailx sendmail libxml-simple-perl cppcheck rats; fi
+  - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get update && sudo apt-get install -y cppcheck libboost-dev libboost-all-dev libcurl4-gnutls-dev liblog4cplus-dev libmicrohttpd-dev libsqlite3-dev libxml-simple-perl cppcheck rats; fi
 
 script:
   - EXTFLAGS="" make all
   - ./analyzeSource.pl 2>report.html
   - echo "Report attachment" | mail -a report.html -s "Report $TRAVIS_JOB_NUMBER" $JOB_MAIL_TO
+  - curl -H "Authorization: token $GIST_TOKEN" https://api.github.com/gists
 
 branches:
   only:
