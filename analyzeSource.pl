@@ -35,8 +35,8 @@ sub launchCPPCHECK()
 	print "Analyze 'cppcheck'\n";
 	my $res = `cppcheck -q --enable=all --std=posix --xml --xml-version=2 . 2>&1`;
 	my $ref = XMLin($res, ForceArray => ['error'], KeyAttr => 0);
-	my %kstats = ('error' => 'error', 'style' => 'warning', 'information' => 'info');
-	my %sevs = ('error' => 'bg-danger', 'style' => 'bg-warning', 'information' => 'bg-info');
+	my %kstats = ('error' => 'error', 'style' => 'warning', 'information' => 'info', 'performance' => 'info');
+	my %sevs = ('error' => 'bg-danger', 'style' => 'bg-warning', 'information' => 'bg-info', 'performance' => 'bg-info');
 
 	print STDERR "<h1>cppcheck " . $ref->{'cppcheck'}->{'version'} . "</h1>\n";
 	if (defined($ref->{'errors'}->{'error'}))
@@ -60,7 +60,7 @@ sub launchCPPCHECK()
 sub launchRATS()
 {
 	print "Analyze 'rats'\n";
-	my $res = `rats --xml --warning 3 . 2>&1`;
+	my $res = `rats --xml --warning 1 . 2>&1`;
 	my $ref = XMLin($res, ForceArray => ['vulnerability', 'file', 'line'], KeyAttr => 0);
 	my %kstats = ('High' => 'error', 'Medium' => 'warning', 'Low' => 'info');
 	my %sevs = ('High' => 'bg-danger', 'Medium' => 'bg-warning', 'Low' => 'bg-info');
@@ -74,7 +74,6 @@ sub launchRATS()
 		{
 			my @files = @{ $vulnerability->{'file'} };
 			
-			$stats{$kstats{$vulnerability->{'severity'}}}++;
 			print STDERR "<div class=\"" . $sevs{$vulnerability->{'severity'}} . "\"><ul>";
 			print STDERR "<li>Severity: " . $vulnerability->{'severity'} . "</li>"; #High / Medium / Low
 			print STDERR "<li>Type: " . $vulnerability->{'type'} . "</li>";
@@ -83,6 +82,7 @@ sub launchRATS()
 			{
 				my @lines = @{ $file->{'line'} };
 				
+				$stats{$kstats{$vulnerability->{'severity'}}}++;
 				foreach my $line (@lines)
 				{
 					print STDERR "<li>File:" . $file->{'name'} . ':' . $line . "</li>";
