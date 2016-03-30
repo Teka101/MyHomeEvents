@@ -15,7 +15,4 @@ cat > report.json <<EOF
 }
 EOF
 
-echo "File"
-cat report.json
-echo "Curl"
-curl -X PATCH --data-binary @$REPORT_FILE -H "Authorization: token $GIST_TOKEN" "https://api.github.com/gists/$GIST_ID"
+curl -X PATCH --data-binary @report.json -H "Authorization: token $GIST_TOKEN" "https://api.github.com/gists/$GIST_ID"
