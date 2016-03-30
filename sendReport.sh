@@ -2,8 +2,10 @@
 
 DATA="
 {
-  \"description\": \"Report Travis-CI $TRAVIS_JOB_NUMBER\"
-  \"files\": { \"report.html\" : { \"content\": \"$(cat report.html | sed -r -e 's/"/\\"/g')\" } }
+  \"description\": \"Report Travis-CI $TRAVIS_JOB_NUMBER\",
+  \"files\": {
+    \"report.html\" : { \"content\": \"$(cat report.html | sed -r -e 's/"/\\"/g')\" }
+  }
 }"
 
 
