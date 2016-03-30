@@ -12,14 +12,8 @@ sub launchRATS();
 
 my %stats = ('info' => 0, 'warning' => 0, 'error' => 0);
 
-print STDERR "<!DOCTYPE html>\n";
-print STDERR "<head><title>Reporting</title>";
-print STDERR '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">';
-print STDERR "</head>\n";
-print STDERR "<body>\n";
 launchCPPCHECK();
 launchRATS();
-print STDERR "</body>\n";
 
 print "\n";
 print "ERROR: " . $stats{'error'} . "\n";
@@ -38,7 +32,7 @@ sub launchCPPCHECK()
 	my %kstats = ('error' => 'error', 'style' => 'warning', 'information' => 'info', 'performance' => 'info');
 	my %sevs = ('error' => 'bg-danger', 'style' => 'bg-warning', 'information' => 'bg-info', 'performance' => 'bg-info');
 
-	print STDERR "<h1>cppcheck " . $ref->{'cppcheck'}->{'version'} . "</h1>\n";
+	print STDERR "# cppcheck " . $ref->{'cppcheck'}->{'version'} . "\n";
 	if (defined($ref->{'errors'}->{'error'}))
 	{
 		my @errors = @{ $ref->{'errors'}->{'error'} };
@@ -46,13 +40,12 @@ sub launchCPPCHECK()
 		foreach my $error (@errors)
 		{
 			$stats{$kstats{$error->{'severity'}}}++;
-			print STDERR "<div class=\"" . $sevs{$error->{'severity'}} . "\"><ul>";
-			print STDERR "<li>Severity: " . $error->{'severity'} . "</li>"; #error / style / information
-			print STDERR "<li>Message: <pre>" . $error->{'msg'} . "</pre></li>";
-			print STDERR "<li>File: " . $error->{'location'}->{'file'} . ':' . $error->{'location'}->{'line'} . "</li>" if (defined($error->{'location'}->{'file'}));
-			print STDERR "</ul></div>\n";
+			print STDERR "* Severity: " . $error->{'severity'} . "\n";
+			print STDERR "  * Message: `" . $error->{'msg'} . "`\n";
+			print STDERR "  * File: " . $error->{'location'}->{'file'} . ':' . $error->{'location'}->{'line'} . "\n" if (defined($error->{'location'}->{'file'}));
 		}
 	}
+	print STDERR "\n";
 	print " * xml version: " . $ref->{'version'} . "\n";	
 	#print Dumper($ref);
 }
@@ -65,7 +58,7 @@ sub launchRATS()
 	my %kstats = ('High' => 'error', 'Medium' => 'warning', 'Low' => 'info');
 	my %sevs = ('High' => 'bg-danger', 'Medium' => 'bg-warning', 'Low' => 'bg-info');
 	
-	print STDERR "<h1>rats</h1>\n";
+	print STDERR "# rats\n";
 	if (defined($ref->{'vulnerability'}))
 	{
 		my @vulnerabilities = @{ $ref->{'vulnerability'} };
@@ -74,10 +67,9 @@ sub launchRATS()
 		{
 			my @files = @{ $vulnerability->{'file'} };
 			
-			print STDERR "<div class=\"" . $sevs{$vulnerability->{'severity'}} . "\"><ul>";
-			print STDERR "<li>Severity: " . $vulnerability->{'severity'} . "</li>"; #High / Medium / Low
-			print STDERR "<li>Type: " . $vulnerability->{'type'} . "</li>";
-			print STDERR "<li>Message: <pre>" . $vulnerability->{'message'} . "</pre></li>";
+			print STDERR "* Severity: " . $vulnerability->{'severity'} . "\n";
+			print STDERR "  * Type: " . $vulnerability->{'type'} . "\n";
+			print STDERR "  * Message: `" . $vulnerability->{'message'} . "`\n";
 			foreach my $file (@files)
 			{
 				my @lines = @{ $file->{'line'} };
@@ -85,12 +77,12 @@ sub launchRATS()
 				$stats{$kstats{$vulnerability->{'severity'}}}++;
 				foreach my $line (@lines)
 				{
-					print STDERR "<li>File:" . $file->{'name'} . ':' . $line . "</li>";
+					print STDERR "  * File:" . $file->{'name'} . ':' . $line . "\n";
 				}
 			}
-			print STDERR "</ul></div>\n";
 		}
 	}
+	print STDERR "\n";
 	print " * total_time: " . $ref->{'timing'}->{'total_time'} . "\n";
 	print " * total_lines: " . $ref->{'timing'}->{'total_lines'} . "\n";
 	print " * lines_per_second: " . $ref->{'timing'}->{'lines_per_second'} . "\n";
