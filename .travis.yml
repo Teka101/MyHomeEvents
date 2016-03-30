@@ -10,8 +10,8 @@ before_install:
 
 script:
   - EXTFLAGS="" make all
-  - ./analyzeSource.pl 2>report.html
-  - ./sendReport.sh
+  - ./analyzeSource.pl 2>report.md
+  - ./sendReport.sh report.md
 
 branches:
   only:
