@@ -2,6 +2,10 @@
 
 REPORT_FILE=$1
 
+[ -z "$GIST_TOKEN" ] && echo "Missing variable 'GIST_TOKEN'" && exit 1
+[ -z "$GIST_ID" ] && echo "Missing variable 'GIST_ID'" && exit 1
+[ -z "$REPORT_FILE" ] && echo "Missing argument: report filename" && exit 1
+
 cat > report.json <<EOF
 {
   "description": "Report Travis-CI $TRAVIS_JOB_NUMBER",
@@ -11,4 +15,7 @@ cat > report.json <<EOF
 }
 EOF
 
-curl -X PATCH --data-binary @$REPORT_FILE -H "Authorization: token $GIST_TOKEN" 'https://api.github.com/gists/94c7b6a4408e1f601899'
+echo "File"
+cat report.json
+echo "Curl"
+curl -X PATCH --data-binary @$REPORT_FILE -H "Authorization: token $GIST_TOKEN" "https://api.github.com/gists/$GIST_ID"
