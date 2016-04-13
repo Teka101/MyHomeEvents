@@ -35,8 +35,7 @@ addons:
   coverity_scan:
     project:
       name: Teka101/MyHomeEvents
-      version: 1.0
       description: MyHomeEvents
     notification_email: $COVERITY_SCAN_EMAIL
-    build_command: make all
+    build_command: EXTFLAGS="" make all
     branch_pattern: master
