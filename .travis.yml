@@ -33,18 +33,10 @@ os:
 
 addons:
   coverity_scan:
-
-    # GitHub project metadata
     project:
       name: Teka101/MyHomeEvents
       version: 1.0
       description: MyHomeEvents
-
-    # The command that will be added as an argument to "cov-build" to compile your project for analysis,
-    # ** likely specific to your build **
+    notification_email: $COVERITY_SCAN_EMAIL
     build_command: make all
-
-    # Pattern to match selecting branches that will run analysis. We recommend leaving this set to 'coverity_scan'.
-    # Take care in resource usage, and consider the build frequency allowances per
-    #   https://scan.coverity.com/faq#frequency
     branch_pattern: master
