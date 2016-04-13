@@ -24,6 +24,9 @@ help:
 
 all: $(NAME)
 
+travisci:
+	@EXTFLAGS="" make all
+
 $(NAME): $(OBJ)
 	@echo "Compile binary	[$(NAME)]"
 	@$(CPP) -o $(NAME) $(OBJ) $(LDFLAGS)
