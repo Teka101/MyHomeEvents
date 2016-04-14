@@ -1,6 +1,10 @@
 # MyHomeEvents [![Build Status](https://travis-ci.org/Teka101/MyHomeEvents.svg?branch=master)](https://travis-ci.org/Teka101/MyHomeEvents) [![Code Quality](https://img.shields.io/badge/code%20quality-link-blue.svg)](https://gist.github.com/Teka101/94c7b6a4408e1f601899#file-report-md) [![Coverity Scan](https://scan.coverity.com/projects/8385/badge.svg)](https://scan.coverity.com/projects/teka101-myhomeevents)
 work with Domoticz
 
+License
+-------
+[MIT License](https://opensource.org/licenses/MIT)
+
 
 Before
 ------
