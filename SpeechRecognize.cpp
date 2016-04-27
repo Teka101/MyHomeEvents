@@ -265,12 +265,13 @@ bool SpeechRecognize::getPlugin(const std::string &sentence, std::string &plugin
 {
     _mutex.lock();
     std::map<std::string,std::string>::const_iterator it = _plugins.find(sentence);
+    bool hasFound = false;
 
     if (it != _plugins.end())
     {
         pluginFile = it->second;
-        return true;
+        hasFound = true;
     }
     _mutex.unlock();
-    return false;
+    return hasFound;
 }

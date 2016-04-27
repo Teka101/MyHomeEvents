@@ -32,8 +32,12 @@ Brain::Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer, int refresh
 
 Brain::~Brain()
 {
-    _timer.cancel();
-	_io.stop();
+    boost::system::error_code ec;
+
+    _timer.cancel(ec);
+    if (errorCode != boost::system::errc::success)
+        LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("~Brain - timer.cancel: errorCode=" << errorCode));
+    _io.stop();
 }
 
 void Brain::start()
