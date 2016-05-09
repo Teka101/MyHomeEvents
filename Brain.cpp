@@ -109,7 +109,8 @@ void Brain::launch()
             {
                 float deviceTemperature = dev->getTemperature();
 
-                if (condition.temperatureMin <= deviceTemperature && deviceTemperature <= condition.temperatureMax)
+                if ((!std::isnormal(condition.temperatureMin) || condition.temperatureMin <= deviceTemperature)
+			&& (!std::isnormal(condition.temperatureMax) || deviceTemperature <= condition.temperatureMax))
                     graphByRoomId[rgc.roomId] = rgc;
             }
         }

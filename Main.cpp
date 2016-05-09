@@ -26,26 +26,32 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 int main(int ac, char **av)
 {
-	boost::program_options::options_description desc("ConfigFile");
-	boost::program_options::variables_map vm;
-	log4cplus::Logger logger;
-	std::string gcmAppId, speechFile, speechLang;
-	long curlTimeout;
-	float hysteresisMin, hysteresisMax;
-	int webPort, brainRefresh;
+    MHEDatabase *db = NULL;
+    SpeechRecognize *sr = NULL;
+    MHEMobileNotify *notify = NULL;
+    MHEHardDevContainer *hardDev = NULL;
+    MHESpeechService *ss = NULL;
+    MHEWeb *ws = NULL;
+    boost::program_options::options_description desc("ConfigFile");
+    boost::program_options::variables_map vm;
+    log4cplus::Logger logger;
+    std::string gcmAppId, speechFile, speechLang;
+    long curlTimeout;
+    float hysteresisMin, hysteresisMax;
+    int webPort, brainRefresh;
 
-	log4cplus::PropertyConfigurator::doConfigure("log4cplus.properties");
-	logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("Main"));
-	desc.add_options()
-		("WebServer.port", boost::program_options::value<int>(&webPort)->default_value(8080))
-		("Brain.refresh", boost::program_options::value<int>(&brainRefresh)->default_value(300))
-		("Notify.gcmAppId", boost::program_options::value<std::string>(&gcmAppId))
-		("General.curlTimeout", boost::program_options::value<long>(&curlTimeout)->default_value(1000L))
-		("General.speechFile", boost::program_options::value<std::string>(&speechFile))
-		("General.speechLang", boost::program_options::value<std::string>(&speechLang))
-		("Heating.hysteresisMin", boost::program_options::value<float>(&hysteresisMin)->default_value(0))
-		("Heating.hysteresisMax", boost::program_options::value<float>(&hysteresisMax)->default_value(0))
-	    ;
+    log4cplus::PropertyConfigurator::doConfigure("log4cplus.properties");
+    logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("Main"));
+    desc.add_options()
+        ("WebServer.port", boost::program_options::value<int>(&webPort)->default_value(8080))
+        ("Brain.refresh", boost::program_options::value<int>(&brainRefresh)->default_value(300))
+        ("Notify.gcmAppId", boost::program_options::value<std::string>(&gcmAppId))
+        ("General.curlTimeout", boost::program_options::value<long>(&curlTimeout)->default_value(1000L))
+        ("General.speechFile", boost::program_options::value<std::string>(&speechFile))
+        ("General.speechLang", boost::program_options::value<std::string>(&speechLang))
+        ("Heating.hysteresisMin", boost::program_options::value<float>(&hysteresisMin)->default_value(0))
+        ("Heating.hysteresisMax", boost::program_options::value<float>(&hysteresisMax)->default_value(0))
+        ;
     std::ifstream settings_file("config.ini", std::ifstream::in);
 	boost::program_options::store(boost::program_options::parse_config_file(settings_file, desc, true), vm);
 	settings_file.close();
@@ -57,54 +63,58 @@ int main(int ac, char **av)
 	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Notify.gcmAppId=" << gcmAppId));
 	curlInit(curlTimeout);
 
-    MHEDatabase *db = new MHEDatabase();
-
-    if (logger.isEnabledFor(log4cplus::DEBUG_LOG_LEVEL))
+    try
     {
-        std::vector<DBCondition> conds = db->getConditions();
-        BOOST_FOREACH(DBCondition cond, conds)
+        db = new MHEDatabase();
+        if (logger.isEnabledFor(log4cplus::DEBUG_LOG_LEVEL))
         {
-            LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)cond));
+            std::vector<DBCondition> conds = db->getConditions();
+            BOOST_FOREACH(DBCondition cond, conds)
+            {
+                LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)cond));
+            }
+            std::vector<DBGraph> graphs = db->getGraphs();
+            BOOST_FOREACH(DBGraph graph, graphs)
+            {
+                LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)graph));
+            }
+            std::vector<DBRoom> rooms = db->getRooms();
+            BOOST_FOREACH(DBRoom room, rooms)
+            {
+                LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)room));
+            }
+            std::vector<DBRoomGraphCond> roomGraphConds = db->getRoomGraphCondByActiveDaysAndCalendar();
+            BOOST_FOREACH(DBRoomGraphCond rgc, roomGraphConds)
+            {
+                LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)rgc));
+            }
         }
-        std::vector<DBGraph> graphs = db->getGraphs();
-        BOOST_FOREACH(DBGraph graph, graphs)
-        {
-            LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)graph));
-        }
-        std::vector<DBRoom> rooms = db->getRooms();
-        BOOST_FOREACH(DBRoom room, rooms)
-        {
-            LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)room));
-        }
-        std::vector<DBRoomGraphCond> roomGraphConds = db->getRoomGraphCondByActiveDaysAndCalendar();
-        BOOST_FOREACH(DBRoomGraphCond rgc, roomGraphConds)
-        {
-            LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - " << (std::string)rgc));
-        }
-    }
 
-    SpeechRecognize *sr = (speechFile.size() == 0 ? NULL : new SpeechRecognize(speechFile));
-    MHEMobileNotify *notify = (gcmAppId.size() == 0 ? NULL : new MHEMobileNotify(gcmAppId, db, sr));
-    MHEHardDevContainer *hardDev = new MHEHardDevContainer(*db);
-    MHESpeechService *ss = new MHESpeechService(sr, speechLang);
-    MHEWeb *ws = new MHEWeb(webPort, db, hardDev, notify, ss);
+        sr = (speechFile.size() == 0 ? NULL : new SpeechRecognize(speechFile));
+        notify = (gcmAppId.size() == 0 ? NULL : new MHEMobileNotify(gcmAppId, db, sr));
+        hardDev = new MHEHardDevContainer(*db);
+        ss = new MHESpeechService(sr, speechLang);
+        ws = new MHEWeb(webPort, db, hardDev, notify, ss);
 
-    if (!ws->isStarted())
-        LOG4CPLUS_ERROR(logger, LOG4CPLUS_TEXT("Unable to start web server !"));
-    else
-    {
-        Brain b(db, hardDev, brainRefresh, notify);
+        if (!ws->isStarted())
+            LOG4CPLUS_ERROR(logger, LOG4CPLUS_TEXT("Unable to start web server !"));
+        else
+        {
+            Brain b(db, hardDev, brainRefresh, notify);
 
-	if (hysteresisMin > 0 && hysteresisMax > 0)
+            if (hysteresisMin > 0 && hysteresisMax > 0)
 		b.setHysteresis(hysteresisMin, hysteresisMax);
-        b.start();
+            b.start();
+        }
+        LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Application stopping..."));
     }
-    LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Application stopping..."));
+    catch (boost::thread_resource_error &e)
+    {
+        LOG4CPLUS_ERROR(logger, LOG4CPLUS_TEXT("Error when creating thread: native_error=" << e.native_error()));
+    }
     delete ws;
-    if (notify != NULL)
-        delete notify;
-    if (sr != NULL)
-        delete sr;
+    delete notify;
+    delete sr;
     delete ss;
     delete hardDev;
     delete db;
