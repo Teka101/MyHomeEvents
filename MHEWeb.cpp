@@ -204,7 +204,6 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
 		{
             int deviceId = boost::lexical_cast<int>(what[1]);
             std::string volume = what[2];
-            tMHEDeviceValues values;
             MHEDevice *dev = ws->getHardDevContainer()->getDeviceById(deviceId);
 
             response = ws->buildStatusResponse(dev != NULL && dev->sendCommand("volume", volume, NULL), httpCode);

@@ -52,17 +52,24 @@ int main(int ac, char **av)
         ("Heating.hysteresisMin", boost::program_options::value<float>(&hysteresisMin)->default_value(0))
         ("Heating.hysteresisMax", boost::program_options::value<float>(&hysteresisMax)->default_value(0))
         ;
-    std::ifstream settings_file("config.ini", std::ifstream::in);
-	boost::program_options::store(boost::program_options::parse_config_file(settings_file, desc, true), vm);
-	settings_file.close();
-	boost::program_options::notify(vm);
-	LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Application starting..."));
-	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - General.curlTimeout=" << curlTimeout));
-	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - WebServer.port=" << webPort));
-	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Brain.refresh=" << brainRefresh));
-	LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Notify.gcmAppId=" << gcmAppId));
-	curlInit(curlTimeout);
-
+    try
+    {
+        std::ifstream settings_file("config.ini", std::ifstream::in);
+        boost::program_options::store(boost::program_options::parse_config_file(settings_file, desc, true), vm);
+        settings_file.close();
+    }
+    catch (const boost::program_options::unknown_option &e)
+    {
+        LOG4CPLUS_ERROR(logger, LOG4CPLUS_TEXT("Unkown option: " << e.get_option_name()));
+        exit(1);
+    }
+    boost::program_options::notify(vm);
+    LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Application starting..."));
+    LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - General.curlTimeout=" << curlTimeout));
+    LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - WebServer.port=" << webPort));
+    LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Brain.refresh=" << brainRefresh));
+    LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Notify.gcmAppId=" << gcmAppId));
+    curlInit(curlTimeout);
     try
     {
         db = new MHEDatabase();
@@ -108,7 +115,11 @@ int main(int ac, char **av)
         }
         LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Application stopping..."));
     }
-    catch (boost::thread_resource_error &e)
+    catch (const boost::thread_interrupted &e)
+    {
+        LOG4CPLUS_ERROR(logger, LOG4CPLUS_TEXT("Error interrupted thread !"));
+    }
+    catch (const boost::thread_resource_error &e)
     {
         LOG4CPLUS_ERROR(logger, LOG4CPLUS_TEXT("Error when creating thread: native_error=" << e.native_error()));
     }
