@@ -467,6 +467,14 @@ struct MHD_Response *MHEWeb::doAdmin(const char *method, const char *url, std::s
 		if (!getDataBase()->updateGraph(graph))
 			httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
 	}
+	else if (boost::equals(method, "DELETE") && boost::starts_with(url, "/admin/device/"))
+	{
+		int devId = atoi(url + 14);
+
+		response = MHD_create_response_from_buffer(2, (void *)"{}", MHD_RESPMEM_PERSISTENT);
+		if (!getDataBase()->deleteDevice(devId))
+			httpCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
+	}
 	else if (postData != NULL && boost::starts_with(url, "/admin/device/"))
 	{
 		boost::property_tree::ptree pTree;

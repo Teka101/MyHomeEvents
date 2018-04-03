@@ -218,6 +218,7 @@
     </div>
     <div class="form-group text-center">
      <button type="button" class="btn btn-primary" onClick="saveDevice()">Save</button>
+     <button type="button" class="btn btn-danger" onClick="deleteDevice()">Delete</button>
     </div>
    </form>
   </div>
@@ -645,6 +646,17 @@ function saveDevice()
 		sendSave('admin/device/', obj);
 }
 
+function deleteDevice()
+{
+	var obj = {};
+
+	$('[id^="dev_"]').each(function(index) {
+			obj[$(this).attr('id').replace(/^.*_/, '')] = $(this).val();
+		});
+	if (obj.id != '')
+		sendDelete('admin/device/' + obj.id);
+}
+
 function saveCondition()
 {
 	var obj = {};
@@ -685,6 +697,16 @@ function saveRGC()
 	sendSave('admin/rgc/', obj);
 }
 
+function sendDelete(url)
+{
+	var r = confirm('Realy want to delete it ?');
+
+	if (r == true)
+		sendRequest('DELETE', url, {});
+	else
+		alert('Operation cancelled');
+}
+
 function sendSave(url, obj)
 {
 	var method = (obj == null ? 'GET' : 'POST');
@@ -692,6 +714,11 @@ function sendSave(url, obj)
 	var serializedData = (obj == null ? null : JSON.stringify(obj));
 
 	console.dir(obj);
+	sendRequest(method, fullUrl, serializedData);
+}
+
+function sendRequest(method, fullUrl, serializedData)
+{
 	$.ajax({
 			type: method,
 			url:  fullUrl,
@@ -699,7 +726,7 @@ function sendSave(url, obj)
 			dataType: 'json',
 			success: function(json)
 			{
-				if (obj != null)
+				if (serializedData != null)
 				{
 					alert('Data saved ! (page should be reloaded)');
 					location.reload();
