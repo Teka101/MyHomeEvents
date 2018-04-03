@@ -34,6 +34,7 @@ private:
 
 	void computeNextLaunch();
 	void launch();
+	void updateDevices();
 
 public:
 	Brain(MHEDatabase *db, MHEHardDevContainer *hardDevContainer, int refreshInSeconds, MHEMobileNotify *notify);

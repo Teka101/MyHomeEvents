@@ -72,6 +72,21 @@ void Brain::computeNextLaunch()
 	_timer.async_wait(boost::bind(&Brain::launch, this));
 }
 
+void Brain::updateDevices()
+{
+        std::vector<MHEDevice*> devices = _hardDevContainer->getDevices();
+
+	BOOST_FOREACH(MHEDevice *dev, devices)
+	{
+		if (dev->isCacheRunning())
+		{
+			dev->getHumidity();
+			dev->getTemperature();
+			dev->isActivated();
+		}
+	}
+}
+
 void Brain::launch()
 {
     LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("Brain::launch - run..."));
@@ -85,6 +100,7 @@ void Brain::launch()
     std::map<int,DBRoom> roomById;
     std::pair<int, DBRoomGraphCond> kv;
 
+    updateDevices();
     BOOST_FOREACH(DBCondition &cond, conditions)
     {
         conditionById[cond.id] = cond;
