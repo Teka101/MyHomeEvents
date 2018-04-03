@@ -678,3 +678,22 @@ bool MHEDatabase::addMobile(std::string &type, std::string &user, std::string &t
 	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::addMobile - SQL error: " << sqlite3_errmsg(_db)));
 	return false;
 }
+
+bool MHEDatabase::deleteDevice(int devId)
+{
+    sqlite3_stmt *stmt = NULL;
+	const std::string sql = "DELETE FROM device WHERE rowid=?";
+	int rc;
+
+	rc = sqlite3_prepare(_db, sql.c_str(), sql.size(), &stmt, NULL);
+	if (rc == SQLITE_OK)
+	{
+		sqlite3_bind_int(stmt, 1, devId);
+		rc = sqlite3_step(stmt);
+		sqlite3_finalize(stmt);
+		if (rc == SQLITE_DONE)
+            return true;
+	}
+	LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("MHEDatabase::deleteDevice - SQL error: " << sqlite3_errmsg(_db)));
+	return false;
+}

@@ -233,6 +233,7 @@ class MHEDatabase
         bool updateRoom(DBRoom &room);
         bool updateRoomGraphCond(DBRoomGraphCond &rgc);
         bool updateMobileLastSuccess(DBMobile &mob);
+	bool deleteDevice(int devId);
 };
 
 #endif // MHEDATABASE_H
