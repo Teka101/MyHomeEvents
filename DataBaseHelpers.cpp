@@ -198,7 +198,14 @@ void writeToPTree(boost::property_tree::ptree &pTree, MHEDevice &dev, bool useCa
             pTree.put("temperatureRaw", tempRaw);
     }
     else
+    {
+        if (dev.isDimmable())
+        {
+            pTree.put("dimmableValue", useCache ? dev.getCachedDimmableValue() : dev.getDimmableValue());
+            pTree.put("dimmableMax", useCache ? dev.getCachedDimmableMax() : dev.getDimmableMax());
+        }
         pTree.put("status", (useCache ? dev.isCachedActivated() : dev.isActivated()) ? "on" : "off");
+    }
     pTree.put("lastUpdate", dev.getLastUpdate());
     pTree.put("hidden", dev.isHidden() ? "true" : "false");
 }

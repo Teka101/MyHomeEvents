@@ -69,6 +69,21 @@ float MHEDevice::getCachedHumidity()
     return NAN;
 }
 
+bool MHEDevice::isCachedDimmable()
+{
+    return false;
+}
+
+int MHEDevice::getCachedDimmableValue()
+{
+    return 0;
+}
+
+int MHEDevice::getCachedDimmableMax()
+{
+    return 0;
+}
+
 bool MHEDevice::isCachedActivated()
 {
     return false;
@@ -92,6 +107,21 @@ float MHEDevice::getHumidity()
 bool MHEDevice::setTempHum(float temperature, float humidity)
 {
     return false;
+}
+
+bool MHEDevice::isDimmable()
+{
+    return false;
+}
+
+int MHEDevice::getDimmableValue()
+{
+    return 0;
+}
+
+int MHEDevice::getDimmableMax()
+{
+    return 0;
 }
 
 bool MHEDevice::isActivated()

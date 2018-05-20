@@ -31,8 +31,10 @@ struct CacheDeviceDomoticz
 	bool statusIsOn;
 	float temperature, temperatureRaw;
 	float humidity;
+	bool dimmable;
+	int dimmableValue, dimmableMax;
 
-	CacheDeviceDomoticz() : name(""), statusIsOn(false), temperature(0), temperatureRaw(0), humidity(0)
+	CacheDeviceDomoticz() : name(""), statusIsOn(false), temperature(0), temperatureRaw(0), humidity(0), dimmable(false), dimmableValue(0), dimmableMax(0)
 	{
 	}
 
@@ -46,6 +48,9 @@ struct CacheDeviceDomoticz
                 << " temperature=" << temperature
                 << " temperatureRaw=" << temperatureRaw
                 << " humidity=" << humidity
+                << " dimmable=" << dimmable
+                << " dimmableValue=" << dimmableValue
+                << " dimmableMax=" << dimmableMax
                 << "]";
             return ss.str();
         }
@@ -72,11 +77,17 @@ class DeviceDomoticz : public MHEDevice
         float getCachedRawTemperature();
         float getCachedTemperature();
         float getCachedHumidity();
+        bool isCachedDimmable();
+        int getCachedDimmableValue();
+        int getCachedDimmableMax();
         bool isCachedActivated();
         float getRawTemperature();
         float getTemperature();
         float getHumidity();
         bool setTempHum(float temperature, float humidity);
+        bool isDimmable();
+        int getDimmableValue();
+        int getDimmableMax();
         bool isActivated();
         bool setStatus(bool activate);
         bool sendCommand(const std::string &command, const std::string &value, void *output);

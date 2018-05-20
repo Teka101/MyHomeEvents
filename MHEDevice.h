@@ -57,11 +57,17 @@ class MHEDevice
         virtual float getCachedRawTemperature();
         virtual float getCachedTemperature();
         virtual float getCachedHumidity();
+        virtual bool isCachedDimmable();
+        virtual int getCachedDimmableValue();
+        virtual int getCachedDimmableMax();
         virtual bool isCachedActivated();
         virtual float getRawTemperature();
         virtual float getTemperature();
         virtual float getHumidity();
         virtual bool setTempHum(float temperature, float humidity);
+        virtual bool isDimmable();
+        virtual int getDimmableValue();
+        virtual int getDimmableMax();
         virtual bool isActivated();
         virtual bool setStatus(bool activate);
         virtual bool sendCommand(const std::string &command, const std::string &value, void *output);

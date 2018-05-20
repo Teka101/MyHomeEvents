@@ -58,6 +58,21 @@ float DeviceDomoticz::getCachedHumidity()
     return _cache.humidity;
 }
 
+bool DeviceDomoticz::isCachedDimmable()
+{
+    return _cache.dimmable;
+}
+
+int DeviceDomoticz::getCachedDimmableValue()
+{
+    return _cache.dimmableValue;
+}
+
+int DeviceDomoticz::getCachedDimmableMax()
+{
+    return _cache.dimmableMax;
+}
+
 bool DeviceDomoticz::isCachedActivated()
 {
     return _cache.statusIsOn;
@@ -79,6 +94,24 @@ float DeviceDomoticz::getHumidity()
 {
     refreshCache();
     return _cache.humidity;
+}
+
+bool DeviceDomoticz::isDimmable()
+{
+    refreshCache();
+    return _cache.dimmable;
+}
+
+int DeviceDomoticz::getDimmableValue()
+{
+    refreshCache();
+    return _cache.dimmableValue;
+}
+
+int DeviceDomoticz::getDimmableMax()
+{
+    refreshCache();
+    return _cache.dimmableMax;
 }
 
 bool DeviceDomoticz::setTempHum(float temperature, float humidity)
@@ -272,6 +305,16 @@ bool DeviceDomoticz::refreshNormal()
                     }
                     else if (itChild.first == "Humidity")
                         _cache.humidity = itChild.second.get_value<float>();
+                    else if (itChild.first == "LevelInt")
+                        _cache.dimmableValue = itChild.second.get_value<int>();
+                    else if (itChild.first == "MaxDimLevel")
+                        _cache.dimmableMax = itChild.second.get_value<int>();
+                    else if (itChild.first == "SwitchType")
+                    {
+                        std::string status = itChild.second.get_value<std::string>();
+
+                        _cache.dimmable = boost::starts_with(status, "Dimmer");
+                    }
                 }
             }
         }
