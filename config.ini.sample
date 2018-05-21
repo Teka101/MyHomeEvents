@@ -10,6 +10,7 @@ port=8080
 refresh=300
 
 [Notify]
+fcmServerKey=SERVERKEYFCM
 gcmAppId=APPKEYGCM
 
 [Heating]

@@ -36,7 +36,7 @@ int main(int ac, char **av)
     boost::program_options::options_description desc("ConfigFile");
     boost::program_options::variables_map vm;
     log4cplus::Logger logger;
-    std::string gcmAppId, speechFile, speechLang;
+    std::string fcmServerKey, gcmAppId, speechFile, speechLang;
     long curlTimeout;
     float hysteresisMin, hysteresisMax;
     int webPort, brainRefresh;
@@ -46,6 +46,7 @@ int main(int ac, char **av)
     desc.add_options()
         ("WebServer.port", boost::program_options::value<int>(&webPort)->default_value(8080))
         ("Brain.refresh", boost::program_options::value<int>(&brainRefresh)->default_value(300))
+        ("Notify.fcmServerKey", boost::program_options::value<std::string>(&fcmServerKey))
         ("Notify.gcmAppId", boost::program_options::value<std::string>(&gcmAppId))
         ("General.curlTimeout", boost::program_options::value<long>(&curlTimeout)->default_value(1000L))
         ("General.speechFile", boost::program_options::value<std::string>(&speechFile))
@@ -69,6 +70,7 @@ int main(int ac, char **av)
     LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - General.curlTimeout=" << curlTimeout));
     LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - WebServer.port=" << webPort));
     LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Brain.refresh=" << brainRefresh));
+    LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Notify.fcmServerKey=" << fcmServerKey));
     LOG4CPLUS_DEBUG(logger, LOG4CPLUS_TEXT("main - Notify.gcmAppId=" << gcmAppId));
     curlInit(curlTimeout);
     try
@@ -99,7 +101,7 @@ int main(int ac, char **av)
         }
 
         sr = (speechFile.size() == 0 ? NULL : new SpeechRecognize(speechFile));
-        notify = (gcmAppId.size() == 0 ? NULL : new MHEMobileNotify(gcmAppId, db, sr));
+        notify = (fcmServerKey.size() == 0 && gcmAppId.size() == 0 ? NULL : new MHEMobileNotify(fcmServerKey, gcmAppId, db, sr));
         hardDev = new MHEHardDevContainer(*db);
         ss = new MHESpeechService(sr, speechLang);
         ws = new MHEWeb(webPort, db, hardDev, notify, ss);

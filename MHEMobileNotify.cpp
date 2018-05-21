@@ -15,7 +15,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "CurlHelpers.h"
 #include "MHEMobileNotify.h"
 
-MHEMobileNotify::MHEMobileNotify(std::string gcmAppId, MHEDatabase *db, SpeechRecognize *sr) : _gcmAppId(gcmAppId), _db(db), _sr(sr)
+MHEMobileNotify::MHEMobileNotify(std::string fcmServerKey, std::string gcmAppId, MHEDatabase *db, SpeechRecognize *sr)
+    : _fcmServerKey(fcmServerKey), _gcmAppId(gcmAppId), _db(db), _sr(sr)
 {
     _log = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("MHEMobileNotify"));
 }
@@ -92,42 +93,84 @@ void MHEMobileNotify::notifyDevices(std::vector<DBMobile> &devices, const std::s
 void MHEMobileNotify::notifyDevice(DBMobile &device, const std::string &type, const std::string &msg)
 {
     LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("notityDevice - device=" << (std::string)device << " type=" << type << " msg=" << msg));
-    if (device.type == "gcm")
-    {
-        std::vector<std::string> headers;
-        std::stringstream ss, ssOut;
-        std::string postData;
-        std::string url = "https://android.googleapis.com/gcm/send";
-        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-        boost::gregorian::date currentDate = now.date();
-        u_int64_t dateYYYYMMDD = currentDate.year() * 10000 + currentDate.month() * 100 + currentDate.day();
-        u_int64_t currentHHMMM = now.time_of_day().hours() * 100 + now.time_of_day().minutes();
-	u_int64_t currentYYYYMMDDHHMMM = dateYYYYMMDD * (u_int64_t)10000 + currentHHMMM;
-
-        ss << "Authorization: key=" << _gcmAppId;
-        headers.push_back(ss.str());
-        headers.push_back("Content-Type: application/json");
-        ss.str(std::string());
-        ss << "{"
-                << "\"to\": \"" << device.token << "\","
-                << "\"delay_while_idle\": false,"
-                << "\"time_to_live\": 86400,"
-                << "\"data\": {"
-                    << "\"type\": \"" << type << "\","
-                    << "\"datetime\": \"" << currentYYYYMMDDHHMMM << "\","
-                    << "\"msg\": \"" << msg << "\""
-                << "}"
-            << "}";
-        postData = ss.str();
-        if (curlExecute(url, &headers, &postData, &ssOut))
-        {
-            LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("notityDevice - success post=" << ss.str() << " return: " << ssOut.str()));
-            device.lastSuccessYYYYMMDDHHSS = currentYYYYMMDDHHMMM;
-            _db->updateMobileLastSuccess(device);
-        }
-        else
-            LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("notityDevice - failed post=" << ss.str() << " result=" << ssOut.str()));
-    }
+    if (device.type == "fcm")
+        notifyDeviceFCM(device, type, msg);
+    else if (device.type == "gcm")
+        notifyDeviceGCM(device, type, msg);
     else
         LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("notityDevice - unkown type of device - " << (std::string)device));
+}
+
+void MHEMobileNotify::notifyDeviceFCM(DBMobile &device, const std::string &type, const std::string &msg)
+{
+    std::vector<std::string> headers;
+    std::stringstream ss, ssOut;
+    std::string postData;
+    std::string url = "https://fcm.googleapis.com/fcm/send";
+    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+    boost::gregorian::date currentDate = now.date();
+    u_int64_t dateYYYYMMDD = currentDate.year() * 10000 + currentDate.month() * 100 + currentDate.day();
+    u_int64_t currentHHMMM = now.time_of_day().hours() * 100 + now.time_of_day().minutes();
+    u_int64_t currentYYYYMMDDHHMMM = dateYYYYMMDD * (u_int64_t)10000 + currentHHMMM;
+
+    ss << "Authorization: key=" << _fcmServerKey;
+    headers.push_back(ss.str());
+    headers.push_back("Content-Type: application/json");
+    ss.str(std::string());
+    ss << "{"
+            << "\"to\": \"" << device.token << "\","
+            << "\"delay_while_idle\": false,"
+            << "\"time_to_live\": 86400,"
+            << "\"data\": {"
+                << "\"type\": \"" << type << "\","
+                << "\"datetime\": \"" << currentYYYYMMDDHHMMM << "\","
+                << "\"msg\": \"" << msg << "\""
+            << "}"
+        << "}";
+    postData = ss.str();
+    if (curlExecute(url, &headers, &postData, &ssOut))
+    {
+        LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("notityDeviceFCM - success post=" << ss.str() << " return: " << ssOut.str()));
+        device.lastSuccessYYYYMMDDHHSS = currentYYYYMMDDHHMMM;
+        _db->updateMobileLastSuccess(device);
+    }
+    else
+        LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("notityDeviceFCM - failed post=" << ss.str() << " result=" << ssOut.str()));
+}
+
+void MHEMobileNotify::notifyDeviceGCM(DBMobile &device, const std::string &type, const std::string &msg)
+{
+    std::vector<std::string> headers;
+    std::stringstream ss, ssOut;
+    std::string postData;
+    std::string url = "https://android.googleapis.com/gcm/send";
+    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+    boost::gregorian::date currentDate = now.date();
+    u_int64_t dateYYYYMMDD = currentDate.year() * 10000 + currentDate.month() * 100 + currentDate.day();
+    u_int64_t currentHHMMM = now.time_of_day().hours() * 100 + now.time_of_day().minutes();
+    u_int64_t currentYYYYMMDDHHMMM = dateYYYYMMDD * (u_int64_t)10000 + currentHHMMM;
+
+    ss << "Authorization: key=" << _gcmAppId;
+    headers.push_back(ss.str());
+    headers.push_back("Content-Type: application/json");
+    ss.str(std::string());
+    ss << "{"
+            << "\"to\": \"" << device.token << "\","
+            << "\"delay_while_idle\": false,"
+            << "\"time_to_live\": 86400,"
+            << "\"data\": {"
+                << "\"type\": \"" << type << "\","
+                << "\"datetime\": \"" << currentYYYYMMDDHHMMM << "\","
+                << "\"msg\": \"" << msg << "\""
+            << "}"
+        << "}";
+    postData = ss.str();
+    if (curlExecute(url, &headers, &postData, &ssOut))
+    {
+        LOG4CPLUS_DEBUG(_log, LOG4CPLUS_TEXT("notityDeviceGCM - success post=" << ss.str() << " return: " << ssOut.str()));
+        device.lastSuccessYYYYMMDDHHSS = currentYYYYMMDDHHMMM;
+        _db->updateMobileLastSuccess(device);
+    }
+    else
+        LOG4CPLUS_ERROR(_log, LOG4CPLUS_TEXT("notityDeviceGCM - failed post=" << ss.str() << " result=" << ssOut.str()));
 }
