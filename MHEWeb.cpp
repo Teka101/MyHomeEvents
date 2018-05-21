@@ -296,7 +296,12 @@ int MHEWeb::sendFile(struct MHD_Response **response, const char *url)
 	{
 		struct stat st;
 
-		fstat(fd, &st);
+		if (fstat(fd, &st) == -1)
+		{
+			LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("MHEWeb::sendFile - unable to stat file: " << url << " : " + strerror(errno)));
+			close(fd);
+			return MHD_HTTP_INTERNAL_SERVER_ERROR;
+		}
 		LOG4CPLUS_DEBUG(log, LOG4CPLUS_TEXT("MHEWeb::sendFile - send file: size=" << st.st_size));
 		*response = MHD_create_response_from_fd(st.st_size, fd);
 		if (boost::ends_with(url, ".css"))
@@ -307,7 +312,7 @@ int MHEWeb::sendFile(struct MHD_Response **response, const char *url)
 			MHD_add_response_header(*response, "Content-Type", "text/html");
 		return MHD_HTTP_OK;
 	}
-	LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("MHEWeb::sendFile - unable to send file: " << url));
+	LOG4CPLUS_ERROR(log, LOG4CPLUS_TEXT("MHEWeb::sendFile - unable to send file: " << url << " : " + strerror(errno)));
 	return MHD_HTTP_NOT_FOUND;
 }
 
