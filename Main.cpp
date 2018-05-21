@@ -115,13 +115,9 @@ int main(int ac, char **av)
         }
         LOG4CPLUS_INFO(logger, LOG4CPLUS_TEXT("Application stopping..."));
     }
-    catch (const boost::thread_interrupted &e)
+    catch (const boost::exception &e)
     {
-        LOG4CPLUS_ERROR(logger, LOG4CPLUS_TEXT("Error interrupted thread !"));
-    }
-    catch (const boost::thread_resource_error &e)
-    {
-        LOG4CPLUS_ERROR(logger, LOG4CPLUS_TEXT("Error when creating thread: native_error=" << e.native_error()));
+        LOG4CPLUS_ERROR(logger, LOG4CPLUS_TEXT("Error " << boost::diagnostic_information(e)));
     }
     delete ws;
     delete notify;
