@@ -129,6 +129,11 @@ bool MHEDevice::isActivated()
     return false;
 }
 
+bool MHEDevice::setLevel(int level)
+{
+    return false;
+}
+
 bool MHEDevice::setStatus(bool activate)
 {
     return false;

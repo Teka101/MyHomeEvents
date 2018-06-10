@@ -69,6 +69,7 @@ class MHEDevice
         virtual int getDimmableValue();
         virtual int getDimmableMax();
         virtual bool isActivated();
+        virtual bool setLevel(int level);
         virtual bool setStatus(bool activate);
         virtual bool sendCommand(const std::string &command, const std::string &value, void *output);
         virtual operator std::string() const

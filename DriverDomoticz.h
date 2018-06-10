@@ -89,6 +89,7 @@ class DeviceDomoticz : public MHEDevice
         int getDimmableValue();
         int getDimmableMax();
         bool isActivated();
+        bool setLevel(int level);
         bool setStatus(bool activate);
         bool sendCommand(const std::string &command, const std::string &value, void *output);
 

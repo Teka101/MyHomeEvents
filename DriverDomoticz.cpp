@@ -140,6 +140,25 @@ bool DeviceDomoticz::isActivated()
     return _cache.statusIsOn;
 }
 
+bool DeviceDomoticz::setLevel(int level)
+{
+    std::stringstream ssUrl;
+
+	ssUrl << _urlDomoticz << "json.htm?type=command&param=switchlight&idx=" << _deviceIdx << "&switchcmd=" << (level > 0 ? "On" : "Off") << "&level=" << level;
+	if (curlExecute(ssUrl.str()))
+	{
+        time_t now = time(NULL);
+
+        _lastUpdate = now;
+        _cache.statusIsOn = level > 0;
+        _cache.dimmableValue = level;
+        if (_cloneTo != NULL)
+            _cloneTo->setLevel(level);
+        return true;
+	}
+    return false;
+}
+
 bool DeviceDomoticz::setStatus(bool activate)
 {
     std::stringstream ssUrl;
