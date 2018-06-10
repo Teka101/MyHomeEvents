@@ -52,6 +52,7 @@ Features
 
 Service REST/JSON:
 * /runningDevices : list declared device
+* /setDimmer/{device.id}/(level 0-100) : changer level on a device
 * /setStatus/{device.id}/(false|true) : turn on/off a device
 * /getSpecial/{device.id}/graph/(last24h|lastMonth|lastYear) : get graph data of a device (only supported for Domoticz)
 * /getSpecial/{device.id}/volume) : get volume of your device (only supported for TV)

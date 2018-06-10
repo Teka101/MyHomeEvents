@@ -127,6 +127,20 @@ static int answer_to_connection(void *cls, struct MHD_Connection *connection,
             response = ws->buildStatusResponse(dev != NULL && dev->sendCommand("channel", channelId, NULL), httpCode);
         }
     }
+    else if (boost::equals(method, "GET") && boost::starts_with(url, "/setDimmer/"))
+    {
+        boost::regex expression("^/setDimmer/([0-9]+)/([0-9]+)$", boost::regex::perl);
+        boost::cmatch what;
+
+        if (boost::regex_match(url, what, expression))
+        {
+            int deviceId = boost::lexical_cast<int>(what[1]);
+            int level    = boost::lexical_cast<int>(what[2]);
+            MHEDevice *dev = ws->getHardDevContainer()->getDeviceById(deviceId);
+
+            response = ws->buildStatusResponse(dev != NULL && dev->setLevel(level), httpCode);
+        }
+    }
     else if (boost::equals(method, "GET") && boost::starts_with(url, "/setStatus/"))
     {
         boost::regex expression("^/setStatus/([0-9]+)/(false|true)$", boost::regex::perl);
