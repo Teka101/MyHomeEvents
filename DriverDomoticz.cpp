@@ -144,7 +144,7 @@ bool DeviceDomoticz::setLevel(int level)
 {
     std::stringstream ssUrl;
 
-	ssUrl << _urlDomoticz << "json.htm?type=command&param=switchlight&idx=" << _deviceIdx << "&switchcmd=" << (level > 0 ? "On" : "Off") << "&level=" << level;
+	ssUrl << _urlDomoticz << "json.htm?type=command&param=switchlight&idx=" << _deviceIdx << "&switchcmd=Set%20Level&level=" << level;
 	if (curlExecute(ssUrl.str()))
 	{
         time_t now = time(NULL);
