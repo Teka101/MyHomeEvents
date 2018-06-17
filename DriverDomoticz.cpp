@@ -300,17 +300,6 @@ bool DeviceDomoticz::refreshNormal()
                 {
                     if (itChild.first == "Name")
                         _cache.name = itChild.second.get_value<std::string>();
-                    /*else if (itChild.first == "LastUpdate")
-                    {
-                        std::string date = itChild.second.get_value<std::string>();
-                        struct tm tm;
-
-                        memset(&tm, 0, sizeof(tm));
-                        tm.tm_zone = *tzname;
-                        tm.tm_isdst = daylight;
-                        if (strptime(date.c_str(), "%Y-%m-%d %H:%M:%S", &tm) != NULL)
-                            _lastUpdate = mktime(&tm);
-                    }*/
                     else if (itChild.first == "Status")
                     {
                         std::string status = itChild.second.get_value<std::string>();
@@ -337,6 +326,8 @@ bool DeviceDomoticz::refreshNormal()
                 }
             }
         }
+        if (!_cache.statusIsOn)
+            _cache.dimmableValue = 0;
         return true;
     }
     return false;
