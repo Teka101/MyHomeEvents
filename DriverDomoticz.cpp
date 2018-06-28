@@ -326,8 +326,6 @@ bool DeviceDomoticz::refreshNormal()
                 }
             }
         }
-        if (!_cache.statusIsOn)
-            _cache.dimmableValue = 0;
         return true;
     }
     return false;
